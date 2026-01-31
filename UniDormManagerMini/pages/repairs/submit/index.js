@@ -53,7 +53,12 @@ Page({
    */
   onPriorityChange(e) {
     const index = e.detail.value
-    this.setData({ priority: this.data.priorityOptions[index].value })
+    const priority = this.data.priorityOptions[index].value
+    const label = this.data.priorityOptions[index].label
+    this.setData({ 
+      priority: priority,
+      selectedPriorityLabel: label
+    })
   },
 
   /**

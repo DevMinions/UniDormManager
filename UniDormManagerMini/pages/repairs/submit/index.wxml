@@ -35,7 +35,7 @@
         bindchange="onPriorityChange"
       >
         <view class="picker">
-          {{priorityOptions[priorityOptions.findIndex(item => item.value === priority)].label}}
+          {{selectedPriorityLabel}}
         </view>
       </picker>
     </view>
