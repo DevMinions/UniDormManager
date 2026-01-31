@@ -136,6 +136,97 @@ func (h *AuthHandler) Login(c *gin.Context) {
 	})
 }
 
+// WechatLogin 微信登录（临时实现，用于小程序测试）
+func (h *AuthHandler) WechatLogin(c *gin.Context) {
+	var req struct {
+		Code string `json:"code" binding:"required"`
+	}
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		middleware.WriteError(c, http.StatusBadRequest, "bad_request", "Invalid request body")
+		return
+	}
+
+	// TODO: 临时实现 - 使用code作为用户名，直接登录
+	// 生产环境应该调用微信API换取openid和session_key
+	// 这里先用管理员账号做测试，后续完善微信登录流程
+
+	// 获取测试用户（admin）
+	user, err := h.userStore.GetUserByUsername("admin")
+	if err != nil || user == nil {
+		middleware.WriteError(c, http.StatusInternalServerError, "internal_error", "Failed to get test user")
+		return
+	}
+
+	// 获取用户角色
+	roles, err := h.userStore.GetUserRoles(user.ID)
+	if err != nil {
+		middleware.WriteError(c, http.StatusInternalServerError, "internal_error", "Failed to get user roles")
+		return
+	}
+
+	// 获取用户权限
+	permissions, err := h.userStore.GetUserPermissions(user.ID)
+	if err != nil {
+		middleware.WriteError(c, http.StatusInternalServerError, "internal_error", "Failed to get user permissions")
+		return
+	}
+
+	// 获取用户管理的楼栋ID
+	buildingIDs, err := h.userStore.GetUserBuildingIDs(user.ID)
+	if err != nil {
+		middleware.WriteError(c, http.StatusInternalServerError, "internal_error", "Failed to get user buildings")
+		return
+	}
+
+	// 获取用户关联的学生ID
+	studentID, err := h.userStore.GetUserStudentID(user.ID)
+	if err != nil {
+		middleware.WriteError(c, http.StatusInternalServerError, "internal_error", "Failed to get student ID")
+		return
+	}
+
+	// 转换为字符串数组
+	roleCodes := make([]string, len(roles))
+	for i, role := range roles {
+		roleCodes[i] = role.Code
+	}
+
+	permissionCodes := make([]string, len(permissions))
+	for i, perm := range permissions {
+		permissionCodes[i] = perm.Code
+	}
+
+	// 生成 Token
+	token, err := auth.GenerateToken(user.ID, user.Username, roleCodes, permissionCodes, buildingIDs, studentID)
+	if err != nil {
+		middleware.WriteError(c, http.StatusInternalServerError, "internal_error", "Failed to generate token")
+		return
+	}
+
+	// 更新最后登录时间
+	_ = h.userStore.UpdateUserLastLogin(user.ID)
+
+	// 构建响应
+	userInfo := &models.UserInfo{
+		ID:        user.ID,
+		Username:  user.Username,
+		Email:     user.Email,
+		Phone:     user.Phone,
+		RealName:  user.RealName,
+		Roles:     roleCodes,
+		StudentID: studentID,
+	}
+
+	expiresIn := int64(auth.TokenExpiration.Seconds())
+
+	c.JSON(http.StatusOK, models.LoginResponse{
+		Token:     token,
+		User:      userInfo,
+		ExpiresIn: expiresIn,
+	})
+}
+
 // Logout 登出
 func (h *AuthHandler) Logout(c *gin.Context) {
 	// 获取 Token（从请求头）

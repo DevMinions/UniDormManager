@@ -103,6 +103,7 @@ func main() {
 	auth := r.Group("/api/auth")
 	{
 		auth.POST("/login", authHandler.Login)
+		auth.POST("/wechat/login", authHandler.WechatLogin) // 微信登录（小程序）
 		auth.POST("/logout", middleware.AuthMiddleware(), authHandler.Logout)
 		auth.GET("/me", middleware.AuthMiddleware(), authHandler.GetCurrentUser)
 	}
