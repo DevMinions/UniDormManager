@@ -1,0 +1,61 @@
+<!--pages/rooms/list.wxml-->
+<view class="container">
+  <!-- 搜索栏 -->
+  <view class="search-section">
+    <view class="search-bar">
+      <input
+        class="search-input"
+        placeholder="搜索房间号"
+        value="{{keyword}}"
+        bindinput="handleSearch"
+        bindconfirm="onSearch"
+      />
+      <view class="search-btn" bindtap="onSearch">搜索</view>
+    </view>
+  </view>
+
+  <!-- 房间列表 -->
+  <view class="room-list">
+    <view class="loading" wx:if="{{loading}}">
+      <text>加载中...</text>
+    </view>
+
+    <view class="empty-state" wx:elif="{{rooms.length === 0}}">
+      <text>暂无房间数据</text>
+    </view>
+
+    <view
+      class="room-card"
+      wx:for="{{rooms}}"
+      wx:key="id"
+      data-id="{{item.id}}"
+      bindtap="goToDetail"
+    >
+      <view class="room-header">
+        <text class="room-number">{{item.roomNumber || item.room_number}}</text>
+        <view class="room-status {{item.status === 'occupied' ? 'occupied' : 'free'}}">
+          {{item.status === 'occupied' ? '已入住' : '空闲'}}
+        </view>
+      </view>
+
+      <view class="room-info">
+        <view class="info-row">
+          <text class="info-label">楼栋:</text>
+          <text class="info-value">{{item.buildingName || item.building_name}}</text>
+        </view>
+        <view class="info-row">
+          <text class="info-label">容量:</text>
+          <text class="info-value">{{item.capacity}}人</text>
+        </view>
+        <view class="info-row" wx:if="{{item.status === 'occupied'}}">
+          <text class="info-label">入住:</text>
+          <text class="info-value">{{item.occupied || 0}}人</text>
+        </view>
+      </view>
+
+      <view class="room-footer">
+        <text class="view-detail">查看详情 ›</text>
+      </view>
+    </view>
+  </view>
+</view>

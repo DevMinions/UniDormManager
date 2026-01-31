@@ -1,0 +1,78 @@
+<!--pages/index/index.wxml-->
+<view class="container">
+  <!-- 欢迎区域 -->
+  <view class="welcome-section">
+    <text class="welcome-text">欢迎使用宿舍管理系统</text>
+    <text class="date-text">{{currentDate}}</text>
+  </view>
+
+  <!-- 统计卡片 -->
+  <view class="stats-section" wx:if="{{!loading}}">
+    <view class="stats-row">
+      <view class="stat-card primary">
+        <text class="stat-value">{{stats.totalRooms}}</text>
+        <text class="stat-label">房间总数</text>
+      </view>
+      <view class="stat-card success">
+        <text class="stat-value">{{stats.freeRooms}}</text>
+        <text class="stat-label">空闲房间</text>
+      </view>
+    </view>
+
+    <view class="stats-row">
+      <view class="stat-card warning">
+        <text class="stat-value">{{stats.occupiedRooms}}</text>
+        <text class="stat-label">已入住</text>
+      </view>
+      <view class="stat-card danger">
+        <text class="stat-value">{{stats.pendingRepairs}}</text>
+        <text class="stat-label">待处理报修</text>
+      </view>
+    </view>
+
+    <view class="stats-row" wx:if="{{isAdmin}}">
+      <view class="stat-card info">
+        <text class="stat-value">{{stats.totalStudents}}</text>
+        <text class="stat-label">学生总数</text>
+      </view>
+      <view class="stat-card secondary">
+        <text class="stat-value">{{stats.totalBuildings}}</text>
+        <text class="stat-label">楼栋总数</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 快捷入口 -->
+  <view class="quick-actions">
+    <view class="action-title">快捷操作</view>
+    <view class="action-grid">
+      <view class="action-item" bindtap="goToRooms">
+        <view class="action-icon room-icon">🏠</view>
+        <text class="action-text">房间查询</text>
+      </view>
+
+      <view class="action-item" bindtap="goToRepairs">
+        <view class="action-icon repair-icon">🔧</view>
+        <text class="action-text">报修申请</text>
+      </view>
+
+      <view class="action-item" bindtap="goToNotices">
+        <view class="action-icon notice-icon">📢</view>
+        <text class="action-text">公告通知</text>
+      </view>
+
+      <view class="action-item" bindtap="goToProfile">
+        <view class="action-icon profile-icon">👤</view>
+        <text class="action-text">个人中心</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 提示信息 -->
+  <view class="tips-section">
+    <view class="tip-card" wx:if="{{stats.pendingRepairs > 0 && isAdmin}}">
+      <text class="tip-icon">⚠️</text>
+      <text class="tip-text">您有 {{stats.pendingRepairs}} 个待处理报修请求</text>
+    </view>
+  </view>
+</view>

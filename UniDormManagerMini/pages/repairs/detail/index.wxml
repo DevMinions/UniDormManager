@@ -1,0 +1,117 @@
+<!--pages/repairs/detail/index.wxml-->
+<view class="container">
+  <!-- 加载中 -->
+  <view class="loading" wx:if="{{loading}}">
+    <text>加载中...</text>
+  </view>
+
+  <!-- 报修详情 -->
+  <view class="repair-detail" wx:else>
+    <!-- 状态卡片 -->
+    <view class="status-card status-{{repair.status}}">
+      <view class="status-icon">🔧</view>
+      <view class="status-info">
+        <text class="status-text">{{repair.statusText || repair.status}}</text>
+        <text class="status-desc">{{repair.statusDescription || ''}}</text>
+      </view>
+    </view>
+
+    <!-- 基本信息 -->
+    <view class="info-section">
+      <view class="section-title">基本信息</view>
+      <view class="info-row">
+        <text class="info-label">报修标题:</text>
+        <text class="info-value">{{repair.title}}</text>
+      </view>
+      <view class="info-row">
+        <text class="info-label">房间号:</text>
+        <text class="info-value">{{repair.roomNumber || repair.room_number}}</text>
+      </view>
+      <view class="info-row">
+        <text class="info-label">优先级:</text>
+        <view class="priority-tag priority-{{repair.priority}}">
+          {{repair.priorityText || repair.priority}}
+        </view>
+      </view>
+      <view class="info-row">
+        <text class="info-label">提交时间:</text>
+        <text class="info-value">{{repair.createdAt || repair.created_at}}</text>
+      </view>
+      <view class="info-row" wx:if="{{repair.updatedAt || repair.updated_at}}">
+        <text class="info-label">更新时间:</text>
+        <text class="info-value">{{repair.updatedAt || repair.updated_at}}</text>
+      </view>
+    </view>
+
+    <!-- 报修描述 -->
+    <view class="description-section">
+      <view class="section-title">详细描述</view>
+      <view class="description-text">{{repair.description}}</view>
+    </view>
+
+    <!-- 相关图片 -->
+    <view class="images-section" wx:if="{{repair.images && repair.images.length > 0}}">
+      <view class="section-title">相关图片</view>
+      <view class="image-list">
+        <image
+          class="image-item"
+          wx:for="{{repair.images}}"
+          wx:key="*this"
+          src="{{item}}"
+          mode="aspectFill"
+          data-url="{{item}}"
+          bindtap="previewImage"
+        />
+      </view>
+    </view>
+
+    <!-- 处理记录 -->
+    <view class="history-section" wx:if="{{repair.history && repair.history.length > 0}}">
+      <view class="section-title">处理记录</view>
+      <view class="history-list">
+        <view class="history-item" wx:for="{{repair.history}}" wx:key="id">
+          <view class="history-header">
+            <text class="history-action">{{item.action}}</text>
+            <text class="history-time">{{item.time}}</text>
+          </view>
+          <view class="history-content">{{item.content}}</view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 管理员操作 -->
+    <view class="admin-actions" wx:if="{{isAdmin && repair.status !== 'closed' && repair.status !== 'completed'}}">
+      <view class="section-title">管理员操作</view>
+      <view class="notes-input">
+        <textarea
+          class="notes-textarea"
+          placeholder="添加处理备注（可选）"
+          value="{{notes}}"
+          bindinput="onNotesInput"
+          maxlength="200"
+        />
+      </view>
+      <view class="action-buttons">
+        <button
+          class="action-btn warning"
+          wx:if="{{repair.status === 'pending'}}"
+          bindtap="markInProgress"
+        >
+          标记为处理中
+        </button>
+        <button
+          class="action-btn success"
+          bindtap="markCompleted"
+        >
+          标记为已完成
+        </button>
+        <button
+          class="action-btn danger"
+          bindtap="closeRepair"
+        >
+          关闭报修
+        </button>
+      </view>
+    </view>
+  </view>
+</view>

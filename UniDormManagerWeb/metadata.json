@@ -1,0 +1,5 @@
+{
+  "name": "UniDorm Manager",
+  "description": "A comprehensive University Dormitory Management System designed for both Desktop (Admin Dashboard) and Mobile (Student/Staff Mini-app) experiences. Features occupancy tracking, repair requests, student management, and an AI-powered dormitory assistant.",
+  "requestFramePermissions": []
+}

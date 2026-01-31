@@ -1,0 +1,140 @@
+services:
+  # PostgreSQL 数据库
+  postgres:
+    image: postgres:16-alpine
+    container_name: unidorm-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: unidorm
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - unidorm-network
+
+  # Redis 缓存
+  redis:
+    image: redis:7-alpine
+    container_name: unidorm-redis
+    ports:
+      - "6380:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - unidorm-network
+
+  # 后端服务
+  backend:
+    build:
+      context: ./UniDormManagerServer
+      dockerfile: Dockerfile
+    container_name: unidorm-backend
+    environment:
+      PORT: "8080"
+      DB_HOST: postgres
+      DB_PORT: "5432"
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      DB_NAME: unidorm
+      DB_SSLMODE: disable
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+      REDIS_PASSWORD: ""
+      USE_CACHE: "true"
+      JWT_SECRET: "UniDormManager2024SecureJWTSecretKeyForProductionEnvironment-PleaseChangeThis!"
+      # 日志配置
+      LOG_LEVEL: "info"
+      LOG_FILE: "/var/log/unidorm/app.log"
+      GIN_MODE: "release"
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - unidorm-network
+    restart: unless-stopped
+    volumes:
+      # 日志文件挂载
+      - ./logs:/var/log/unidorm
+
+  # 前端服务
+  frontend:
+    build:
+      context: ./UniDormManagerWeb
+      dockerfile: Dockerfile
+      args:
+        - VITE_API_URL=http://backend:8080
+    container_name: unidorm-frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    networks:
+      - unidorm-network
+    restart: unless-stopped
+
+  # Prometheus 监控
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: unidorm-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+    networks:
+      - unidorm-network
+    restart: unless-stopped
+    depends_on:
+      - backend
+
+  # Grafana 可视化
+  grafana:
+    image: grafana/grafana:latest
+    container_name: unidorm-grafana
+    ports:
+      - "3001:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning
+      - ./grafana/dashboards:/etc/grafana/provisioning/dashboards
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+    networks:
+      - unidorm-network
+    restart: unless-stopped
+    depends_on:
+      - prometheus
+
+volumes:
+  postgres_data:
+  redis_data:
+  prometheus_data:
+  grafana_data:
+
+networks:
+  unidorm-network:
+    driver: bridge
+

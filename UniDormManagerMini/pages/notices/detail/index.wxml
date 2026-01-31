@@ -1,0 +1,52 @@
+<!--pages/notices/detail/index.wxml-->
+<view class="container">
+  <!-- 加载中 -->
+  <view class="loading" wx:if="{{loading}}">
+    <text>加载中...</text>
+  </view>
+
+  <!-- 公告详情 -->
+  <view class="notice-detail" wx:else>
+    <!-- 标题区域 -->
+    <view class="header-section">
+      <view class="category-badge category-{{notice.category}}">
+        {{notice.categoryText || notice.category}}
+      </view>
+      <text class="notice-title">{{notice.title}}</text>
+      <view class="meta-info">
+        <text class="publish-time">{{notice.publishedAt || notice.published_at}}</text>
+        <text class="author" wx:if="{{notice.author}}">发布人: {{notice.author}}</text>
+      </view>
+    </view>
+
+    <!-- 公告内容 -->
+    <view class="content-section">
+      <rich-text class="notice-content" nodes="{{notice.content}}"></rich-text>
+    </view>
+
+    <!-- 附件 -->
+    <view class="attachments-section" wx:if="{{notice.attachments && notice.attachments.length > 0}}">
+      <view class="section-title">相关附件</view>
+      <view class="attachment-list">
+        <view class="attachment-item" wx:for="{{notice.attachments}}" wx:key="id">
+          <text class="attachment-icon">📎</text>
+          <text class="attachment-name">{{item.name}}</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 提示信息 -->
+    <view class="tips-section">
+      <view class="tips-item">• 本公告由宿舍管理系统发布</view>
+      <view class="tips-item">• 如有疑问请联系宿舍管理员</view>
+    </view>
+
+    <!-- 分享按钮 -->
+    <view class="share-section">
+      <button class="share-btn" open-type="share">
+        <text class="share-icon">📤</text>
+        <text>分享给好友</text>
+      </button>
+    </view>
+  </view>
+</view>

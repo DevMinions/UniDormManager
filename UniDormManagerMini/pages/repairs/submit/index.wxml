@@ -1,0 +1,112 @@
+<!--pages/repairs/submit/index.wxml-->
+<view class="container">
+  <view class="form-section">
+    <!-- 标题 -->
+    <view class="form-item">
+      <view class="form-label required">报修标题</view>
+      <input
+        class="form-input"
+        placeholder="请输入报修标题"
+        value="{{title}}"
+        bindinput="onTitleInput"
+        maxlength="50"
+      />
+    </view>
+
+    <!-- 房间号 -->
+    <view class="form-item">
+      <view class="form-label required">房间号</view>
+      <input
+        class="form-input"
+        placeholder="请输入房间号"
+        value="{{roomNumber}}"
+        bindinput="onRoomNumberInput"
+        maxlength="20"
+      />
+    </view>
+
+    <!-- 优先级 -->
+    <view class="form-item">
+      <view class="form-label">优先级</view>
+      <picker
+        mode="selector"
+        range="{{priorityOptions}}"
+        range-key="label"
+        bindchange="onPriorityChange"
+      >
+        <view class="picker">
+          {{priorityOptions[priorityOptions.findIndex(item => item.value === priority)].label}}
+        </view>
+      </picker>
+    </view>
+
+    <!-- 描述 -->
+    <view class="form-item">
+      <view class="form-label required">详细描述</view>
+      <textarea
+        class="form-textarea"
+        placeholder="请详细描述故障情况"
+        value="{{description}}"
+        bindinput="onDescriptionInput"
+        maxlength="500"
+        auto-height
+      />
+      <view class="char-count">{{description.length}}/500</view>
+    </view>
+
+    <!-- 图片上传 -->
+    <view class="form-item">
+      <view class="form-label">相关图片</view>
+      <view class="image-upload">
+        <view class="image-list">
+          <view
+            class="image-item"
+            wx:for="{{images}}"
+            wx:key="*this"
+          >
+            <image
+              class="uploaded-image"
+              src="{{item}}"
+              mode="aspectFill"
+              data-url="{{item}}"
+              bindtap="previewImage"
+            ></image>
+            <view
+              class="delete-btn"
+              data-index="{{index}}"
+              bindtap="deleteImage"
+            >×</view>
+          </view>
+
+          <view
+            class="upload-btn"
+            wx:if="{{images.length < 3}}"
+            bindtap="chooseImage"
+          >
+            <text class="upload-icon">＋</text>
+            <text class="upload-text">添加图片</text>
+          </view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 提交按钮 -->
+  <view class="submit-section">
+    <button
+      class="submit-btn {{submitting ? 'disabled' : ''}}"
+      bindtap="submitRepair"
+      disabled="{{submitting}}"
+    >
+      {{submitting ? '提交中...' : '提交报修'}}
+    </button>
+  </view>
+
+  <!-- 提示信息 -->
+  <view class="tips-section">
+    <view class="tips-title">温馨提示</view>
+    <view class="tips-item">• 请如实填写报修信息，方便维修人员处理</view>
+    <view class="tips-item">• 上传相关图片可以帮助维修人员更好地了解情况</view>
+    <view class="tips-item">• 高优先级报修会优先处理，请合理选择</view>
+  </view>
+</view>

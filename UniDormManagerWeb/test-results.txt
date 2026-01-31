@@ -1,0 +1,124 @@
+
+> unidorm-manager@0.0.0 test:run
+> vitest run
+
+
+[1m[46m RUN [49m[22m [36mv4.0.18 [39m[90m/home/adamyu/CursorPorjects/UniDormManager/UniDormManagerWeb[39m
+
+ [32m✓[39m src/test/utils.test.ts [2m([22m[2m9 tests[22m[2m)[22m[32m 37[2mms[22m[39m
+ [31m❯[39m src/test/api.test.ts [2m([22m[2m17 tests[22m[2m | [22m[31m1 failed[39m[2m)[22m[32m 29[2mms[22m[39m
+[31m       [31m×[31m should login successfully[39m[32m 12[2mms[22m[39m
+       [32m✓[39m should handle login failure[32m 2[2mms[22m[39m
+       [32m✓[39m should logout successfully[32m 1[2mms[22m[39m
+       [32m✓[39m should get current user[32m 1[2mms[22m[39m
+       [32m✓[39m should get students[32m 1[2mms[22m[39m
+       [32m✓[39m should create student[32m 1[2mms[22m[39m
+       [32m✓[39m should update student[32m 0[2mms[22m[39m
+       [32m✓[39m should delete student[32m 2[2mms[22m[39m
+       [32m✓[39m should get rooms[32m 1[2mms[22m[39m
+       [32m✓[39m should create room[32m 1[2mms[22m[39m
+       [32m✓[39m should get repair requests[32m 0[2mms[22m[39m
+       [32m✓[39m should create repair request[32m 1[2mms[22m[39m
+       [32m✓[39m should get dashboard stats[32m 0[2mms[22m[39m
+       [32m✓[39m should get roles[32m 1[2mms[22m[39m
+       [32m✓[39m should handle network errors[32m 1[2mms[22m[39m
+       [32m✓[39m should handle 401 unauthorized[32m 0[2mms[22m[39m
+       [32m✓[39m should handle 500 server error[32m 0[2mms[22m[39m
+[90mstderr[2m | src/test/authContext.test.tsx[2m > [22m[2mAuthContext[2m > [22m[2mAuthentication[2m > [22m[2mshould handle login failure
+[22m[39mFailed to fetch roles for auth context Error: Invalid credentials
+    at request [90m(/home/adamyu/CursorPorjects/UniDormManager/UniDormManagerWeb/[39mservices/api.ts:40:11[90m)[39m
+[90m    at processTicksAndRejections (node:internal/process/task_queues:95:5)[39m
+    at Object.getRoles [90m(/home/adamyu/CursorPorjects/UniDormManager/UniDormManagerWeb/[39mservices/api.ts:156:19[90m)[39m
+    at fetchRoles [90m(/home/adamyu/CursorPorjects/UniDormManager/UniDormManagerWeb/[39mcontexts/AuthContext.tsx:55:23[90m)[39m
+
+[90mstderr[2m | src/test/authContext.test.tsx[2m > [22m[2mAuthContext[2m > [22m[2mAuthentication[2m > [22m[2mshould logout successfully
+[22m[39mFailed to fetch roles for auth context TypeError: roles.map is not a function
+    at Object.getRoles [90m(/home/adamyu/CursorPorjects/UniDormManager/UniDormManagerWeb/[39mservices/api.ts:157:18[90m)[39m
+[90m    at processTicksAndRejections (node:internal/process/task_queues:95:5)[39m
+    at fetchRoles [90m(/home/adamyu/CursorPorjects/UniDormManager/UniDormManagerWeb/[39mcontexts/AuthContext.tsx:55:23[90m)[39m
+
+[90mstderr[2m | src/test/authContext.test.tsx[2m > [22m[2mAuthContext[2m > [22m[2mPermission checking[2m > [22m[2mshould check permissions correctly
+[22m[39mFailed to fetch roles for auth context TypeError: roles.map is not a function
+    at Object.getRoles [90m(/home/adamyu/CursorPorjects/UniDormManager/UniDormManagerWeb/[39mservices/api.ts:157:18[90m)[39m
+[90m    at processTicksAndRejections (node:internal/process/task_queues:95:5)[39m
+    at fetchRoles [90m(/home/adamyu/CursorPorjects/UniDormManager/UniDormManagerWeb/[39mcontexts/AuthContext.tsx:55:23[90m)[39m
+
+[90mstderr[2m | src/test/authContext.test.tsx[2m > [22m[2mAuthContext[2m > [22m[2mPermission checking[2m > [22m[2mshould return false for unauthenticated user
+[22m[39mFailed to fetch roles for auth context TypeError: roles.map is not a function
+    at Object.getRoles [90m(/home/adamyu/CursorPorjects/UniDormManager/UniDormManagerWeb/[39mservices/api.ts:157:18[90m)[39m
+[90m    at processTicksAndRejections (node:internal/process/task_queues:95:5)[39m
+    at fetchRoles [90m(/home/adamyu/CursorPorjects/UniDormManager/UniDormManagerWeb/[39mcontexts/AuthContext.tsx:55:23[90m)[39m
+
+ [31m❯[39m src/test/authContext.test.tsx [2m([22m[2m5 tests[22m[2m | [22m[31m3 failed[39m[2m)[22m[32m 54[2mms[22m[39m
+[31m       [31m×[31m should login successfully[39m[32m 29[2mms[22m[39m
+       [32m✓[39m should handle login failure[32m 10[2mms[22m[39m
+[31m       [31m×[31m should logout successfully[39m[32m 5[2mms[22m[39m
+[31m       [31m×[31m should check permissions correctly[39m[32m 4[2mms[22m[39m
+       [32m✓[39m should return false for unauthenticated user[32m 3[2mms[22m[39m
+
+[31m⎯⎯⎯⎯⎯⎯⎯[39m[1m[41m Failed Tests 4 [49m[22m[31m⎯⎯⎯⎯⎯⎯⎯[39m
+
+[41m[1m FAIL [22m[49m src/test/api.test.ts[2m > [22mAPI Service[2m > [22mAuthentication[2m > [22mshould login successfully
+[31m[1mAssertionError[22m: expected null to be 'mock-jwt-token' // Object.is equality[39m
+
+[32m- Expected:[39m 
+"mock-jwt-token"
+
+[31m+ Received:[39m 
+null
+
+[36m [2m❯[22m src/test/api.test.ts:[2m27:45[22m[39m
+    [90m 25| [39m
+    [90m 26| [39m      [34mexpect[39m(result)[33m.[39m[34mtoEqual[39m(mockAuthResponse)[33m;[39m
+    [90m 27| [39m      [34mexpect[39m(localStorage[33m.[39m[34mgetItem[39m([32m'token'[39m))[33m.[39m[34mtoBe[39m([32m'mock-jwt-token'[39m)[33m;[39m
+    [90m   | [39m                                            [31m^[39m
+    [90m 28| [39m      [34mexpect[39m(mockFetch)[33m.[39m[34mtoHaveBeenCalledWith[39m(
+    [90m 29| [39m        [32m'/api/auth/login'[39m[33m,[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/4]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m src/test/authContext.test.tsx[2m > [22mAuthContext[2m > [22mAuthentication[2m > [22mshould login successfully
+[31m[1mError[22m: Cannot read properties of undefined (reading 'roles')[39m
+[36m [2m❯[22m Object.login contexts/AuthContext.tsx:[2m80:13[22m[39m
+    [90m 78| [39m      [34msetAllRoles[39m(roles)[33m;[39m
+    [90m 79| [39m    } [35mcatch[39m (err[33m:[39m any) {
+    [90m 80| [39m      [35mthrow[39m [35mnew[39m [33mError[39m(err[33m.[39mmessage [33m||[39m [32m'登录失败'[39m)[33m;[39m
+    [90m   | [39m            [31m^[39m
+    [90m 81| [39m    } [35mfinally[39m {
+    [90m 82| [39m      [34msetIsLoading[39m([35mfalse[39m)[33m;[39m
+[90m [2m❯[22m src/test/authContext.test.tsx:[2m63:9[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/4]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m src/test/authContext.test.tsx[2m > [22mAuthContext[2m > [22mAuthentication[2m > [22mshould logout successfully
+[31m[1mError[22m: roles.map is not a function[39m
+[36m [2m❯[22m Object.login contexts/AuthContext.tsx:[2m80:13[22m[39m
+    [90m 78| [39m      [34msetAllRoles[39m(roles)[33m;[39m
+    [90m 79| [39m    } [35mcatch[39m (err[33m:[39m any) {
+    [90m 80| [39m      [35mthrow[39m [35mnew[39m [33mError[39m(err[33m.[39mmessage [33m||[39m [32m'登录失败'[39m)[33m;[39m
+    [90m   | [39m            [31m^[39m
+    [90m 81| [39m    } [35mfinally[39m {
+    [90m 82| [39m      [34msetIsLoading[39m([35mfalse[39m)[33m;[39m
+[90m [2m❯[22m src/test/authContext.test.tsx:[2m100:9[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/4]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m src/test/authContext.test.tsx[2m > [22mAuthContext[2m > [22mPermission checking[2m > [22mshould check permissions correctly
+[31m[1mError[22m: roles.map is not a function[39m
+[36m [2m❯[22m Object.login contexts/AuthContext.tsx:[2m80:13[22m[39m
+    [90m 78| [39m      [34msetAllRoles[39m(roles)[33m;[39m
+    [90m 79| [39m    } [35mcatch[39m (err[33m:[39m any) {
+    [90m 80| [39m      [35mthrow[39m [35mnew[39m [33mError[39m(err[33m.[39mmessage [33m||[39m [32m'登录失败'[39m)[33m;[39m
+    [90m   | [39m            [31m^[39m
+    [90m 81| [39m    } [35mfinally[39m {
+    [90m 82| [39m      [34msetIsLoading[39m([35mfalse[39m)[33m;[39m
+[90m [2m❯[22m src/test/authContext.test.tsx:[2m139:9[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/4]⎯[22m[39m
+
+
+[2m Test Files [22m [1m[31m2 failed[39m[22m[2m | [22m[1m[32m1 passed[39m[22m[90m (3)[39m
+[2m      Tests [22m [1m[31m4 failed[39m[22m[2m | [22m[1m[32m27 passed[39m[22m[90m (31)[39m
+[2m   Start at [22m 13:35:28
+[2m   Duration [22m 1.43s[2m (transform 324ms, setup 674ms, import 377ms, tests 120ms, environment 2.17s)[22m
+
