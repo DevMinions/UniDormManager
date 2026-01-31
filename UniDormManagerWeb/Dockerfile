@@ -7,8 +7,8 @@ WORKDIR /app
 # 复制 package 文件
 COPY package.json package-lock.json* ./
 
-# 安装依赖
-RUN if [ -f package-lock.json ]; then npm ci; else npm install; fi
+# 安装依赖（包含类型定义和缺失的peer依赖）
+RUN npm install --legacy-peer-deps && npm install -D --legacy-peer-deps @types/react @types/react-dom && npm install --legacy-peer-deps react-is
 
 # 复制源代码
 COPY . .
