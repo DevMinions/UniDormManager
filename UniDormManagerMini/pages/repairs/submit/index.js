@@ -8,6 +8,7 @@ Page({
     description: '',
     roomNumber: '',
     priority: 'medium',
+    selectedPriorityLabel: '中', // 添加这个字段
     priorityOptions: [
       { value: 'low', label: '低' },
       { value: 'medium', label: '中' },
