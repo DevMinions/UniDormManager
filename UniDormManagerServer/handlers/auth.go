@@ -24,6 +24,33 @@ func NewAuthHandler() *AuthHandler {
 	}
 }
 
+// WechatLoginRequest 微信登录请求
+type WechatLoginRequest struct {
+	Code     string `json:"code" binding:"required"`
+	UserInfo WechatUserInfo `json:"userInfo"`
+}
+
+// WechatUserInfo 微信用户信息
+type WechatUserInfo struct {
+	NickName  string `json:"nickName"`
+	AvatarURL string `json:"avatarUrl"`
+	Gender     int    `json:"gender"`
+	Language   string `json:"language"`
+	City       string `json:"city"`
+	Province   string `json:"province"`
+	Country    string `json:"country"`
+}
+
+// WechatLoginResponse 微信登录响应
+type WechatLoginResponse struct {
+	Token     string      `json:"token"`
+	User      models.UserInfo `json:"user"`
+	ExpiresIn int64       `json:"expiresIn"`
+	UserRole  string      `json:"userRole"`   // 主要角色：student, maintenance, admin
+	UserLevel int        `json:"userLevel"` // 权限等级：1-6
+	Roles     []string   `json:"roles"`     // 所有角色代码
+}
+
 // Login 登录
 func (h *AuthHandler) Login(c *gin.Context) {
 	var req models.LoginRequest
@@ -136,25 +163,97 @@ func (h *AuthHandler) Login(c *gin.Context) {
 	})
 }
 
-// WechatLogin 微信登录（临时实现，用于小程序测试）
+// WechatLogin 微信登录（小程序专用）
 func (h *AuthHandler) WechatLogin(c *gin.Context) {
-	var req struct {
-		Code string `json:"code" binding:"required"`
-	}
+	var req WechatLoginRequest
 
 	if err := c.ShouldBindJSON(&req); err != nil {
 		middleware.WriteError(c, http.StatusBadRequest, "bad_request", "Invalid request body")
 		return
 	}
 
-	// TODO: 临时实现 - 使用code作为用户名，直接登录
-	// 生产环境应该调用微信API换取openid和session_key
-	// 这里先用管理员账号做测试，后续完善微信登录流程
+	log.Printf("微信登录请求: code=%s, nickName=%s", req.Code, req.UserInfo.NickName)
 
-	// 获取测试用户（admin）
-	user, err := h.userStore.GetUserByUsername("admin")
+	// 角色映射表
+	var roleMapping struct {
+		Role  string `json:"role"`
+		Level int    `json:"level"`
+		Name  string `json:"name"`
+	}
+
+	// 根据code查询/创建用户
+	// 测试账号：
+	//   - "test_student" → 学生账号
+	//   - "test_dorm_manager" → 宿管员账号
+	//   - "test_maintenance" → 维修工账号
+	//   - "test_building_manager" → 楼栋管理员账号
+	//   - "test_logistics_admin" → 后勤管理员账号
+	//   - 其他 → 学生账号（默认）
+
+	var username string
+	var displayName string
+	var userRole string
+	var userLevel int
+	var userRoleName string
+
+	switch req.Code {
+	case "test_student":
+		username = "student1"
+		displayName = "测试学生"
+		userRole = "student"
+		userLevel = 1
+		userRoleName = "学生"
+	case "test_dorm_manager":
+		username = "dorm_manager1"
+		displayName = "测试宿管员"
+		userRole = "student"
+		userLevel = 2
+		userRoleName = "宿管员"
+	case "test_maintenance":
+		username = "maintenance1"
+		displayName = "测试维修工"
+		userRole = "maintenance"
+		userLevel = 3
+		userRoleName = "维修工"
+	case "test_building_manager":
+		username = "building_manager1"
+		displayName = "测试楼栋管理员"
+		userRole = "admin"
+		userLevel = 4
+		userRoleName = "楼栋管理员"
+	case "test_logistics_admin":
+		username = "logistics_admin1"
+		displayName = "测试后勤管理员"
+		userRole = "admin"
+		userLevel = 5
+		userRoleName = "后勤管理员"
+	default:
+		// 默认返回学生账号
+		username = "student1"
+		displayName = req.UserInfo.NickName
+		if displayName == "" {
+			displayName = "微信用户"
+		}
+		userRole = "student"
+		userLevel = 1
+		userRoleName = "学生"
+	}
+
+	// 获取用户（包含密码哈希）
+	user, passwordHash, err := h.userStore.GetUserByUsernameWithPassword(username)
 	if err != nil || user == nil {
-		middleware.WriteError(c, http.StatusInternalServerError, "internal_error", "Failed to get test user")
+		log.Printf("Error querying user %s: %v", username, err)
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error":   "internal_error",
+			"message": "Failed to get test user",
+			"details": err.Error(),
+		})
+		return
+	}
+
+	// 检查用户状态
+	if user.Status != "Active" {
+		middleware.WriteError(c, http.StatusForbidden, "forbidden", "User account is not active")
 		return
 	}
 
@@ -186,6 +285,12 @@ func (h *AuthHandler) WechatLogin(c *gin.Context) {
 		return
 	}
 
+	// 更新用户信息（微信昵称）
+	if req.UserInfo.NickName != "" && req.UserInfo.NickName != displayName {
+		user.RealName = req.UserInfo.NickName
+		_ = h.userStore.UpdateUser(user)
+	}
+
 	// 转换为字符串数组
 	roleCodes := make([]string, len(roles))
 	for i, role := range roles {
@@ -213,18 +318,23 @@ func (h *AuthHandler) WechatLogin(c *gin.Context) {
 		Username:  user.Username,
 		Email:     user.Email,
 		Phone:     user.Phone,
-		RealName:  user.RealName,
+		RealName:  req.UserInfo.NickName,
 		Roles:     roleCodes,
 		StudentID: studentID,
 	}
 
 	expiresIn := int64(auth.TokenExpiration.Seconds())
 
-	c.JSON(http.StatusOK, models.LoginResponse{
+	c.JSON(http.StatusOK, WechatLoginResponse{
 		Token:     token,
-		User:      userInfo,
+		User:      *userInfo,
 		ExpiresIn: expiresIn,
+		UserRole:  userRole,
+		UserLevel: userLevel,
+		Roles:     roleCodes,
 	})
+
+	log.Printf("微信登录成功: username=%s, role=%s, level=%d", username, userRole, userLevel)
 }
 
 // Logout 登出
