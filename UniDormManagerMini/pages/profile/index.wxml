@@ -1,69 +1,128 @@
 <!--pages/profile/index.wxml-->
 <view class="container">
-  <!-- 用户信息卡片 -->
-  <view class="user-card">
-    <view class="user-info" wx:if="{{hasLogin && userInfo}}">
-      <image class="avatar" src="{{userInfo.avatarUrl}}" mode="aspectFill"></image>
-      <view class="user-detail">
-        <text class="nickname">{{userInfo.nickName}}</text>
-        <view class="role-tag">
-          <text class="tag {{isAdmin ? 'admin' : 'student'}}">
-            {{isAdmin ? '管理员' : '学生'}}
-          </text>
+  <!-- 未登录状态 -->
+  <view class="login-prompt" wx:if="{{!hasLogin}}">
+    <text class="prompt-text">请先登录</text>
+    <button class="login-btn" bindtap="goToLogin">
+      去登录
+    </button>
+  </view>
+
+  <!-- 已登录状态 -->
+  <view wx:if="{{hasLogin}}">
+    <!-- 用户信息卡片 -->
+    <view class="user-card">
+      <view class="avatar">
+        <image
+          class="avatar-img"
+          src="/images/default-avatar.png"
+          mode="aspectFill"
+        />
+      </view>
+      <view class="user-info">
+        <view class="user-role-tag {{userRole}}">
+          {{userRoleName}}
         </view>
+        <text class="user-name">{{userInfo.realName || userInfo.username}}</text>
+        <text class="user-email">{{userInfo.email}}</text>
+        <text class="user-id" wx:if="{{userInfo.studentId}}">学号: {{userInfo.studentId}}</text>
       </view>
     </view>
-    <view class="user-info" wx:else>
-      <image class="avatar" src="/images/default-avatar.png" mode="aspectFill"></image>
-      <view class="user-detail">
-        <text class="nickname">未登录</text>
+
+    <!-- 管理员专属功能提示 -->
+    <view class="admin-notice" wx:if="{{canManageStudents || canManageRooms || canManageNotices || canManageRepairs}}">
+      <view class="notice-icon">📋</view>
+      <view class="notice-text">
+        <text>您拥有管理权限</text>
+        <text wx:if="{{canManageStudents}}">• 可管理学生信息</text>
+        <text wx:if="{{canManageRooms}}">• 可管理房间分配</text>
+        <text wx:if="{{canManageNotices}}">• 可发布公告通知</text>
+        <text wx:if="{{canManageRepairs}}">• 可处理报修请求</text>
       </view>
     </view>
-  </view>
 
-  <!-- 功能菜单 -->
-  <view class="menu-section" wx:if="{{hasLogin}}">
-    <view class="menu-title">我的功能</view>
-
-    <view class="menu-list">
-      <view class="menu-item">
-        <text class="menu-icon">📝</text>
-        <text class="menu-text">我的报修</text>
-        <text class="menu-arrow">›</text>
-      </view>
-
-      <view class="menu-item" bindtap="goToRoomManagement" wx:if="{{isAdmin}}">
-        <text class="menu-icon">🏢</text>
-        <text class="menu-text">房间管理</text>
-        <text class="menu-arrow">›</text>
-      </view>
-
-      <view class="menu-item" bindtap="goToNoticeManagement" wx:if="{{isAdmin}}">
-        <text class="menu-icon">📢</text>
-        <text class="menu-text">公告管理</text>
-        <text class="menu-arrow">›</text>
-      </view>
-
-      <view class="menu-item">
-        <text class="menu-icon">⚙️</text>
-        <text class="menu-text">设置</text>
-        <text class="menu-arrow">›</text>
+    <!-- 学生专属功能 -->
+    <view class="student-notice" wx:if="{{userRole === 'student'}}">
+      <view class="notice-icon">👥</view>
+      <view class="notice-text">
+        <text>学生用户</text>
+        <text>• 可以提交报修申请</text>
+        <text>• 可以查看公告通知</text>
+        <text>• 可以查看宿舍分配</text>
       </view>
     </view>
-  </view>
 
-  <!-- 退出登录 -->
-  <view class="logout-section" wx:if="{{hasLogin}}">
-    <button class="logout-btn" bindtap="handleLogout">退出登录</button>
-  </view>
+    <!-- 维修工专属功能 -->
+    <view class="maintenance-notice" wx:if="{{userRole === 'maintenance'}}">
+      <view class="notice-icon">🔧</view>
+      <view class="notice-text">
+        <text>维修工角色</text>
+        <text>• 可以处理报修请求</text>
+        <text>• 可以更新报修状态</text>
+        <text>• 可以添加维修备注</text>
+      </view>
+    </view>
 
-  <!-- 未登录提示 -->
-  <view class="not-login" wx:if="{{!hasLogin}}">
-    <text class="not-login-text">请先登录</text>
-  </view>
+    <!-- 功能菜单 -->
+    <view class="menu-section">
+      <view class="section-title">我的功能</view>
+      
+      <!-- 查看我的报修（所有角色都有） -->
+      <view class="menu-item" bindtap="goToMyRepairs">
+        <view class="menu-icon repair-icon">🔧</view>
+        <view class="menu-content">
+          <text class="menu-title">我的报修</text>
+          <text class="menu-desc">查看我提交的报修记录</text>
+        </view>
+        <view class="menu-arrow">›</view>
+      </view>
 
-  <!-- 版本信息 -->
-  <view class="version-info">
-    <text class="version-text">版本 1.0.0</text>
+      <!-- 学生管理（宿管员及以上） -->
+      <view class="menu-item" bindtap="goToStudentManagement" wx:if="{{canManageStudents}}">
+        <view class="menu-icon student-icon">👥</view>
+        <view class="menu-content">
+          <text class="menu-title">学生管理</text>
+          <text class="menu-desc">查看和管理学生信息</text>
+        </view>
+        <view class="menu-arrow admin-arrow">›</view>
+      </view>
+
+      <!-- 房间管理（楼栋管理员及以上） -->
+      <view class="menu-item" bindtap="goToRoomManagement" wx:if="{{canManageRooms}}">
+        <view class="menu-icon room-icon">🏢</view>
+        <view class="menu-content">
+          <text class="menu-title">房间管理</text>
+          <text class="menu-desc">查看和管理宿舍房间</text>
+        </view>
+        <view class="menu-arrow admin-arrow">›</view>
+      </view>
+
+      <!-- 公告管理（后勤管理员及以上） -->
+      <view class="menu-item" bindtap="goToNoticeManagement" wx:if="{{canManageNotices}}">
+        <view class="menu-icon notice-icon">📢</view>
+        <view class="menu-content">
+          <text class="menu-title">公告管理</text>
+          <text class="menu-desc">发布和管理公告通知</text>
+        </view>
+        <view class="menu-arrow admin-arrow">›</view>
+      </view>
+
+      <!-- 报修管理（维修工及以上） -->
+      <view class="menu-item" bindtap="goToRepairManagement" wx:if="{{canManageRepairs}}">
+        <view class="menu-icon repair-icon">🔧</view>
+        <view class="menu-content">
+          <text class="menu-title">报修管理</text>
+          <text class="menu-desc">查看和处理报修请求</text>
+        </view>
+        <view class="menu-arrow admin-arrow">›</view>
+      </view>
+    </view>
+
+    <!-- 退出登录 -->
+    <view class="logout-section">
+      <button class="logout-btn" bindtap="handleLogout">
+        退出登录
+      </button>
+    </view>
   </view>
 </view>
