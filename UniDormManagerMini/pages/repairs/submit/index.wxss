@@ -1,78 +1,147 @@
 /* pages/repairs/submit/index.wxss */
-
 .container {
-  min-height: 100vh;
+  padding: 20px;
   background-color: #f5f5f5;
-  padding: 20rpx;
+  min-height: 100vh;
 }
 
+/* 页面头部 */
+.page-header {
+  padding: 20px 0;
+  text-align: center;
+}
+
+.page-title {
+  font-size: 36rpx;
+  font-weight: bold;
+  color: #333;
+  display: block;
+  margin-bottom: 10rpx;
+}
+
+.page-subtitle {
+  font-size: 28rpx;
+  color: #999;
+  display: block;
+}
+
+/* 提示卡片 */
+.tip-card {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 16rpx;
+  padding: 24rpx 32rpx;
+  margin: 20px 0 30px;
+  display: flex;
+  align-items: center;
+  box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.1);
+}
+
+.tip-icon {
+  font-size: 48rpx;
+  margin-right: 24rpx;
+}
+
+.tip-content {
+  flex: 1;
+}
+
+.tip-text {
+  display: block;
+  color: #fff;
+  font-size: 28rpx;
+  line-height: 40rpx;
+  margin-bottom: 8rpx;
+}
+
+/* 表单区域 */
 .form-section {
-  background-color: #fff;
-  border-radius: 12rpx;
+  background: #fff;
+  border-radius: 16rpx;
   padding: 30rpx;
-  margin-bottom: 20rpx;
-  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.08);
+  margin: 0 20px;
+  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.05);
 }
 
 .form-item {
   margin-bottom: 30rpx;
 }
 
-.form-item:last-child {
-  margin-bottom: 0;
+.form-item.required .form-label::before {
+  content: '*';
+  color: #ff4d4f;
+  margin-right: 4rpx;
 }
 
 .form-label {
   font-size: 28rpx;
   color: #333;
-  margin-bottom: 15rpx;
   font-weight: 500;
-}
-
-.form-label.required::before {
-  content: '*';
-  color: #ff4d4f;
-  margin-right: 5rpx;
+  margin-bottom: 12rpx;
+  display: flex;
+  align-items: center;
 }
 
 .form-input {
   width: 100%;
   height: 80rpx;
-  background-color: #f5f5f5;
+  border: 2rpx solid #e8e8e8;
   border-radius: 8rpx;
-  padding: 0 25rpx;
+  padding: 0 20rpx;
   font-size: 28rpx;
   color: #333;
+  background: #fafafa;
+  box-sizing: border-box;
+}
+
+.form-input:focus {
+  border-color: #1890ff;
+  background: #fff;
+}
+
+.form-picker {
+  width: 100%;
+  height: 80rpx;
+  border: 2rpx solid #e8e8e8;
+  border-radius: 8rpx;
+  padding: 0 20rpx;
+  background: #fafafa;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-sizing: border-box;
+}
+
+.picker {
+  color: #333;
+  font-size: 28rpx;
 }
 
 .form-textarea {
   width: 100%;
   min-height: 200rpx;
-  background-color: #f5f5f5;
+  border: 2rpx solid #e8e8e8;
   border-radius: 8rpx;
-  padding: 20rpx 25rpx;
+  padding: 20rpx;
   font-size: 28rpx;
   color: #333;
+  background: #fafafa;
+  box-sizing: border-box;
+  line-height: 40rpx;
 }
 
-.picker {
-  width: 100%;
-  height: 80rpx;
-  background-color: #f5f5f5;
-  border-radius: 8rpx;
-  padding: 0 25rpx;
-  font-size: 28rpx;
-  color: #333;
-  line-height: 80rpx;
+.form-textarea:focus {
+  border-color: #1890ff;
+  background: #fff;
 }
 
 .char-count {
   text-align: right;
   font-size: 24rpx;
   color: #999;
-  margin-top: 10rpx;
+  margin-top: 8rpx;
 }
 
+/* 图片上传 */
 .image-upload {
   margin-top: 10rpx;
 }
@@ -80,14 +149,14 @@
 .image-list {
   display: flex;
   flex-wrap: wrap;
+  gap: 16rpx;
+  margin-bottom: 20rpx;
 }
 
 .image-item {
   position: relative;
-  width: 200rpx;
-  height: 200rpx;
-  margin-right: 20rpx;
-  margin-bottom: 20rpx;
+  width: 160rpx;
+  height: 160rpx;
 }
 
 .uploaded-image {
@@ -98,81 +167,74 @@
 
 .delete-btn {
   position: absolute;
-  top: -10rpx;
-  right: -10rpx;
-  width: 40rpx;
-  height: 40rpx;
-  background-color: rgba(0, 0, 0, 0.5);
+  top: -8rpx;
+  right: -8rpx;
+  width: 32rpx;
+  height: 32rpx;
+  background: #ff4d4f;
   color: #fff;
   border-radius: 50%;
   display: flex;
-  justify-content: center;
   align-items: center;
-  font-size: 28rpx;
+  justify-content: center;
+  font-size: 32rpx;
+  font-weight: bold;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.2);
 }
 
 .upload-btn {
-  width: 200rpx;
-  height: 200rpx;
-  border: 2rpx dashed #ddd;
+  width: 160rpx;
+  height: 160rpx;
+  border: 2rpx dashed #d9d9d9;
   border-radius: 8rpx;
   display: flex;
   flex-direction: column;
-  justify-content: center;
   align-items: center;
-  background-color: #f9f9f9;
+  justify-content: center;
+  background: #fafafa;
 }
 
 .upload-icon {
-  font-size: 60rpx;
+  font-size: 64rpx;
   color: #999;
-  margin-bottom: 10rpx;
+  margin-bottom: 8rpx;
 }
 
 .upload-text {
   font-size: 24rpx;
-  color: #999;
+  color: #666;
 }
 
+.upload-hint {
+  font-size: 24rpx;
+  color: #999;
+  margin-top: 12rpx;
+}
+
+/* 提交按钮 */
 .submit-section {
-  margin-bottom: 20rpx;
+  padding: 30rpx 20px;
 }
 
 .submit-btn {
   width: 100%;
-  height: 90rpx;
-  line-height: 90rpx;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  height: 88rpx;
+  background: linear-gradient(135deg, #1890ff 0%, #096dd9 100%);
   color: #fff;
+  border: none;
+  border-radius: 12rpx;
   font-size: 32rpx;
   font-weight: bold;
-  border-radius: 12rpx;
-  border: none;
-  box-shadow: 0 8rpx 24rpx rgba(102, 126, 234, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .submit-btn.disabled {
+  background: #d9d9d9;
   opacity: 0.6;
-  pointer-events: none;
 }
 
-.tips-section {
-  background-color: #fff;
-  border-radius: 12rpx;
-  padding: 25rpx;
-  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.08);
-}
-
-.tips-title {
-  font-size: 28rpx;
-  color: #333;
-  font-weight: bold;
-  margin-bottom: 15rpx;
-}
-
-.tips-item {
-  font-size: 26rpx;
-  color: #666;
-  line-height: 1.8;
-  margin-bottom: 8rpx;
+.submit-btn::after {
+  border: none;
 }

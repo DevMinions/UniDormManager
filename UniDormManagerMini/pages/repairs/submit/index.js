@@ -5,24 +5,43 @@ const { createRepair } = require('../../../api/repairs')
 Page({
   data: {
     title: '',
-    description: '',
     roomNumber: '',
+    repairType: '',
     priority: 'medium',
-    selectedPriorityLabel: '中', // 添加这个字段
+    description: '',
+    selectedTypeLabel: '请选择',
+    selectedPriorityLabel: '中',
+    images: [],
+    submitting: false,
+
+    // 报修类型选项
+    repairTypes: [
+      { value: 'water', label: '水电故障' },
+      { value: 'appliance', label: '家电故障' },
+      { value: 'furniture', label: '家具损坏' },
+      { value: 'network', label: '网络问题' },
+      { value: 'other', label: '其他' }
+    ],
+
+    // 优先级选项
     priorityOptions: [
       { value: 'low', label: '低' },
       { value: 'medium', label: '中' },
       { value: 'high', label: '高' }
-    ],
-    images: [],
-    submitting: false
+    ]
   },
 
   onLoad() {
     // 检查登录状态
     if (!app.globalData.isLoggedIn) {
-      wx.redirectTo({
-        url: '/pages/login/login'
+      wx.showModal({
+        title: '提示',
+        content: '请先登录',
+        success: () => {
+          wx.redirectTo({
+            url: '/pages/login/login'
+          })
+        }
       })
       return
     }
@@ -36,13 +55,6 @@ Page({
   },
 
   /**
-   * 输入描述
-   */
-  onDescriptionInput(e) {
-    this.setData({ description: e.detail.value })
-  },
-
-  /**
    * 输入房间号
    */
   onRoomNumberInput(e) {
@@ -50,16 +62,34 @@ Page({
   },
 
   /**
+   * 选择报修类型
+   */
+  onTypeChange(e) {
+    const index = e.detail.value
+    const type = this.data.repairTypes[index]
+    this.setData({
+      repairType: type.value,
+      selectedTypeLabel: type.label
+    })
+  },
+
+  /**
    * 选择优先级
    */
   onPriorityChange(e) {
     const index = e.detail.value
-    const priority = this.data.priorityOptions[index].value
-    const label = this.data.priorityOptions[index].label
-    this.setData({ 
-      priority: priority,
-      selectedPriorityLabel: label
+    const priority = this.data.priorityOptions[index]
+    this.setData({
+      priority: priority.value,
+      selectedPriorityLabel: priority.label
     })
+  },
+
+  /**
+   * 输入描述
+   */
+  onDescriptionInput(e) {
+    this.setData({ description: e.detail.value })
   },
 
   /**
@@ -133,6 +163,14 @@ Page({
       return false
     }
 
+    if (!this.data.repairType) {
+      wx.showToast({
+        title: '请选择报修类型',
+        icon: 'none'
+      })
+      return false
+    }
+
     return true
   },
 
@@ -150,6 +188,7 @@ Page({
       title: this.data.title,
       description: this.data.description,
       roomNumber: this.data.roomNumber,
+      type: this.data.repairType,
       priority: this.data.priority
     }
 
@@ -157,7 +196,8 @@ Page({
       console.log('报修提交成功:', res)
       wx.showToast({
         title: '报修提交成功',
-        icon: 'success'
+        icon: 'success',
+        duration: 2000
       })
 
       setTimeout(() => {
@@ -167,6 +207,11 @@ Page({
     }).catch(err => {
       console.error('报修提交失败:', err)
       this.setData({ submitting: false })
+      wx.showToast({
+        title: '报修提交失败，请重试',
+        icon: 'none',
+        duration: 2000
+      })
     })
   }
 })
