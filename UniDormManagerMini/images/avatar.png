@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="144" height="144" viewBox="0 0 144 144">
+  <!-- 蓝色背景，圆角 -->
+  <rect width="144" height="144" rx="20" fill="#1890ff"/>
+  
+  <!-- 房子图标 -->
+  <path d="M30 80 L50 60 L72 75 L72 45" stroke="white" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <path d="M72 45 L72 75 L92 60 L114 80" stroke="white" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  
+  <!-- 房子主体 -->
+  <rect x="45" y="80" width="54" height="40" rx="6" fill="white"/>
+  
+  <!-- 窗户 -->
+  <rect x="55" y="90" width="12" height="12" rx="2" fill="#1890ff"/>
+  <rect x="77" y="90" width="12" height="12" rx="2" fill="#1890ff"/>
+  
+  <!-- 门 -->
+  <rect x="60" y="100" width="24" height="20" rx="2" fill="#1890ff"/>
+</svg>
