@@ -25,27 +25,19 @@
     "list": [
       {
         "pagePath": "pages/index/index",
-        "text": "首页",
-        "iconPath": "images/home.png",
-        "selectedIconPath": "images/home-active.png"
+        "text": "首页"
       },
       {
         "pagePath": "pages/rooms/list",
-        "text": "房间",
-        "iconPath": "images/room.png",
-        "selectedIconPath": "images/room-active.png"
+        "text": "房间"
       },
       {
         "pagePath": "pages/repairs/list/index",
-        "text": "报修",
-        "iconPath": "images/repair.png",
-        "selectedIconPath": "images/repair-active.png"
+        "text": "报修"
       },
       {
         "pagePath": "pages/profile/index",
-        "text": "我的",
-        "iconPath": "images/profile.png",
-        "selectedIconPath": "images/profile-active.png"
+        "text": "我的"
       }
     ]
   },
