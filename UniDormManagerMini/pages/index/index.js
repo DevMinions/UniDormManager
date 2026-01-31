@@ -4,6 +4,7 @@ const { getStats } = require('../../api/dashboard')
 
 Page({
   data: {
+    currentDate: '',
     stats: {
       totalRooms: 0,
       occupiedRooms: 0,
@@ -25,6 +26,9 @@ Page({
       return
     }
 
+    // 设置当前日期
+    this.setCurrentDate()
+
     this.setData({
       isAdmin: app.globalData.userRole === 'admin'
     })
@@ -35,8 +39,25 @@ Page({
   onShow() {
     // 每次显示页面时重新加载数据
     if (app.globalData.isLoggedIn) {
+      this.setCurrentDate()
       this.loadStats()
     }
+  },
+
+  /**
+   * 设置当前日期
+   */
+  setCurrentDate() {
+    const date = new Date()
+    const year = date.getFullYear()
+    const month = date.getMonth() + 1
+    const day = date.getDate()
+    const weekDays = ['日', '一', '二', '三', '四', '五', '六']
+    const weekDay = weekDays[date.getDay()]
+    
+    this.setData({
+      currentDate: `${year}年${month}月${day}日 星期${weekDay}`
+    })
   },
 
   /**
@@ -47,8 +68,35 @@ Page({
 
     getStats().then(data => {
       console.log('统计数据:', data)
+      
+      // 转换数据格式，适配小程序WXML模板
+      const transformedStats = {
+        totalRooms: 0,
+        occupiedRooms: 0,
+        freeRooms: 0,
+        pendingRepairs: data.pendingRepairs || 0,
+        completedRepairs: data.completedRepairs || 0,
+        totalStudents: data.totalStudents || 0,
+        totalBuildings: data.occupancyData ? data.occupancyData.length : 0
+      }
+
+      // 计算房间数据
+      if (data.occupancyData && data.occupancyData.length > 0) {
+        let totalCapacity = 0
+        let totalOccupied = 0
+
+        data.occupancyData.forEach(building => {
+          totalCapacity += building.capacity
+          totalOccupied += building.occupied
+        })
+
+        transformedStats.totalRooms = totalCapacity
+        transformedStats.occupiedRooms = totalOccupied
+        transformedStats.freeRooms = totalCapacity - totalOccupied
+      }
+
       this.setData({
-        stats: data,
+        stats: transformedStats,
         loading: false
       })
     }).catch(err => {
