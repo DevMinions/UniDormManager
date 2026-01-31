@@ -21,7 +21,7 @@
     "color": "#999999",
     "selectedColor": "#1890ff",
     "backgroundColor": "#ffffff",
-    "borderStyle": "black",
+    "borderStyle": "white",
     "list": [
       {
         "pagePath": "pages/index/index",
