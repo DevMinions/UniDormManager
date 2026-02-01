@@ -59,16 +59,15 @@ App({
 
     // 楼栋管理员权限（level 4）
     buildingManager: {
-      canViewAllStudents: () => true,
       canViewAllRepairs: () => true,
       canUpdateRepairStatus: () => true,
       canManageRooms: () => true,
       canAssignRepairs: () => true,
+      canDeleteRepairs: () => true,
     },
 
     // 后勤管理员权限（level 5）
     logisticsAdmin: {
-      canViewAllStudents: () => true,
       canViewAllRepairs: () => true,
       canManageNotices: () => true,  // 发布、编辑、删除公告
       canViewNotices: () => true,
@@ -87,21 +86,13 @@ App({
     const token = wx.getStorageSync('token')
     const userInfo = wx.getStorageSync('userInfo')
     const userRole = wx.getStorageSync('userRole')
-    const userLevel = wx.getStorageSync('userLevel')
-    const userRoleName = wx.getStorageSync('userRoleName')
 
     if (token && userInfo) {
       this.globalData.token = token
       this.globalData.userInfo = userInfo
       this.globalData.userRole = userRole
-      this.globalData.userLevel = userLevel || 1
-      this.globalData.userRoleName = userRoleName || '学生'
       this.globalData.isLoggedIn = true
-      console.log('用户已登录:', {
-        role: userRole,
-        level: userLevel,
-        roleName: userRoleName
-      })
+      console.log('用户已登录:', userInfo)
     } else {
       this.globalData.isLoggedIn = false
       console.log('用户未登录')
@@ -117,55 +108,83 @@ App({
   },
 
   /**
-   * 更新登录状态
+   * 更新登录状态（修复后，兼容后端字符串数组格式）
    */
-  updateLoginStatus(token, userInfo, userRole) {
-    // 根据后端角色代码映射到小程序角色和权限等级
-    const roleMapping = this.mapBackendRole(userRole)
-    
-    this.globalData.token = token
-    this.globalData.userInfo = userInfo
-    this.globalData.userRole = roleMapping.role
-    this.globalData.userLevel = roleMapping.level
-    this.globalData.userRoleName = roleMapping.name
-    this.globalData.isLoggedIn = true
-
-    wx.setStorageSync('token', token)
-    wx.setStorageSync('userInfo', userInfo)
-    wx.setStorageSync('userRole', roleMapping.role)
-    wx.setStorageSync('userLevel', roleMapping.level)
-    wx.setStorageSync('userRoleName', roleMapping.name)
-
-    console.log('登录状态已更新:', {
-      backendRole: userRole,
-      miniAppRole: roleMapping.role,
-      level: roleMapping.level,
-      roleName: roleMapping.name
-    })
-  },
-
-  /**
-   * 映射后端角色代码到小程序角色和权限等级
-   */
-  mapBackendRole(backendRoles) {
-    if (!backendRoles || backendRoles.length === 0) {
-      return { role: 'student', level: 1, name: '学生' }
-    }
-
-    // 获取第一个角色（优先级最高）
-    const primaryRole = backendRoles[0].code
-
+  updateLoginStatus(token, userInfo, backendRoles, backendUserRole, backendUserLevel) {
     // 角色映射表
     const roleMap = {
       'student': { role: 'student', level: 1, name: '学生' },
-      'dorm_manager': { role: 'student', level: 2, name: '宿管员' },  // 宿管员对学生可见，但权限更高
+      'dorm_manager': { role: 'student', level: 2, name: '宿管员' },
       'maintenance_staff': { role: 'maintenance', level: 3, name: '维修工' },
       'building_manager': { role: 'admin', level: 4, name: '楼栋管理员' },
       'logistics_admin': { role: 'admin', level: 5, name: '后勤管理员' },
       'system_admin': { role: 'admin', level: 6, name: '系统管理员' },
     }
 
-    return roleMap[primaryRole] || { role: 'student', level: 1, name: '学生' }
+    // 确定主要角色（后端返回的主要角色字符串）
+    let primaryRole = 'student'
+    let primaryLevel = 1
+    let primaryName = '学生'
+
+    if (backendUserRole && roleMap[backendUserRole]) {
+      primaryRole = roleMap[backendUserRole].role
+      primaryLevel = roleMap[backendUserRole].level
+      primaryName = roleMap[backendUserRole].name
+    } else if (backendRoles && backendRoles.length > 0) {
+      // 如果没有userRole，从roles数组中取第一个
+      const firstRole = backendRoles[0]
+      if (roleMap[firstRole]) {
+        primaryRole = roleMap[firstRole].role
+        primaryLevel = roleMap[firstRole].level
+        primaryName = roleMap[firstRole].name
+      }
+    }
+
+    this.globalData.token = token
+    this.globalData.userInfo = userInfo
+    this.globalData.userRole = primaryRole
+    this.globalData.userLevel = primaryLevel
+    this.globalData.userRoleName = primaryName
+    this.globalData.isLoggedIn = true
+
+    wx.setStorageSync('token', token)
+    wx.setStorageSync('userInfo', userInfo)
+    wx.setStorageSync('userRole', primaryRole)
+    wx.setStorageSync('userLevel', primaryLevel)
+    wx.setStorageSync('userRoleName', primaryName)
+
+    console.log('登录状态已更新:', {
+      backendRoles: backendRoles,
+      backendUserRole: backendUserRole,
+      backendUserLevel: backendUserLevel,
+      miniAppRole: primaryRole,
+      miniAppLevel: primaryLevel,
+      miniAppName: primaryName
+    })
+  },
+
+  /**
+   * 映射后端角色代码到小程序角色和权限等级（修复后）
+   */
+  mapBackendRole(backendRoles) {
+    if (!backendRoles || backendRoles.length === 0) {
+      return { role: 'student', level: 1, name: '学生' }
+    }
+
+    // 获取第一个角色代码（主要角色）
+    const primaryRoleCode = backendRoles[0]
+
+    // 角色映射表
+    const roleMap = {
+      'student': { role: 'student', level: 1, name: '学生' },
+      'dorm_manager': { role: 'student', level: 2, name: '宿管员' },
+      'maintenance_staff': { role: 'maintenance', level: 3, name: '维修工' },
+      'building_manager': { role: 'admin', level: 4, name: '楼栋管理员' },
+      'logistics_admin': { role: 'admin', level: 5, name: '后勤管理员' },
+      'system_admin': { role: 'admin', level: 6, name: '系统管理员' },
+    }
+
+    return roleMap[primaryRoleCode] || { role: 'student', level: 1, name: '学生' }
   },
 
   /**
