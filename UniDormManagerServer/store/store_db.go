@@ -1216,6 +1216,101 @@ func (s *DBStore) GetLiveAccessLogs() ([]*models.AccessLog, error) {
 	return logs, nil
 }
 
+// CreateAccessLog 创建门禁记录，并自动检测晚归
+func (s *DBStore) CreateAccessLog(req *models.CreateAccessLogRequest) (*models.AccessLog, error) {
+	ctx := context.Background()
+
+	// 解析时间戳
+	timestamp := time.Now()
+	if req.Timestamp != "" {
+		parsedTime, err := time.Parse(time.RFC3339, req.Timestamp)
+		if err == nil {
+			timestamp = parsedTime
+		}
+	}
+
+	// 判断是否为晚归 (23:00后进入)
+	isLateReturn := false
+	if req.Direction == "In" && timestamp.Hour() >= 23 {
+		isLateReturn = true
+	}
+
+	status := "Normal"
+	if isLateReturn {
+		status = "Late"
+	}
+
+	// 创建门禁记录
+	logID := uuid.New().String()
+	_, err := database.DB.Exec(ctx,
+		"INSERT INTO access_logs (id, student_id, student_name, room_number, direction, gate_name, timestamp, photo_url, status) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)",
+		logID, req.StudentID, req.StudentName, req.RoomNumber, req.Direction, req.GateName, timestamp, req.PhotoURL, status)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create access log: %v", err)
+	}
+
+	accessLog := &models.AccessLog{
+		ID:          logID,
+		StudentID:   req.StudentID,
+		StudentName: req.StudentName,
+		RoomNumber:  req.RoomNumber,
+		Direction:   req.Direction,
+		GateName:    req.GateName,
+		Timestamp:   timestamp.Format(time.RFC3339),
+		PhotoURL:    req.PhotoURL,
+		Status:      status,
+		CreatedAt:   time.Now().Format(time.RFC3339),
+	}
+
+	// 如果是晚归，自动创建晚归告警
+	if isLateReturn {
+		err := s.createLateReturnAlert(ctx, req.StudentID, req.StudentName, req.RoomNumber, timestamp)
+		if err != nil {
+			// 记录错误但不影响门禁记录创建
+			fmt.Printf("Failed to create late return alert: %v\n", err)
+		}
+	}
+
+	return accessLog, nil
+}
+
+// createLateReturnAlert 创建晚归告警
+func (s *DBStore) createLateReturnAlert(ctx context.Context, studentID, studentName, roomNumber string, entryTime time.Time) error {
+	alertID := uuid.New().String()
+	alertDate := entryTime.Format("2006-01-02")
+	now := time.Now()
+
+	// 检查今天是否已存在该学生的晚归告警
+	var existingCount int
+	err := database.DB.QueryRow(ctx,
+		"SELECT COUNT(*) FROM late_return_alerts WHERE student_id = $1 AND alert_date = $2",
+		studentID, alertDate).Scan(&existingCount)
+	if err != nil {
+		return err
+	}
+
+	// 如果已存在，更新最后进入时间
+	if existingCount > 0 {
+		_, err = database.DB.Exec(ctx,
+			"UPDATE late_return_alerts SET last_entry = $1, updated_at = $2 WHERE student_id = $3 AND alert_date = $4",
+			entryTime, now, studentID, alertDate)
+		return err
+	}
+
+	// 创建新的晚归告警
+	_, err = database.DB.Exec(ctx,
+		"INSERT INTO late_return_alerts (id, student_id, student_name, room_number, alert_date, last_entry, status, notify_sent, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)",
+		alertID, studentID, studentName, roomNumber, alertDate, entryTime, "Pending", true, now, now)
+	if err != nil {
+		return err
+	}
+
+	// 发送通知给宿管员 (这里仅记录日志，实际项目中可接入短信/推送服务)
+	fmt.Printf("[晚归预警] 学生: %s, 房间: %s, 进入时间: %s\n", studentName, roomNumber, entryTime.Format("15:04:05"))
+
+	return nil
+}
+
 // GetLateReturnAlertsPaginated 获取晚归告警分页
 func (s *DBStore) GetLateReturnAlertsPaginated(req *models.PaginatedRequest, filter *models.LateReturnFilter) (*models.PaginatedResponse, error) {
 	ctx := context.Background()

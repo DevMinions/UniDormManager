@@ -230,6 +230,7 @@ func main() {
 		{
 			accessLogs.GET("", accessLogHandler.GetAccessLogs)
 			accessLogs.GET("/live", accessLogHandler.GetLiveLogs)
+			accessLogs.POST("", middleware.RequirePermission("access_logs:create"), accessLogHandler.CreateAccessLog)
 		}
 
 		// 晚归告警路由

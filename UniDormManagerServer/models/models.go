@@ -285,6 +285,17 @@ type AccessLogFilter struct {
 	DateTo      string `json:"dateTo"`
 }
 
+// CreateAccessLogRequest 创建门禁记录请求
+type CreateAccessLogRequest struct {
+	StudentID   string `json:"studentId" binding:"required"`
+	StudentName string `json:"studentName" binding:"required"`
+	RoomNumber  string `json:"roomNumber"`
+	Direction   string `json:"direction" binding:"required,oneof=In Out"`
+	GateName    string `json:"gateName" binding:"required"`
+	Timestamp   string `json:"timestamp"`
+	PhotoURL    string `json:"photoUrl,omitempty"`
+}
+
 // LateReturnAlert 晚归告警
 type LateReturnAlert struct {
 	ID          string `json:"id"`

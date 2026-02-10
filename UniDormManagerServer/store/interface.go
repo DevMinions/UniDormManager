@@ -55,6 +55,7 @@ type StoreInterface interface {
 	// Access Log methods
 	GetAccessLogsPaginated(req *models.PaginatedRequest, filter *models.AccessLogFilter) (*models.PaginatedResponse, error)
 	GetLiveAccessLogs() ([]*models.AccessLog, error)
+	CreateAccessLog(req *models.CreateAccessLogRequest) (*models.AccessLog, error)
 
 	// Late Return methods
 	GetLateReturnAlertsPaginated(req *models.PaginatedRequest, filter *models.LateReturnFilter) (*models.PaginatedResponse, error)
