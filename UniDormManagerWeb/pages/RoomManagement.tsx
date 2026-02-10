@@ -199,9 +199,12 @@ const RoomManagement: React.FC = () => {
     roomsActions.setSearch(value);
   };
 
-  // Get available students for a room
+  // Get available students for a room (匹配房间号和楼栋)
   const getAvailableStudentsForRoom = (roomNumber: string, buildingName: string) => {
-    return students.filter(s => s.roomNumber === '-' || s.roomNumber === roomNumber);
+    return students.filter(s => 
+      (s.roomNumber === roomNumber && s.building === buildingName) ||
+      (s.roomNumber === '-' && s.building === buildingName)
+    );
   };
 
   // Get building floors for a specific building

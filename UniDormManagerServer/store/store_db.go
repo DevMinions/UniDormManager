@@ -42,7 +42,7 @@ func (s *DBStore) GetAllStudents() []*models.Student {
 
 	// 从数据库查询
 	rows, err := database.DB.Query(ctx,
-		"SELECT id, name, student_id, major, room_number, status FROM students ORDER BY created_at DESC")
+		"SELECT id, name, student_id, major, room_number, building, status FROM students ORDER BY created_at DESC")
 	if err != nil {
 		return []*models.Student{}
 	}
@@ -52,7 +52,7 @@ func (s *DBStore) GetAllStudents() []*models.Student {
 	for rows.Next() {
 		var student models.Student
 		if err := rows.Scan(&student.ID, &student.Name, &student.StudentID,
-			&student.Major, &student.RoomNumber, &student.Status); err == nil {
+			&student.Major, &student.RoomNumber, &student.Building, &student.Status); err == nil {
 			students = append(students, &student)
 		}
 	}
@@ -99,6 +99,7 @@ func (s *DBStore) GetStudentsPaginated(req *models.PaginatedRequest, filter *mod
 			StudentID    string    `json:"student_id"`
 			Major        string    `json:"major"`
 			RoomNumber   string    `json:"room_number"`
+			Building     string    `json:"building"`
 			Status       string    `json:"status"`
 			CreatedAt    time.Time `json:"created_at"`
 			UpdatedAt    time.Time `json:"updated_at"`
@@ -107,7 +108,7 @@ func (s *DBStore) GetStudentsPaginated(req *models.PaginatedRequest, filter *mod
 
 		if err := rows.Scan(
 			&student.ID, &student.Name, &student.StudentID,
-			&student.Major, &student.RoomNumber, &student.Status,
+			&student.Major, &student.RoomNumber, &student.Building, &student.Status,
 			&student.CreatedAt, &student.UpdatedAt, &student.BuildingName,
 		); err == nil {
 			// 转换为标准格式
@@ -117,11 +118,13 @@ func (s *DBStore) GetStudentsPaginated(req *models.PaginatedRequest, filter *mod
 				StudentID:  student.StudentID,
 				Major:      student.Major,
 				RoomNumber: student.RoomNumber,
+				Building:   student.Building,
 				Status:     student.Status,
 			}
 
 			if student.BuildingName != nil {
-				// 可以添加到额外的字段或metadata中
+				// 如果数据库查询返回了楼栋名称，使用它
+				s.Building = *student.BuildingName
 			}
 
 			students = append(students, s)
@@ -150,10 +153,10 @@ func (s *DBStore) GetStudentByID(id string) (*models.Student, bool) {
 
 	// 从数据库查询
 	var student models.Student
-	err := database.DB.QueryRow(ctx,
-		"SELECT id, name, student_id, major, room_number, status FROM students WHERE id = $1",
+	err := database.DB.QueryRow(ctx, 
+		"SELECT id, name, student_id, major, room_number, building, status FROM students WHERE id = $1",
 		id).Scan(&student.ID, &student.Name, &student.StudentID,
-		&student.Major, &student.RoomNumber, &student.Status)
+		&student.Major, &student.RoomNumber, &student.Building, &student.Status)
 
 	if err == pgx.ErrNoRows {
 		return nil, false
@@ -187,8 +190,8 @@ func (s *DBStore) CreateStudent(req *models.CreateStudentRequest) *models.Studen
 
 	// 插入数据库
 	_, err := database.DB.Exec(ctx,
-		"INSERT INTO students (id, name, student_id, major, room_number, status) VALUES ($1, $2, $3, $4, $5, $6)",
-		student.ID, student.Name, student.StudentID, student.Major, student.RoomNumber, student.Status)
+		"INSERT INTO students (id, name, student_id, major, room_number, building, status) VALUES ($1, $2, $3, $4, $5, $6, $7)",
+		student.ID, student.Name, student.StudentID, student.Major, student.RoomNumber, student.Building, student.Status)
 
 	if err != nil {
 		return nil
@@ -232,8 +235,8 @@ func (s *DBStore) UpdateStudent(id string, req *models.UpdateStudentRequest) (*m
 
 	// 更新数据库
 	_, err := database.DB.Exec(ctx,
-		"UPDATE students SET name = $1, student_id = $2, major = $3, room_number = $4, status = $5, updated_at = $6 WHERE id = $7",
-		student.Name, student.StudentID, student.Major, student.RoomNumber, student.Status, time.Now(), id)
+		"UPDATE students SET name = $1, student_id = $2, major = $3, room_number = $4, building = $5, status = $6, updated_at = $7 WHERE id = $8",
+		student.Name, student.StudentID, student.Major, student.RoomNumber, student.Building, student.Status, time.Now(), id)
 
 	if err != nil {
 		return nil, false
@@ -981,7 +984,7 @@ func (s *DBStore) CreateInspection(req *models.CreateInspectionRequest, inspecto
 		CreatedAt:    now,
 	}
 
-	query := `INSERT INTO inspections (id, room_number, building, inspector, check_date, overall_score, status, comment, created_at) 
+	query := `INSERT INTO inspections (id, room_number, building, inspector, check_date, overall_score, status, comment, created_at)
 			  VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`
 
 	_, err := database.DB.Exec(ctx, query,

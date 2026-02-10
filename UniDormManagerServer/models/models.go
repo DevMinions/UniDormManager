@@ -11,7 +11,8 @@ type Student struct {
 	StudentID  string `json:"studentId"`
 	Major      string `json:"major"`
 	RoomNumber string `json:"roomNumber"`
-	Status     string `json:"status"` // Active, Graduated, On Leave
+	Building   string `json:"building"` // 楼栋，如"A栋"
+	Status     string `json:"status"`   // Active, Graduated, On Leave
 }
 
 // Building 楼栋模型

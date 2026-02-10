@@ -5,6 +5,7 @@ export interface Student {
   studentId: string;
   major: string;
   roomNumber: string;
+  building?: string;  // 楼栋，如"A栋"
   status: 'Active' | 'Graduated' | 'On Leave';
   counselorId?: string;
 }
