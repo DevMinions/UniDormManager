@@ -107,7 +107,7 @@ echo "🔍 步骤5: 楼栋管理业务测试"
 echo "------------------------"
 test_api "GET" "/api/buildings" "200" "" "获取楼栋列表"
 if [ -n "$TOKEN" ]; then
-    test_api "POST" "/api/buildings" "201" '{"name":"测试楼栋","code":"TEST01","floors":6,"roomsPerFloor":20}' "创建楼栋"
+    test_api "POST" "/api/buildings" "201" '{"name":"测试楼栋","type":"male","floors":6,"manager":"测试管理员","description":"测试描述"}' "创建楼栋"
 fi
 echo ""
 
@@ -124,18 +124,18 @@ echo "------------------------"
 test_api "GET" "/api/repairs" "200" "" "获取报修列表"
 test_api "GET" "/api/repairs/all" "200" "" "获取所有报修"
 if [ -n "$TOKEN" ]; then
-    test_api "POST" "/api/repairs" "201" '{"title":"测试报修","description":"测试描述","priority":"normal","roomId":1}' "创建报修"
+    test_api "POST" "/api/repairs" "201" '{"title":"测试报修","description":"测试描述","priority":"normal","roomId":1,"type":"electric"}' "创建报修"
 fi
 echo ""
 
 # 查寝管理测试
 echo "🔍 步骤8: 查寝管理业务测试"
 echo "------------------------"
-test_api "GET" "/api/inspections" "200" "" "获取查寝记录"
+test_api "GET" "/api/inspections?page=1&pageSize=10&status=" "200" "" "获取查寝记录"
 test_api "GET" "/api/inspections/rooms" "200" "" "获取查寝房间列表"
 test_api "GET" "/api/inspections/rankings" "200" "" "获取查寝排名"
 if [ -n "$TOKEN" ]; then
-    test_api "POST" "/api/inspections" "201" '{"roomId":1,"overallScore":95,"status":"excellent","comment":"测试查寝"}' "创建查寝记录"
+    test_api "POST" "/api/inspections" "201" '{"roomId":1,"overallScore":95,"status":"excellent","items":[{"item":" cleanliness","score":95,"comment":"很干净"}]}' "创建查寝记录"
 fi
 echo ""
 
@@ -148,7 +148,7 @@ test_api "GET" "/api/room-swaps/pending" "200" "" "获取待处理申请"
 test_api "GET" "/api/room-swaps/history" "200" "" "获取历史记录"
 test_api "GET" "/api/room-swaps/available" "200" "" "获取可用房间"
 if [ -n "$TOKEN" ]; then
-    test_api "POST" "/api/room-swaps" "201" '{"reason":"测试换寝","targetRoomId":2}' "提交换寝申请"
+    test_api "POST" "/api/room-swaps" "201" '{"targetRoom":"2","reason":"测试换寝","urgencyLevel":"normal"}' "提交换寝申请"
 fi
 echo ""
 
@@ -171,7 +171,7 @@ echo "🔍 步骤12: 公告通知业务测试"
 echo "------------------------"
 test_api "GET" "/api/notices" "200" "" "获取公告列表"
 if [ -n "$TOKEN" ]; then
-    test_api "POST" "/api/notices" "201" '{"title":"测试公告","content":"测试内容","type":"general"}' "创建公告"
+    test_api "POST" "/api/notices" "201" '{"title":"测试公告","content":"测试内容","author":"管理员"}' "创建公告"
 fi
 echo ""
 
