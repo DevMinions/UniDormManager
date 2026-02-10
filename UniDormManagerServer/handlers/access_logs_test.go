@@ -169,14 +169,44 @@ func (m *MockStore) GetInspectionsPaginated(req *models.PaginatedRequest, filter
 	return args.Get(0).(*models.PaginatedResponse), args.Error(1)
 }
 
+func (m *MockStore) GetInspectionByID(id string) (*models.Inspection, bool) {
+	args := m.Called(id)
+	return args.Get(0).(*models.Inspection), args.Bool(1)
+}
+
+func (m *MockStore) UpdateInspection(id string, req *models.CreateInspectionRequest) (*models.Inspection, bool) {
+	args := m.Called(id, req)
+	return args.Get(0).(*models.Inspection), args.Bool(1)
+}
+
+func (m *MockStore) DeleteInspection(id string) bool {
+	args := m.Called(id)
+	return args.Bool(0)
+}
+
 func (m *MockStore) GetRoomSwapApplications(userID string, role string) ([]*models.RoomSwapApplication, error) {
 	args := m.Called(userID, role)
+	return args.Get(0).([]*models.RoomSwapApplication), args.Error(1)
+}
+
+func (m *MockStore) GetRoomSwapApplicationsPaginated(req *models.PaginatedRequest, filter *models.RoomSwapFilter) (*models.PaginatedResponse, error) {
+	args := m.Called(req, filter)
+	return args.Get(0).(*models.PaginatedResponse), args.Error(1)
+}
+
+func (m *MockStore) GetMyRoomSwapApplications(userID string) ([]*models.RoomSwapApplication, error) {
+	args := m.Called(userID)
 	return args.Get(0).([]*models.RoomSwapApplication), args.Error(1)
 }
 
 func (m *MockStore) GetPendingRoomSwapApplications() ([]*models.RoomSwapApplication, error) {
 	args := m.Called()
 	return args.Get(0).([]*models.RoomSwapApplication), args.Error(1)
+}
+
+func (m *MockStore) GetRoomSwapApplicationByID(id string) (*models.RoomSwapApplication, bool) {
+	args := m.Called(id)
+	return args.Get(0).(*models.RoomSwapApplication), args.Bool(1)
 }
 
 func (m *MockStore) CreateRoomSwapApplication(userID string, req *models.CreateRoomSwapRequest) (*models.RoomSwapApplication, error) {
@@ -187,6 +217,42 @@ func (m *MockStore) CreateRoomSwapApplication(userID string, req *models.CreateR
 func (m *MockStore) ApproveRoomSwapApplication(id string, req *models.ApproveRoomSwapRequest) error {
 	args := m.Called(id, req)
 	return args.Error(0)
+}
+
+func (m *MockStore) DeleteRoomSwapApplication(id string) bool {
+	args := m.Called(id)
+	return args.Bool(0)
+}
+
+func (m *MockStore) GetRoomSwapHistory(userID string) ([]*models.RoomSwapHistory, error) {
+	args := m.Called(userID)
+	return args.Get(0).([]*models.RoomSwapHistory), args.Error(1)
+}
+
+func (m *MockStore) GetAvailableRooms() ([]*models.Room, error) {
+	args := m.Called()
+	return args.Get(0).([]*models.Room), args.Error(1)
+}
+}
+
+func (m *MockStore) ApproveRoomSwapApplication(id string, req *models.ApproveRoomSwapRequest) error {
+	args := m.Called(id, req)
+	return args.Error(0)
+}
+
+func (m *MockStore) DeleteRoomSwapApplication(id string) bool {
+	args := m.Called(id)
+	return args.Bool(0)
+}
+
+func (m *MockStore) GetRoomSwapHistory(userID string) ([]*models.RoomSwapHistory, error) {
+	args := m.Called(userID)
+	return args.Get(0).([]*models.RoomSwapHistory), args.Error(1)
+}
+
+func (m *MockStore) GetAvailableRooms() ([]*models.Room, error) {
+	args := m.Called()
+	return args.Get(0).([]*models.Room), args.Error(1)
 }
 
 func (m *MockStore) GetAccessLogsPaginated(req *models.PaginatedRequest, filter *models.AccessLogFilter) (*models.PaginatedResponse, error) {

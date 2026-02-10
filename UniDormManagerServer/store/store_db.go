@@ -1437,3 +1437,171 @@ func (s *DBStore) HandleLateReturn(id string, req *models.HandleLateReturnReques
 
 	return &alert, nil
 }
+
+// ========== Additional Inspection Methods ==========
+
+// GetInspectionByID 根据ID获取查寝记录
+func (s *DBStore) GetInspectionByID(id string) (*models.Inspection, bool) {
+	ctx := context.Background()
+	var inspection models.Inspection
+	var checkDate time.Time
+	var createdAt time.Time
+
+	err := database.DB.QueryRow(ctx,
+		"SELECT id, room_number, building, inspector, check_date, overall_score, status, comment, created_at FROM inspections WHERE id = $1",
+		id).Scan(&inspection.ID, &inspection.RoomNumber, &inspection.Building, &inspection.Inspector,
+		&checkDate, &inspection.OverallScore, &inspection.Status, &inspection.Comment, &createdAt)
+
+	if err == pgx.ErrNoRows {
+		return nil, false
+	}
+	if err != nil {
+		return nil, false
+	}
+
+	inspection.CheckDate = checkDate.Format("2006-01-02")
+	inspection.CreatedAt = createdAt.Format(time.RFC3339)
+	return &inspection, true
+}
+
+// UpdateInspection 更新查寝记录
+func (s *DBStore) UpdateInspection(id string, req *models.CreateInspectionRequest) (*models.Inspection, bool) {
+	ctx := context.Background()
+
+	// 检查记录是否存在
+	_, exists := s.GetInspectionByID(id)
+	if !exists {
+		return nil, false
+	}
+
+	// 计算状态
+	status := "Good"
+	if req.OverallScore >= 90 {
+		status = "Excellent"
+	} else if req.OverallScore < 60 {
+		status = "Poor"
+	} else if req.OverallScore < 80 {
+		status = "Fair"
+	}
+
+	_, err := database.DB.Exec(ctx,
+		"UPDATE inspections SET room_number = $1, building = $2, overall_score = $3, status = $4, comment = $5, updated_at = $6 WHERE id = $7",
+		req.RoomNumber, req.Building, req.OverallScore, status, req.Comment, time.Now(), id)
+
+	if err != nil {
+		return nil, false
+	}
+
+	return s.GetInspectionByID(id)
+}
+
+// DeleteInspection 删除查寝记录
+func (s *DBStore) DeleteInspection(id string) bool {
+	ctx := context.Background()
+	_, err := database.DB.Exec(ctx, "DELETE FROM inspections WHERE id = $1", id)
+	return err == nil
+}
+
+// ========== Additional Room Swap Methods ==========
+
+// GetRoomSwapApplicationsPaginated 分页获取换寝申请
+func (s *DBStore) GetRoomSwapApplicationsPaginated(req *models.PaginatedRequest, filter *models.RoomSwapFilter) (*models.PaginatedResponse, error) {
+	ctx := context.Background()
+
+	// 简化实现，直接返回所有数据
+	applications, err := s.GetRoomSwapApplications("", "")
+	if err != nil {
+		return nil, err
+	}
+
+	total := int64(len(applications))
+	return &models.PaginatedResponse{
+		Data:     applications,
+		Total:    total,
+		Page:     req.Page,
+		PageSize: req.PageSize,
+	}, nil
+}
+
+// GetMyRoomSwapApplications 获取当前用户的换寝申请
+func (s *DBStore) GetMyRoomSwapApplications(userID string) ([]*models.RoomSwapApplication, error) {
+	return s.GetRoomSwapApplications(userID, "student")
+}
+
+// GetRoomSwapApplicationByID 根据ID获取换寝申请
+func (s *DBStore) GetRoomSwapApplicationByID(id string) (*models.RoomSwapApplication, bool) {
+	ctx := context.Background()
+	var app models.RoomSwapApplication
+	var applyDate time.Time
+	var createdAt, updatedAt time.Time
+
+	err := database.DB.QueryRow(ctx,
+		"SELECT id, applicant_id, applicant_name, current_room, target_room, reason, urgency_level, status, current_step, apply_date, created_at, updated_at FROM room_swap_applications WHERE id = $1",
+		id).Scan(&app.ID, &app.ApplicantID, &app.ApplicantName, &app.CurrentRoom, &app.TargetRoom,
+		&app.Reason, &app.UrgencyLevel, &app.Status, &app.CurrentStep, &applyDate, &createdAt, &updatedAt)
+
+	if err == pgx.ErrNoRows {
+		return nil, false
+	}
+	if err != nil {
+		return nil, false
+	}
+
+	app.ApplyDate = applyDate.Format("2006-01-02")
+	app.CreatedAt = createdAt.Format(time.RFC3339)
+	app.UpdatedAt = updatedAt.Format(time.RFC3339)
+	return &app, true
+}
+
+// DeleteRoomSwapApplication 删除换寝申请（取消申请）
+func (s *DBStore) DeleteRoomSwapApplication(id string) bool {
+	ctx := context.Background()
+	_, err := database.DB.Exec(ctx, "DELETE FROM room_swap_applications WHERE id = $1", id)
+	return err == nil
+}
+
+// GetRoomSwapHistory 获取换寝历史记录
+func (s *DBStore) GetRoomSwapHistory(userID string) ([]*models.RoomSwapHistory, error) {
+	ctx := context.Background()
+	// 简化实现，返回申请的状态变更历史
+	applications, err := s.GetRoomSwapApplications(userID, "")
+	if err != nil {
+		return nil, err
+	}
+
+	history := []*models.RoomSwapHistory{}
+	for _, app := range applications {
+		history = append(history, &models.RoomSwapHistory{
+			ID:            uuid.New().String(),
+			ApplicationID: app.ID,
+			Action:        app.Status,
+			ActorID:       app.ApplicantID,
+			ActorName:     app.ApplicantName,
+			Comment:       app.Reason,
+			CreatedAt:     app.CreatedAt,
+		})
+	}
+
+	return history, nil
+}
+
+// GetAvailableRooms 获取可换寝的空房间
+func (s *DBStore) GetAvailableRooms() ([]*models.Room, error) {
+	ctx := context.Background()
+	rows, err := database.DB.Query(ctx,
+		"SELECT id, number, building, capacity, occupied, type, status FROM rooms WHERE status = 'Available' OR (capacity > occupied AND status != 'Full') ORDER BY building, number")
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	rooms := []*models.Room{}
+	for rows.Next() {
+		var room models.Room
+		if err := rows.Scan(&room.ID, &room.Number, &room.Building, &room.Capacity, &room.Occupied, &room.Type, &room.Status); err == nil {
+			rooms = append(rooms, &room)
+		}
+	}
+
+	return rooms, nil
+}

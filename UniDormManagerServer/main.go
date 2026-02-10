@@ -214,15 +214,22 @@ func main() {
 			inspections.POST("", middleware.RequirePermission("inspections:create"), inspectionHandler.CreateInspection)
 			inspections.GET("/rooms", middleware.RequirePermission("inspections:read"), inspectionHandler.GetInspectionRooms)
 			inspections.GET("/rankings", middleware.RequirePermission("inspections:read"), inspectionHandler.GetInspectionRankings)
+			inspections.GET("/:id", middleware.RequirePermission("inspections:read"), inspectionHandler.GetInspectionByID)
+			inspections.PUT("/:id", middleware.RequirePermission("inspections:update"), inspectionHandler.UpdateInspection)
+			inspections.DELETE("/:id", middleware.RequirePermission("inspections:delete"), inspectionHandler.DeleteInspection)
 		}
 
 		// 换寝申请路由
 		roomSwaps := api.Group("/room-swaps")
 		{
 			roomSwaps.GET("", roomSwapHandler.GetApplications)
+			roomSwaps.GET("/my-applications", roomSwapHandler.GetMyApplications)
 			roomSwaps.GET("/pending", roomSwapHandler.GetPendingApplications)
+			roomSwaps.GET("/history", roomSwapHandler.GetSwapHistory)
+			roomSwaps.GET("/available", roomSwapHandler.GetAvailableRooms)
 			roomSwaps.POST("", roomSwapHandler.ApplyRoomSwap)
 			roomSwaps.POST("/:id/approve", roomSwapHandler.ApproveRoomSwap)
+			roomSwaps.DELETE("/:id", roomSwapHandler.CancelApplication)
 		}
 
 		// 门禁记录路由

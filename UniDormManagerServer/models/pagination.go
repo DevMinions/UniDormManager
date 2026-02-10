@@ -50,8 +50,15 @@ type RepairFilter struct {
 	DateTo    time.Time `json:"dateTo" form:"dateTo"`
 }
 
-// InspectionFilter 查寝筛选参数
-type InspectionFilter struct {
+// RoomSwapFilter 换寝申请筛选参数
+type RoomSwapFilter struct {
+	Status        string `json:"status" form:"status"`
+	CurrentStep   string `json:"currentStep" form:"currentStep"`
+	ApplicantName string `json:"applicantName" form:"applicantName"`
+	UrgencyLevel  string `json:"urgencyLevel" form:"urgencyLevel"`
+	DateFrom      string `json:"dateFrom" form:"dateFrom"`
+	DateTo        string `json:"dateTo" form:"dateTo"`
+}
 	Status    string    `json:"status" form:"status"`
 	Building  string    `json:"building" form:"building"`
 	Inspector string    `json:"inspector" form:"inspector"`

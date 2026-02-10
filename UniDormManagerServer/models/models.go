@@ -252,6 +252,17 @@ type CreateRoomSwapRequest struct {
 	UrgencyLevel string `json:"urgencyLevel" binding:"required"`
 }
 
+// RoomSwapHistory 换寝申请历史记录
+type RoomSwapHistory struct {
+	ID            string `json:"id"`
+	ApplicationID string `json:"applicationId"`
+	Action        string `json:"action"`
+	ActorID       string `json:"actorId"`
+	ActorName     string `json:"actorName"`
+	Comment       string `json:"comment"`
+	CreatedAt     string `json:"createdAt"`
+}
+
 // ApproveRoomSwapRequest 换寝审批请求
 type ApproveRoomSwapRequest struct {
 	ApproverID   string `json:"approverId"`
