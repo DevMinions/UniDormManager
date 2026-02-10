@@ -1506,8 +1506,6 @@ func (s *DBStore) DeleteInspection(id string) bool {
 
 // GetRoomSwapApplicationsPaginated 分页获取换寝申请
 func (s *DBStore) GetRoomSwapApplicationsPaginated(req *models.PaginatedRequest, filter *models.RoomSwapFilter) (*models.PaginatedResponse, error) {
-	ctx := context.Background()
-
 	// 简化实现，直接返回所有数据
 	applications, err := s.GetRoomSwapApplications("", "")
 	if err != nil {
@@ -1562,7 +1560,6 @@ func (s *DBStore) DeleteRoomSwapApplication(id string) bool {
 
 // GetRoomSwapHistory 获取换寝历史记录
 func (s *DBStore) GetRoomSwapHistory(userID string) ([]*models.RoomSwapHistory, error) {
-	ctx := context.Background()
 	// 简化实现，返回申请的状态变更历史
 	applications, err := s.GetRoomSwapApplications(userID, "")
 	if err != nil {
