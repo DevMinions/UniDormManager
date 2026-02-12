@@ -2,6 +2,7 @@ package store
 
 import (
 	"context"
+	"log"
 	"fmt"
 	"time"
 
@@ -42,7 +43,7 @@ func (s *DBStore) GetAllStudents() []*models.Student {
 
 	// 从数据库查询
 	rows, err := database.DB.Query(ctx,
-		"SELECT id, name, student_id, major, room_number, status FROM students ORDER BY created_at DESC")
+		"SELECT id, name, student_id, major, room_number, building, status FROM students ORDER BY created_at DESC")
 	if err != nil {
 		return []*models.Student{}
 	}
@@ -52,7 +53,7 @@ func (s *DBStore) GetAllStudents() []*models.Student {
 	for rows.Next() {
 		var student models.Student
 		if err := rows.Scan(&student.ID, &student.Name, &student.StudentID,
-			&student.Major, &student.RoomNumber, &student.Status); err == nil {
+			&student.Major, &student.RoomNumber, &student.Building, &student.Status); err == nil {
 			students = append(students, &student)
 		}
 	}
@@ -99,6 +100,7 @@ func (s *DBStore) GetStudentsPaginated(req *models.PaginatedRequest, filter *mod
 			StudentID    string    `json:"student_id"`
 			Major        string    `json:"major"`
 			RoomNumber   string    `json:"room_number"`
+			Building     string    `json:"building"`
 			Status       string    `json:"status"`
 			CreatedAt    time.Time `json:"created_at"`
 			UpdatedAt    time.Time `json:"updated_at"`
@@ -107,7 +109,7 @@ func (s *DBStore) GetStudentsPaginated(req *models.PaginatedRequest, filter *mod
 
 		if err := rows.Scan(
 			&student.ID, &student.Name, &student.StudentID,
-			&student.Major, &student.RoomNumber, &student.Status,
+			&student.Major, &student.RoomNumber, &student.Building, &student.Status,
 			&student.CreatedAt, &student.UpdatedAt, &student.BuildingName,
 		); err == nil {
 			// 转换为标准格式
@@ -117,11 +119,13 @@ func (s *DBStore) GetStudentsPaginated(req *models.PaginatedRequest, filter *mod
 				StudentID:  student.StudentID,
 				Major:      student.Major,
 				RoomNumber: student.RoomNumber,
+				Building:   student.Building,
 				Status:     student.Status,
 			}
 
 			if student.BuildingName != nil {
-				// 可以添加到额外的字段或metadata中
+				// 如果数据库查询返回了楼栋名称，使用它
+				s.Building = *student.BuildingName
 			}
 
 			students = append(students, s)
@@ -150,10 +154,10 @@ func (s *DBStore) GetStudentByID(id string) (*models.Student, bool) {
 
 	// 从数据库查询
 	var student models.Student
-	err := database.DB.QueryRow(ctx,
-		"SELECT id, name, student_id, major, room_number, status FROM students WHERE id = $1",
+	err := database.DB.QueryRow(ctx, 
+		"SELECT id, name, student_id, major, room_number, building, status FROM students WHERE id = $1",
 		id).Scan(&student.ID, &student.Name, &student.StudentID,
-		&student.Major, &student.RoomNumber, &student.Status)
+		&student.Major, &student.RoomNumber, &student.Building, &student.Status)
 
 	if err == pgx.ErrNoRows {
 		return nil, false
@@ -187,8 +191,8 @@ func (s *DBStore) CreateStudent(req *models.CreateStudentRequest) *models.Studen
 
 	// 插入数据库
 	_, err := database.DB.Exec(ctx,
-		"INSERT INTO students (id, name, student_id, major, room_number, status) VALUES ($1, $2, $3, $4, $5, $6)",
-		student.ID, student.Name, student.StudentID, student.Major, student.RoomNumber, student.Status)
+		"INSERT INTO students (id, name, student_id, major, room_number, building, status) VALUES ($1, $2, $3, $4, $5, $6, $7)",
+		student.ID, student.Name, student.StudentID, student.Major, student.RoomNumber, student.Building, student.Status)
 
 	if err != nil {
 		return nil
@@ -203,7 +207,7 @@ func (s *DBStore) CreateStudent(req *models.CreateStudentRequest) *models.Studen
 	return student
 }
 
-// UpdateStudent 更新学生
+// UpdateStudent 更新学生（修复版 - 添加房间容量验证）
 func (s *DBStore) UpdateStudent(id string, req *models.UpdateStudentRequest) (*models.Student, bool) {
 	ctx := context.Background()
 
@@ -213,7 +217,33 @@ func (s *DBStore) UpdateStudent(id string, req *models.UpdateStudentRequest) (*m
 		return nil, false
 	}
 
-	// 更新字段
+	// 如果涉及房间变更，需要验证
+	if req.RoomNumber != "" && req.RoomNumber != student.RoomNumber {
+		// 1. 检查目标房间是否存在
+		targetRoom, roomExists := s.GetRoomByNumber(req.Building, req.RoomNumber)
+		if !roomExists {
+			return nil, false // 房间不存在
+		}
+
+		// 2. 检查目标房间是否已满
+		if targetRoom.Occupied >= targetRoom.Capacity {
+			return nil, false // 房间已满
+		}
+
+		// 3. 更新原房间的人数（如果原来有房间且不是"-"）
+		if student.RoomNumber != "-" && student.RoomNumber != "" {
+			s.updateRoomOccupied(student.Building, student.RoomNumber, -1)
+		}
+
+		// 4. 更新目标房间的人数
+		s.updateRoomOccupied(targetRoom.Building, req.RoomNumber, 1)
+
+		// 5. 更新学生的房间信息
+		student.RoomNumber = req.RoomNumber
+		student.Building = targetRoom.Building
+	}
+
+	// 更新其他字段
 	if req.Name != "" {
 		student.Name = req.Name
 	}
@@ -223,17 +253,14 @@ func (s *DBStore) UpdateStudent(id string, req *models.UpdateStudentRequest) (*m
 	if req.Major != "" {
 		student.Major = req.Major
 	}
-	if req.RoomNumber != "" {
-		student.RoomNumber = req.RoomNumber
-	}
 	if req.Status != "" {
 		student.Status = req.Status
 	}
 
 	// 更新数据库
 	_, err := database.DB.Exec(ctx,
-		"UPDATE students SET name = $1, student_id = $2, major = $3, room_number = $4, status = $5, updated_at = $6 WHERE id = $7",
-		student.Name, student.StudentID, student.Major, student.RoomNumber, student.Status, time.Now(), id)
+		"UPDATE students SET name = $1, student_id = $2, major = $3, room_number = $4, building = $5, status = $6, updated_at = $7 WHERE id = $8",
+		student.Name, student.StudentID, student.Major, student.RoomNumber, student.Building, student.Status, time.Now(), id)
 
 	if err != nil {
 		return nil, false
@@ -246,6 +273,17 @@ func (s *DBStore) UpdateStudent(id string, req *models.UpdateStudentRequest) (*m
 	}
 
 	return student, true
+}
+
+// updateRoomOccupied 更新房间入住人数（辅助函数）
+func (s *DBStore) updateRoomOccupied(building string, roomNumber string, delta int) {
+	ctx := context.Background()
+	_, err := database.DB.Exec(ctx,
+		"UPDATE rooms SET occupied = occupied + $1 WHERE building = $2 AND number = $3",
+		delta, building, roomNumber)
+	if err != nil {
+		log.Printf("更新房间人数失败: %v", err)
+	}
 }
 
 // DeleteStudent 删除学生
@@ -981,7 +1019,7 @@ func (s *DBStore) CreateInspection(req *models.CreateInspectionRequest, inspecto
 		CreatedAt:    now,
 	}
 
-	query := `INSERT INTO inspections (id, room_number, building, inspector, check_date, overall_score, status, comment, created_at) 
+	query := `INSERT INTO inspections (id, room_number, building, inspector, check_date, overall_score, status, comment, created_at)
 			  VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`
 
 	_, err := database.DB.Exec(ctx, query,
@@ -1089,7 +1127,7 @@ func (s *DBStore) CreateRoomSwapApplication(userID string, req *models.CreateRoo
 		TargetRoom:    req.TargetRoom,
 		Reason:        req.Reason,
 		UrgencyLevel:  req.UrgencyLevel,
-		Status:        "Pending",
+		Status:        "Approving",
 		CurrentStep:   "Counselor",
 		ApplyDate:     time.Now().Format("2006-01-02"),
 		CreatedAt:     time.Now().Format(time.RFC3339),
@@ -1214,6 +1252,101 @@ func (s *DBStore) GetLiveAccessLogs() ([]*models.AccessLog, error) {
 	}
 
 	return logs, nil
+}
+
+// CreateAccessLog 创建门禁记录，并自动检测晚归
+func (s *DBStore) CreateAccessLog(req *models.CreateAccessLogRequest) (*models.AccessLog, error) {
+	ctx := context.Background()
+
+	// 解析时间戳
+	timestamp := time.Now()
+	if req.Timestamp != "" {
+		parsedTime, err := time.Parse(time.RFC3339, req.Timestamp)
+		if err == nil {
+			timestamp = parsedTime
+		}
+	}
+
+	// 判断是否为晚归 (23:00后进入)
+	isLateReturn := false
+	if req.Direction == "In" && timestamp.Hour() >= 23 {
+		isLateReturn = true
+	}
+
+	status := "Normal"
+	if isLateReturn {
+		status = "Late"
+	}
+
+	// 创建门禁记录
+	logID := uuid.New().String()
+	_, err := database.DB.Exec(ctx,
+		"INSERT INTO access_logs (id, student_id, student_name, room_number, direction, gate_name, timestamp, photo_url, status) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)",
+		logID, req.StudentID, req.StudentName, req.RoomNumber, req.Direction, req.GateName, timestamp, req.PhotoURL, status)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create access log: %v", err)
+	}
+
+	accessLog := &models.AccessLog{
+		ID:          logID,
+		StudentID:   req.StudentID,
+		StudentName: req.StudentName,
+		RoomNumber:  req.RoomNumber,
+		Direction:   req.Direction,
+		GateName:    req.GateName,
+		Timestamp:   timestamp.Format(time.RFC3339),
+		PhotoURL:    req.PhotoURL,
+		Status:      status,
+		CreatedAt:   time.Now().Format(time.RFC3339),
+	}
+
+	// 如果是晚归，自动创建晚归告警
+	if isLateReturn {
+		err := s.createLateReturnAlert(ctx, req.StudentID, req.StudentName, req.RoomNumber, timestamp)
+		if err != nil {
+			// 记录错误但不影响门禁记录创建
+			fmt.Printf("Failed to create late return alert: %v\n", err)
+		}
+	}
+
+	return accessLog, nil
+}
+
+// createLateReturnAlert 创建晚归告警
+func (s *DBStore) createLateReturnAlert(ctx context.Context, studentID, studentName, roomNumber string, entryTime time.Time) error {
+	alertID := uuid.New().String()
+	alertDate := entryTime.Format("2006-01-02")
+	now := time.Now()
+
+	// 检查今天是否已存在该学生的晚归告警
+	var existingCount int
+	err := database.DB.QueryRow(ctx,
+		"SELECT COUNT(*) FROM late_return_alerts WHERE student_id = $1 AND alert_date = $2",
+		studentID, alertDate).Scan(&existingCount)
+	if err != nil {
+		return err
+	}
+
+	// 如果已存在，更新最后进入时间
+	if existingCount > 0 {
+		_, err = database.DB.Exec(ctx,
+			"UPDATE late_return_alerts SET last_entry = $1, updated_at = $2 WHERE student_id = $3 AND alert_date = $4",
+			entryTime, now, studentID, alertDate)
+		return err
+	}
+
+	// 创建新的晚归告警
+	_, err = database.DB.Exec(ctx,
+		"INSERT INTO late_return_alerts (id, student_id, student_name, room_number, alert_date, last_entry, status, notify_sent, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)",
+		alertID, studentID, studentName, roomNumber, alertDate, entryTime, "Pending", true, now, now)
+	if err != nil {
+		return err
+	}
+
+	// 发送通知给宿管员 (这里仅记录日志，实际项目中可接入短信/推送服务)
+	fmt.Printf("[晚归预警] 学生: %s, 房间: %s, 进入时间: %s\n", studentName, roomNumber, entryTime.Format("15:04:05"))
+
+	return nil
 }
 
 // GetLateReturnAlertsPaginated 获取晚归告警分页
@@ -1341,4 +1474,186 @@ func (s *DBStore) HandleLateReturn(id string, req *models.HandleLateReturnReques
 	}
 
 	return &alert, nil
+}
+
+// ========== Additional Inspection Methods ==========
+
+// GetInspectionByID 根据ID获取查寝记录
+func (s *DBStore) GetInspectionByID(id string) (*models.Inspection, bool) {
+	ctx := context.Background()
+	var inspection models.Inspection
+	var checkDate time.Time
+	var createdAt time.Time
+
+	err := database.DB.QueryRow(ctx,
+		"SELECT id, room_number, building, inspector, check_date, overall_score, status, comment, created_at FROM inspections WHERE id = $1",
+		id).Scan(&inspection.ID, &inspection.RoomNumber, &inspection.Building, &inspection.Inspector,
+		&checkDate, &inspection.OverallScore, &inspection.Status, &inspection.Comment, &createdAt)
+
+	if err == pgx.ErrNoRows {
+		return nil, false
+	}
+	if err != nil {
+		return nil, false
+	}
+
+	inspection.CheckDate = checkDate.Format("2006-01-02")
+	inspection.CreatedAt = createdAt.Format(time.RFC3339)
+	return &inspection, true
+}
+
+// UpdateInspection 更新查寝记录
+func (s *DBStore) UpdateInspection(id string, req *models.CreateInspectionRequest) (*models.Inspection, bool) {
+	ctx := context.Background()
+
+	// 检查记录是否存在
+	_, exists := s.GetInspectionByID(id)
+	if !exists {
+		return nil, false
+	}
+
+	// 计算状态
+	status := "Good"
+	if req.OverallScore >= 90 {
+		status = "Excellent"
+	} else if req.OverallScore < 60 {
+		status = "Poor"
+	} else if req.OverallScore < 80 {
+		status = "Fair"
+	}
+
+	_, err := database.DB.Exec(ctx,
+		"UPDATE inspections SET room_number = $1, building = $2, overall_score = $3, status = $4, comment = $5, updated_at = $6 WHERE id = $7",
+		req.RoomNumber, req.Building, req.OverallScore, status, req.Comment, time.Now(), id)
+
+	if err != nil {
+		return nil, false
+	}
+
+	return s.GetInspectionByID(id)
+}
+
+// DeleteInspection 删除查寝记录
+func (s *DBStore) DeleteInspection(id string) bool {
+	ctx := context.Background()
+	_, err := database.DB.Exec(ctx, "DELETE FROM inspections WHERE id = $1", id)
+	return err == nil
+}
+
+// ========== Additional Room Swap Methods ==========
+
+// GetRoomSwapApplicationsPaginated 分页获取换寝申请
+func (s *DBStore) GetRoomSwapApplicationsPaginated(req *models.PaginatedRequest, filter *models.RoomSwapFilter) (*models.PaginatedResponse, error) {
+	// 简化实现，直接返回所有数据
+	applications, err := s.GetRoomSwapApplications("", "")
+	if err != nil {
+		return nil, err
+	}
+
+	total := int64(len(applications))
+	return &models.PaginatedResponse{
+		Data:     applications,
+		Total:    total,
+		Page:     req.Page,
+		PageSize: req.PageSize,
+	}, nil
+}
+
+// GetMyRoomSwapApplications 获取当前用户的换寝申请
+func (s *DBStore) GetMyRoomSwapApplications(userID string) ([]*models.RoomSwapApplication, error) {
+	return s.GetRoomSwapApplications(userID, "student")
+}
+
+// GetRoomSwapApplicationByID 根据ID获取换寝申请
+func (s *DBStore) GetRoomSwapApplicationByID(id string) (*models.RoomSwapApplication, bool) {
+	ctx := context.Background()
+	var app models.RoomSwapApplication
+	var applyDate time.Time
+	var createdAt, updatedAt time.Time
+
+	err := database.DB.QueryRow(ctx,
+		"SELECT id, applicant_id, applicant_name, current_room, target_room, reason, urgency_level, status, current_step, apply_date, created_at, updated_at FROM room_swap_applications WHERE id = $1",
+		id).Scan(&app.ID, &app.ApplicantID, &app.ApplicantName, &app.CurrentRoom, &app.TargetRoom,
+		&app.Reason, &app.UrgencyLevel, &app.Status, &app.CurrentStep, &applyDate, &createdAt, &updatedAt)
+
+	if err == pgx.ErrNoRows {
+		return nil, false
+	}
+	if err != nil {
+		return nil, false
+	}
+
+	app.ApplyDate = applyDate.Format("2006-01-02")
+	app.CreatedAt = createdAt.Format(time.RFC3339)
+	app.UpdatedAt = updatedAt.Format(time.RFC3339)
+	return &app, true
+}
+
+// DeleteRoomSwapApplication 删除换寝申请（取消申请）
+func (s *DBStore) DeleteRoomSwapApplication(id string) bool {
+	ctx := context.Background()
+	_, err := database.DB.Exec(ctx, "DELETE FROM room_swap_applications WHERE id = $1", id)
+	return err == nil
+}
+
+// GetRoomSwapHistory 获取换寝历史记录
+func (s *DBStore) GetRoomSwapHistory(userID string) ([]*models.RoomSwapHistory, error) {
+	// 简化实现，返回申请的状态变更历史
+	applications, err := s.GetRoomSwapApplications(userID, "")
+	if err != nil {
+		return nil, err
+	}
+
+	history := []*models.RoomSwapHistory{}
+	for _, app := range applications {
+		history = append(history, &models.RoomSwapHistory{
+			ID:            uuid.New().String(),
+			ApplicationID: app.ID,
+			Action:        app.Status,
+			ActorID:       app.ApplicantID,
+			ActorName:     app.ApplicantName,
+			Comment:       app.Reason,
+			CreatedAt:     app.CreatedAt,
+		})
+	}
+
+	return history, nil
+}
+
+// GetAvailableRooms 获取可换寝的空房间
+func (s *DBStore) GetAvailableRooms() ([]*models.Room, error) {
+	ctx := context.Background()
+	rows, err := database.DB.Query(ctx,
+		"SELECT id, number, building, capacity, occupied, type, status FROM rooms WHERE status = 'Available' OR (capacity > occupied AND status != 'Full') ORDER BY building, number")
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	rooms := []*models.Room{}
+	for rows.Next() {
+		var room models.Room
+		if err := rows.Scan(&room.ID, &room.Number, &room.Building, &room.Capacity, &room.Occupied, &room.Type, &room.Status); err == nil {
+			rooms = append(rooms, &room)
+		}
+	}
+
+	return rooms, nil
+}
+
+
+// GetRoomByNumber 根据楼栋和房间号获取房间
+func (s *DBStore) GetRoomByNumber(building string, number string) (*models.Room, bool) {
+	ctx := context.Background()
+	
+	var room models.Room
+	err := database.DB.QueryRow(ctx,
+		"SELECT id, number, building, capacity, occupied, type, status FROM rooms WHERE building = $1 AND number = $2",
+		building, number).Scan(&room.ID, &room.Number, &room.Building, &room.Capacity, &room.Occupied, &room.Type, &room.Status)
+	
+	if err != nil {
+		return nil, false
+	}
+	
+	return &room, true
 }

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Search, User, GraduationCap, School, Plus, X, Edit, Trash2, LogIn, LogOut, ArrowRightLeft, CheckCircle, Loader2, AlertCircle } from 'lucide-react';
 import { Student, Room } from '../types';
 import { api } from '../services/api';
@@ -15,6 +15,14 @@ const Students: React.FC = () => {
   const [roomsLoading, setRoomsLoading] = useState(false);
   const [roomsError, setRoomsError] = useState<string | null>(null);
   const [filter, setFilter] = useState('All');
+
+  // 根据筛选条件过滤学生数据
+  const displayStudents = useMemo(() => {
+    if (filter === 'NoRoom') {
+      return studentsState.data.filter(s => s.roomNumber === '-' || !s.roomNumber);
+    }
+    return studentsState.data;
+  }, [studentsState.data, filter]);
 
   // Load rooms on mount (rooms data is still needed for UI)
   useEffect(() => {
@@ -219,7 +227,7 @@ const Students: React.FC = () => {
             />
           </div>
           <div className="flex gap-2">
-            {['All', 'Active', 'Graduated', 'On Leave'].map((val) => (
+            {['All', 'Active', 'Graduated', 'On Leave', 'NoRoom'].map((val) => (
               <button
                 key={val}
                 onClick={() => setFilter(val)}
@@ -231,7 +239,7 @@ const Students: React.FC = () => {
               >
                 {val === 'All' ? '全部' :
                  val === 'Active' ? '在校' :
-                 val === 'Graduated' ? '毕业' : '休学'}
+                 val === 'Graduated' ? '毕业' : val === 'NoRoom' ? '未分配宿舍' : '休学'}
               </button>
             ))}
           </div>
@@ -280,14 +288,14 @@ const Students: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {studentsState.data.length === 0 ? (
+                  {displayStudents.length === 0 ? (
                     <tr>
                       <td colSpan={5} className="px-6 py-12 text-center text-gray-500">
                         {studentsState.search || filter !== 'All' ? '没有找到匹配的学生' : '暂无学生数据'}
                       </td>
                     </tr>
                   ) : (
-                    studentsState.data.map(student => (
+                    displayStudents.map(student => (
                       <tr key={student.id} className="hover:bg-gray-50">
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div>
@@ -306,7 +314,7 @@ const Students: React.FC = () => {
                                 ? 'text-gray-400'
                                 : 'text-gray-900'
                             }`}>
-                              {student.roomNumber === '-' || !student.roomNumber ? '未分配' : student.roomNumber}
+                              {(student.building && student.roomNumber && student.roomNumber !== '-') ? `${student.building}-${student.roomNumber}` : (student.roomNumber === '-' || !student.roomNumber ? '未分配' : student.roomNumber)}
                             </span>
                           </div>
                         </td>

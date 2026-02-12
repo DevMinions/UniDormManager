@@ -132,3 +132,42 @@ func (h *InspectionHandler) GetInspectionRankings(c *gin.Context) {
 
 	c.JSON(http.StatusOK, []models.InspectionRanking{})
 }
+
+// GetInspectionByID 根据ID获取查寝记录
+func (h *InspectionHandler) GetInspectionByID(c *gin.Context) {
+	id := c.Param("id")
+	inspection, exists := h.store.GetInspectionByID(id)
+	if !exists {
+		middleware.WriteError(c, http.StatusNotFound, "not_found", "Inspection record not found")
+		return
+	}
+	c.JSON(http.StatusOK, inspection)
+}
+
+// UpdateInspection 更新查寝记录
+func (h *InspectionHandler) UpdateInspection(c *gin.Context) {
+	id := c.Param("id")
+	var req models.CreateInspectionRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		middleware.WriteError(c, http.StatusBadRequest, "invalid_request", err.Error())
+		return
+	}
+
+	inspection, exists := h.store.UpdateInspection(id, &req)
+	if !exists {
+		middleware.WriteError(c, http.StatusNotFound, "not_found", "Inspection record not found")
+		return
+	}
+
+	c.JSON(http.StatusOK, inspection)
+}
+
+// DeleteInspection 删除查寝记录
+func (h *InspectionHandler) DeleteInspection(c *gin.Context) {
+	id := c.Param("id")
+	if !h.store.DeleteInspection(id) {
+		middleware.WriteError(c, http.StatusNotFound, "not_found", "Inspection record not found")
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "Inspection deleted successfully"})
+}

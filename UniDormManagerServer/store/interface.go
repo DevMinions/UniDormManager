@@ -45,16 +45,26 @@ type StoreInterface interface {
 	// Inspection methods
 	CreateInspection(req *models.CreateInspectionRequest, inspectorID string) (*models.Inspection, error)
 	GetInspectionsPaginated(req *models.PaginatedRequest, filter *models.InspectionFilter) (*models.PaginatedResponse, error)
+	GetInspectionByID(id string) (*models.Inspection, bool)
+	UpdateInspection(id string, req *models.CreateInspectionRequest) (*models.Inspection, bool)
+	DeleteInspection(id string) bool
 
 	// Room Swap methods
 	GetRoomSwapApplications(userID string, role string) ([]*models.RoomSwapApplication, error)
+	GetRoomSwapApplicationsPaginated(req *models.PaginatedRequest, filter *models.RoomSwapFilter) (*models.PaginatedResponse, error)
+	GetMyRoomSwapApplications(userID string) ([]*models.RoomSwapApplication, error)
 	GetPendingRoomSwapApplications() ([]*models.RoomSwapApplication, error)
+	GetRoomSwapApplicationByID(id string) (*models.RoomSwapApplication, bool)
 	CreateRoomSwapApplication(userID string, req *models.CreateRoomSwapRequest) (*models.RoomSwapApplication, error)
 	ApproveRoomSwapApplication(id string, req *models.ApproveRoomSwapRequest) error
+	DeleteRoomSwapApplication(id string) bool
+	GetRoomSwapHistory(userID string) ([]*models.RoomSwapHistory, error)
+	GetAvailableRooms() ([]*models.Room, error)
 
 	// Access Log methods
 	GetAccessLogsPaginated(req *models.PaginatedRequest, filter *models.AccessLogFilter) (*models.PaginatedResponse, error)
 	GetLiveAccessLogs() ([]*models.AccessLog, error)
+	CreateAccessLog(req *models.CreateAccessLogRequest) (*models.AccessLog, error)
 
 	// Late Return methods
 	GetLateReturnAlertsPaginated(req *models.PaginatedRequest, filter *models.LateReturnFilter) (*models.PaginatedResponse, error)

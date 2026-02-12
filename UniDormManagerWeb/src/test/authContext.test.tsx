@@ -2,7 +2,6 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import React from 'react';
 import { AuthProvider, useAuth } from '../../contexts/AuthContext';
-import * as apiModule from '../../services/api';
 
 // Mock localStorage
 const localStorageMock = (() => {
@@ -22,9 +21,37 @@ const localStorageMock = (() => {
 })();
 global.localStorage = localStorageMock as any;
 
-// Mock fetch
-const mockFetch = vi.fn();
-global.fetch = mockFetch;
+// Create mock api object with localStorage side effect for login
+const mockLogin = vi.fn().mockImplementation(async (username: string, password: string) => {
+  const response = {
+    token: 'mock-jwt-token',
+    user: {
+      id: '1',
+      username: username,
+      email: 'admin@unidorm.edu',
+      realName: '系统管理员',
+      roles: [{ id: '1', code: 'system_admin', name: '系统管理员' }],
+    },
+    expiresIn: 3600,
+  };
+  localStorage.setItem('token', response.token);
+  return response;
+});
+const mockLogout = vi.fn().mockImplementation(async () => {
+  localStorage.removeItem('token');
+});
+const mockGetCurrentUser = vi.fn();
+const mockGetRoles = vi.fn();
+
+// Mock the api module
+vi.mock('../../services/api', () => ({
+  api: {
+    login: (...args: any[]) => mockLogin(...args),
+    logout: (...args: any[]) => mockLogout(...args),
+    getCurrentUser: (...args: any[]) => mockGetCurrentUser(...args),
+    getRoles: (...args: any[]) => mockGetRoles(...args),
+  }
+}));
 
 const wrapper = ({ children }: { children: React.ReactNode }) => (
   <AuthProvider>{children}</AuthProvider>
@@ -34,11 +61,6 @@ describe('AuthContext', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     localStorage.clear();
-    mockFetch.mockReset();
-    mockFetch.mockResolvedValue({
-      ok: true,
-      json: async () => [],
-    });
   });
 
   describe('Authentication', () => {
@@ -60,30 +82,10 @@ describe('AuthContext', () => {
         },
       ];
 
-      // Spy on api methods
-      const loginSpy = vi.spyOn(apiModule, 'api', 'get').mockImplementation((key) => {
-        if (key === 'login') {
-          return vi.fn().mockResolvedValue({
-            token: 'mock-jwt-token',
-            user: mockUser,
-            expiresIn: 3600,
-          });
-        } else if (key === 'getRoles') {
-          return vi.fn().mockResolvedValue(mockRoles);
-        } else if (key === 'getCurrentUser') {
-          return vi.fn().mockResolvedValue({
-            user: mockUser,
-            permissions: ['students:read', 'students:create', 'rooms:read'],
-          });
-        }
-        return vi.fn();
-      });
-
-      const logoutSpy = vi.spyOn(apiModule, 'api', 'get').mockImplementation((key) => {
-        if (key === 'logout') {
-          return vi.fn().mockResolvedValue(undefined);
-        }
-        return vi.fn();
+      mockGetRoles.mockResolvedValue(mockRoles);
+      mockGetCurrentUser.mockResolvedValue({
+        user: mockUser,
+        permissions: ['students:read', 'students:create', 'rooms:read'],
       });
 
       const { result } = renderHook(() => useAuth(), { wrapper });
@@ -97,18 +99,10 @@ describe('AuthContext', () => {
       expect(result.current.isAuthenticated).toBe(true);
       expect(localStorage.getItem('token')).toBe('mock-jwt-token');
       expect(result.current.permissions).toEqual(['students:read', 'students:create', 'rooms:read']);
-
-      loginSpy.mockRestore();
-      logoutSpy.mockRestore();
     });
 
     it('should handle login failure', async () => {
-      const loginSpy = vi.spyOn(apiModule, 'api', 'get').mockImplementation((key) => {
-        if (key === 'login') {
-          return vi.fn().mockRejectedValue(new Error('Invalid credentials'));
-        }
-        return vi.fn();
-      });
+      mockLogin.mockRejectedValueOnce(new Error('Invalid credentials'));
 
       const { result } = renderHook(() => useAuth(), { wrapper });
 
@@ -117,8 +111,6 @@ describe('AuthContext', () => {
           await result.current.login('admin', 'wrong');
         })
       ).rejects.toThrow('Invalid credentials');
-
-      loginSpy.mockRestore();
     });
 
     it('should logout successfully', async () => {
@@ -138,24 +130,10 @@ describe('AuthContext', () => {
         },
       ];
 
-      const loginSpy = vi.spyOn(apiModule, 'api', 'get').mockImplementation((key) => {
-        if (key === 'login') {
-          return vi.fn().mockResolvedValue({
-            token: 'mock-token',
-            user: mockUser,
-            expiresIn: 3600,
-          });
-        } else if (key === 'getRoles') {
-          return vi.fn().mockResolvedValue(mockRoles);
-        } else if (key === 'getCurrentUser') {
-          return vi.fn().mockResolvedValue({
-            user: mockUser,
-            permissions: ['students:read'],
-          });
-        } else if (key === 'logout') {
-          return vi.fn().mockResolvedValue(undefined);
-        }
-        return vi.fn();
+      mockGetRoles.mockResolvedValue(mockRoles);
+      mockGetCurrentUser.mockResolvedValue({
+        user: mockUser,
+        permissions: ['students:read'],
       });
 
       const { result } = renderHook(() => useAuth(), { wrapper });
@@ -174,8 +152,6 @@ describe('AuthContext', () => {
       expect(result.current.isAuthenticated).toBe(false);
       expect(localStorage.getItem('token')).toBeNull();
       expect(result.current.permissions).toEqual([]);
-
-      loginSpy.mockRestore();
     });
   });
 
@@ -197,22 +173,10 @@ describe('AuthContext', () => {
         },
       ];
 
-      const loginSpy = vi.spyOn(apiModule, 'api', 'get').mockImplementation((key) => {
-        if (key === 'login') {
-          return vi.fn().mockResolvedValue({
-            token: 'mock-token',
-            user: mockUser,
-            expiresIn: 3600,
-          });
-        } else if (key === 'getRoles') {
-          return vi.fn().mockResolvedValue(mockRoles);
-        } else if (key === 'getCurrentUser') {
-          return vi.fn().mockResolvedValue({
-            user: mockUser,
-            permissions: ['students:read', 'students:create', 'rooms:read'],
-          });
-        }
-        return vi.fn();
+      mockGetRoles.mockResolvedValue(mockRoles);
+      mockGetCurrentUser.mockResolvedValue({
+        user: mockUser,
+        permissions: ['students:read', 'students:create', 'rooms:read'],
       });
 
       const { result } = renderHook(() => useAuth(), { wrapper });
@@ -226,15 +190,17 @@ describe('AuthContext', () => {
       expect(result.current.hasPermission('rooms:read')).toBe(true);
       expect(result.current.hasPermission('rooms:create')).toBe(false);
       expect(result.current.hasPermission('admin:delete')).toBe(false);
-
-      loginSpy.mockRestore();
     });
 
     it('should return false for unauthenticated user', async () => {
+      mockGetRoles.mockResolvedValue([]);
+      
       const { result } = renderHook(() => useAuth(), { wrapper });
 
       // Wait for initialization
-      await new Promise(resolve => setTimeout(resolve, 50));
+      await act(async () => {
+        await new Promise(resolve => setTimeout(resolve, 50));
+      });
 
       expect(result.current.user).toBeNull();
       expect(result.current.hasPermission('students:read')).toBe(false);

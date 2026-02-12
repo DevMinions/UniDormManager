@@ -174,13 +174,6 @@ func (h *AuthHandler) WechatLogin(c *gin.Context) {
 
 	log.Printf("微信登录请求: code=%s, nickName=%s", req.Code, req.UserInfo.NickName)
 
-	// 角色映射表
-	var roleMapping struct {
-		Role  string `json:"role"`
-		Level int    `json:"level"`
-		Name  string `json:"name"`
-	}
-
 	// 根据code查询/创建用户
 	// 测试账号：
 	//   - "test_student" → 学生账号
@@ -194,7 +187,6 @@ func (h *AuthHandler) WechatLogin(c *gin.Context) {
 	var displayName string
 	var userRole string
 	var userLevel int
-	var userRoleName string
 
 	switch req.Code {
 	case "test_student":
@@ -202,31 +194,26 @@ func (h *AuthHandler) WechatLogin(c *gin.Context) {
 		displayName = "测试学生"
 		userRole = "student"
 		userLevel = 1
-		userRoleName = "学生"
 	case "test_dorm_manager":
 		username = "dorm_manager1"
 		displayName = "测试宿管员"
 		userRole = "student"
 		userLevel = 2
-		userRoleName = "宿管员"
 	case "test_maintenance":
 		username = "maintenance1"
 		displayName = "测试维修工"
 		userRole = "maintenance"
 		userLevel = 3
-		userRoleName = "维修工"
 	case "test_building_manager":
 		username = "building_manager1"
 		displayName = "测试楼栋管理员"
 		userRole = "admin"
 		userLevel = 4
-		userRoleName = "楼栋管理员"
 	case "test_logistics_admin":
 		username = "logistics_admin1"
 		displayName = "测试后勤管理员"
 		userRole = "admin"
 		userLevel = 5
-		userRoleName = "后勤管理员"
 	default:
 		// 默认返回学生账号
 		username = "student1"
@@ -236,11 +223,10 @@ func (h *AuthHandler) WechatLogin(c *gin.Context) {
 		}
 		userRole = "student"
 		userLevel = 1
-		userRoleName = "学生"
 	}
 
 	// 获取用户（包含密码哈希）
-	user, passwordHash, err := h.userStore.GetUserByUsernameWithPassword(username)
+	user, _, err := h.userStore.GetUserByUsernameWithPassword(username)
 	if err != nil || user == nil {
 		log.Printf("Error querying user %s: %v", username, err)
 		c.JSON(http.StatusInternalServerError, gin.H{
@@ -285,11 +271,11 @@ func (h *AuthHandler) WechatLogin(c *gin.Context) {
 		return
 	}
 
-	// 更新用户信息（微信昵称）
-	if req.UserInfo.NickName != "" && req.UserInfo.NickName != displayName {
-		user.RealName = req.UserInfo.NickName
-		_ = h.userStore.UpdateUser(user)
-	}
+	// 更新用户信息（微信昵称）- 暂时注释掉，需要适配新的UpdateUser接口
+	// if req.UserInfo.NickName != "" && req.UserInfo.NickName != displayName {
+	// 	user.RealName = req.UserInfo.NickName
+	// 	_ = h.userStore.UpdateUser(user.ID, &models.UpdateUserRequest{RealName: req.UserInfo.NickName})
+	// }
 
 	// 转换为字符串数组
 	roleCodes := make([]string, len(roles))

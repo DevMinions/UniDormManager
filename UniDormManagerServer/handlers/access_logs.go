@@ -60,3 +60,20 @@ func (h *AccessLogHandler) GetLiveLogs(c *gin.Context) {
 
 	c.JSON(http.StatusOK, logs)
 }
+
+// CreateAccessLog 创建门禁记录 (接收门禁系统推送)
+func (h *AccessLogHandler) CreateAccessLog(c *gin.Context) {
+	var req models.CreateAccessLogRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		middleware.WriteError(c, http.StatusBadRequest, "invalid_request", err.Error())
+		return
+	}
+
+	accessLog, err := h.store.CreateAccessLog(&req)
+	if err != nil {
+		middleware.WriteError(c, http.StatusInternalServerError, "database_error", err.Error())
+		return
+	}
+
+	c.JSON(http.StatusCreated, accessLog)
+}
