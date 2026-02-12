@@ -194,31 +194,26 @@ func (h *AuthHandler) WechatLogin(c *gin.Context) {
 		displayName = "测试学生"
 		userRole = "student"
 		userLevel = 1
-		userRoleName = "学生"
 	case "test_dorm_manager":
 		username = "dorm_manager1"
 		displayName = "测试宿管员"
 		userRole = "student"
 		userLevel = 2
-		userRoleName = "宿管员"
 	case "test_maintenance":
 		username = "maintenance1"
 		displayName = "测试维修工"
 		userRole = "maintenance"
 		userLevel = 3
-		userRoleName = "维修工"
 	case "test_building_manager":
 		username = "building_manager1"
 		displayName = "测试楼栋管理员"
 		userRole = "admin"
 		userLevel = 4
-		userRoleName = "楼栋管理员"
 	case "test_logistics_admin":
 		username = "logistics_admin1"
 		displayName = "测试后勤管理员"
 		userRole = "admin"
 		userLevel = 5
-		userRoleName = "后勤管理员"
 	default:
 		// 默认返回学生账号
 		username = "student1"
@@ -228,7 +223,6 @@ func (h *AuthHandler) WechatLogin(c *gin.Context) {
 		}
 		userRole = "student"
 		userLevel = 1
-		userRoleName = "学生"
 	}
 
 	// 获取用户（包含密码哈希）

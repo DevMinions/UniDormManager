@@ -2,6 +2,7 @@ package store
 
 import (
 	"context"
+	"log"
 	"fmt"
 	"time"
 
@@ -206,7 +207,7 @@ func (s *DBStore) CreateStudent(req *models.CreateStudentRequest) *models.Studen
 	return student
 }
 
-// UpdateStudent 更新学生
+// UpdateStudent 更新学生（修复版 - 添加房间容量验证）
 func (s *DBStore) UpdateStudent(id string, req *models.UpdateStudentRequest) (*models.Student, bool) {
 	ctx := context.Background()
 
@@ -216,7 +217,33 @@ func (s *DBStore) UpdateStudent(id string, req *models.UpdateStudentRequest) (*m
 		return nil, false
 	}
 
-	// 更新字段
+	// 如果涉及房间变更，需要验证
+	if req.RoomNumber != "" && req.RoomNumber != student.RoomNumber {
+		// 1. 检查目标房间是否存在
+		targetRoom, roomExists := s.GetRoomByNumber(req.Building, req.RoomNumber)
+		if !roomExists {
+			return nil, false // 房间不存在
+		}
+
+		// 2. 检查目标房间是否已满
+		if targetRoom.Occupied >= targetRoom.Capacity {
+			return nil, false // 房间已满
+		}
+
+		// 3. 更新原房间的人数（如果原来有房间且不是"-"）
+		if student.RoomNumber != "-" && student.RoomNumber != "" {
+			s.updateRoomOccupied(student.Building, student.RoomNumber, -1)
+		}
+
+		// 4. 更新目标房间的人数
+		s.updateRoomOccupied(targetRoom.Building, req.RoomNumber, 1)
+
+		// 5. 更新学生的房间信息
+		student.RoomNumber = req.RoomNumber
+		student.Building = targetRoom.Building
+	}
+
+	// 更新其他字段
 	if req.Name != "" {
 		student.Name = req.Name
 	}
@@ -225,9 +252,6 @@ func (s *DBStore) UpdateStudent(id string, req *models.UpdateStudentRequest) (*m
 	}
 	if req.Major != "" {
 		student.Major = req.Major
-	}
-	if req.RoomNumber != "" {
-		student.RoomNumber = req.RoomNumber
 	}
 	if req.Status != "" {
 		student.Status = req.Status
@@ -249,6 +273,17 @@ func (s *DBStore) UpdateStudent(id string, req *models.UpdateStudentRequest) (*m
 	}
 
 	return student, true
+}
+
+// updateRoomOccupied 更新房间入住人数（辅助函数）
+func (s *DBStore) updateRoomOccupied(building string, roomNumber string, delta int) {
+	ctx := context.Background()
+	_, err := database.DB.Exec(ctx,
+		"UPDATE rooms SET occupied = occupied + $1 WHERE building = $2 AND number = $3",
+		delta, building, roomNumber)
+	if err != nil {
+		log.Printf("更新房间人数失败: %v", err)
+	}
 }
 
 // DeleteStudent 删除学生
@@ -1092,7 +1127,7 @@ func (s *DBStore) CreateRoomSwapApplication(userID string, req *models.CreateRoo
 		TargetRoom:    req.TargetRoom,
 		Reason:        req.Reason,
 		UrgencyLevel:  req.UrgencyLevel,
-		Status:        "Pending",
+		Status:        "Approving",
 		CurrentStep:   "Counselor",
 		ApplyDate:     time.Now().Format("2006-01-02"),
 		CreatedAt:     time.Now().Format(time.RFC3339),
@@ -1604,4 +1639,21 @@ func (s *DBStore) GetAvailableRooms() ([]*models.Room, error) {
 	}
 
 	return rooms, nil
+}
+
+
+// GetRoomByNumber 根据楼栋和房间号获取房间
+func (s *DBStore) GetRoomByNumber(building string, number string) (*models.Room, bool) {
+	ctx := context.Background()
+	
+	var room models.Room
+	err := database.DB.QueryRow(ctx,
+		"SELECT id, number, building, capacity, occupied, type, status FROM rooms WHERE building = $1 AND number = $2",
+		building, number).Scan(&room.ID, &room.Number, &room.Building, &room.Capacity, &room.Occupied, &room.Type, &room.Status)
+	
+	if err != nil {
+		return nil, false
+	}
+	
+	return &room, true
 }

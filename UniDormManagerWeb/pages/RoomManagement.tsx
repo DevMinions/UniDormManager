@@ -201,10 +201,15 @@ const RoomManagement: React.FC = () => {
 
   // Get available students for a room (匹配房间号和楼栋)
   const getAvailableStudentsForRoom = (roomNumber: string, buildingName: string) => {
-    return students.filter(s => 
-      (s.roomNumber === roomNumber && s.building === buildingName) ||
-      (s.roomNumber === '-' && s.building === buildingName)
-    );
+    console.log('Getting students for:', buildingName, '-', roomNumber);
+    console.log('Total students:', students.length);
+    const filtered = students.filter(s => {
+      const match = (s.roomNumber === roomNumber && s.building === buildingName);
+      if (match) console.log('Matched student:', s.name, s.building, s.roomNumber);
+      return match;
+    });
+    console.log('Filtered count:', filtered.length);
+    return filtered;
   };
 
   // Get building floors for a specific building
