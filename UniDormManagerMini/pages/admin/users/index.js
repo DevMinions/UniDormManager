@@ -52,7 +52,9 @@ Page({
       email: '',
       phone: '',
       role: 'student',
-      status: 'active'
+      status: 'active',
+      roleLabel: '学生',
+      statusLabel: '启用'
     },
     
     // 重置密码
@@ -245,7 +247,9 @@ Page({
         email: '',
         phone: '',
         role: 'student',
-        status: 'active'
+        status: 'active',
+        roleLabel: '学生',
+        statusLabel: '启用'
       }
     })
   },
@@ -266,7 +270,9 @@ Page({
         email: user.email,
         phone: user.phone,
         role: user.role,
-        status: user.status
+        status: user.status,
+        roleLabel: this.getRoleLabel(user.role),
+        statusLabel: user.status === 'active' ? '启用' : '禁用'
       }
     })
   },
@@ -294,7 +300,11 @@ Page({
    */
   onRoleChange(e) {
     const role = this.data.roleOptions[e.detail.value].value
-    this.setData({ 'formData.role': role })
+    const label = this.data.roleOptions[e.detail.value].label
+    this.setData({
+      'formData.role': role,
+      'formData.roleLabel': label
+    })
   },
 
   /**
@@ -302,7 +312,11 @@ Page({
    */
   onStatusChange(e) {
     const status = this.data.statusOptions[e.detail.value].value
-    this.setData({ 'formData.status': status })
+    const label = this.data.statusOptions[e.detail.value].label
+    this.setData({
+      'formData.status': status,
+      'formData.statusLabel': label
+    })
   },
 
   /**
@@ -418,5 +432,13 @@ Page({
       })
       this.closePasswordModal()
     }, 600)
+  },
+
+  /**
+   * 获取角色标签
+   */
+  getRoleLabel(role) {
+    const option = this.data.roleOptions.find(r => r.value === role)
+    return option ? option.label : '未知'
   }
 })

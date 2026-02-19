@@ -234,19 +234,19 @@
       
       <view class="form-item">
         <text class="form-label">角色</text>
-        <picker bindchange="onRoleChange" value="{{roleOptions.findIndex(r => r.value === formData.role)}}" range="{{roleOptions}}" range-key="label">
+        <picker bindchange="onRoleChange" range="{{roleOptions}}" range-key="label">
           <view class="form-picker">
-            <text>{{roleOptions.find(r => r.value === formData.role).label}}</text>
+            <text>{{formData.roleLabel}}</text>
             <text class="picker-arrow">›</text>
           </view>
         </picker>
       </view>
-      
+
       <view class="form-item">
         <text class="form-label">状态</text>
-        <picker bindchange="onStatusChange" value="{{statusOptions.findIndex(s => s.value === formData.status)}}" range="{{statusOptions}}" range-key="label">
+        <picker bindchange="onStatusChange" range="{{statusOptions}}" range-key="label">
           <view class="form-picker">
-            <text>{{statusOptions.find(s => s.value === formData.status).label}}</text>
+            <text>{{formData.statusLabel}}</text>
             <text class="picker-arrow">›</text>
           </view>
         </picker>
