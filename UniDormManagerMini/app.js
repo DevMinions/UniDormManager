@@ -189,9 +189,16 @@ App({
       if (currentPage.getTabBar) {
         const tabBar = currentPage.getTabBar()
         if (tabBar) {
-          tabBar.setData({
-            tabBarList: tabBarList
-          })
+          // 调用 TabBar 组件的 updateTabBar 方法
+          if (typeof tabBar.updateTabBar === 'function') {
+            tabBar.updateTabBar(this.globalData.userLevel || 1)
+          } else {
+            // 兼容旧方式，直接设置 list
+            tabBar.setData({
+              list: tabBarList,
+              userLevel: this.globalData.userLevel || 1
+            })
+          }
         }
       }
     }
