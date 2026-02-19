@@ -26,7 +26,8 @@ Page({
     showMyWorkOrders: false,
     showWorkOrderStats: false,
     showUserManagement: false,
-    showSystemSettings: false
+    showSystemSettings: false,
+    showOperationLogs: false
   },
 
   onLoad() {
@@ -68,6 +69,7 @@ Page({
     const showWorkOrderStats = isMaintenance || isAdmin
     const showUserManagement = isAdmin
     const showSystemSettings = isAdmin
+    const showOperationLogs = userLevel >= 5  // 后勤管理员及以上
 
     this.setData({
       hasLogin,
@@ -85,7 +87,8 @@ Page({
       showMyWorkOrders,
       showWorkOrderStats,
       showUserManagement,
-      showSystemSettings
+      showSystemSettings,
+      showOperationLogs
     })
   },
 
@@ -268,9 +271,26 @@ Page({
       })
       return
     }
-    
+
     wx.navigateTo({
       url: '/pages/admin/dashboard/index'
+    })
+  },
+
+  /**
+   * 跳转到操作日志
+   */
+  goToLogs() {
+    if (this.data.userLevel < 5) {
+      wx.showToast({
+        title: '权限不足',
+        icon: 'none'
+      })
+      return
+    }
+
+    wx.navigateTo({
+      url: '/pages/admin/logs/index'
     })
   },
 

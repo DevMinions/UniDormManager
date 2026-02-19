@@ -20,7 +20,7 @@ Page({
     // 轮播图数据
     banners: [],
     
-    // 统计数据（各角色通用）
+    // 统计数据
     stats: {
       totalRooms: 0,
       occupiedRooms: 0,
@@ -66,18 +66,7 @@ Page({
       canManageNotices: false,
       canManageUsers: false,
       canSystemSettings: false
-    },
-    
-    // 数据概览
-    overviewData: {
-      buildingOccupancy: [],
-      weeklyRepairTrend: [],
-      last7DaysStats: []
-    },
-    
-    // 紧急待办
-    urgentTodos: [],
-    hasUrgentTodos: false
+    }
   },
 
   onLoad() {
@@ -119,10 +108,12 @@ Page({
     let viewType = 'student'
     if (userLevel >= 6) {
       viewType = 'admin'
-    } else if (userLevel >= 2 && userLevel <= 5) {
-      viewType = 'dorm_manager'
-    } else if (userRole === 'maintenance' || userLevel === 3) {
+    } else if (userLevel >= 4 && userLevel <= 5) {
+      viewType = 'admin'
+    } else if (userLevel === 3) {
       viewType = 'maintenance'
+    } else if (userLevel === 2) {
+      viewType = 'dorm_manager'
     }
 
     this.setData({
@@ -169,9 +160,7 @@ Page({
     
     if (hour >= 5 && hour < 12) {
       welcomeText = '早上好'
-    } else if (hour >= 12 && hour < 14) {
-      welcomeText = '中午好'
-    } else if (hour >= 14 && hour < 18) {
+    } else if (hour >= 12 && hour < 18) {
       welcomeText = '下午好'
     } else {
       welcomeText = '晚上好'
@@ -312,9 +301,6 @@ Page({
       console.error('加载统计数据失败:', err)
       this.setData({ loading: false })
     })
-
-    // 加载最新报修
-    this.loadRecentRepairs()
   },
 
   /**
@@ -397,10 +383,6 @@ Page({
         stats: transformedStats,
         loading: false
       })
-
-      // 加载概览数据
-      this.loadOverviewData()
-      this.loadUrgentTodos()
     }).catch(err => {
       console.error('加载统计数据失败:', err)
       this.setData({ loading: false })
@@ -530,82 +512,6 @@ Page({
   },
 
   /**
-   * 加载紧急待办事项
-   */
-  loadUrgentTodos() {
-    const todos = []
-    const { permissions, stats } = this.data
-    
-    if (permissions.canManageRepairs && stats.pendingRepairs > 0) {
-      todos.push({
-        id: 'repair-1',
-        type: 'repair',
-        icon: '🔧',
-        title: '待处理报修',
-        desc: `${stats.pendingRepairs} 个报修请求待处理`,
-        urgent: true,
-        action: 'goToRepairs'
-      })
-    }
-    
-    if (permissions.canManageRepairs) {
-      todos.push({
-        id: 'repair-overdue',
-        type: 'overdue',
-        icon: '⚠️',
-        title: '超时未处理报修',
-        desc: '2 个报修已超时 24 小时未处理',
-        urgent: true,
-        action: 'goToRepairs'
-      })
-    }
-    
-    if (this.data.userLevel >= 4) {
-      todos.push({
-        id: 'approval',
-        type: 'approval',
-        icon: '📋',
-        title: '待审批调宿申请',
-        desc: '3 个调宿申请待审批',
-        urgent: false,
-        action: 'goToApprovals'
-      })
-    }
-
-    this.setData({
-      urgentTodos: todos,
-      hasUrgentTodos: todos.length > 0
-    })
-  },
-
-  /**
-   * 加载数据概览
-   */
-  loadOverviewData() {
-    const buildingOccupancy = [
-      { name: 'A栋', rate: 85 },
-      { name: 'B栋', rate: 92 },
-      { name: 'C栋', rate: 78 },
-      { name: 'D栋', rate: 88 }
-    ]
-    
-    const weeklyRepairTrend = [
-      { day: '周一', count: 5 },
-      { day: '周二', count: 8 },
-      { day: '周三', count: 3 },
-      { day: '周四', count: 12 },
-      { day: '周五', count: 7 },
-      { day: '周六', count: 4 },
-      { day: '周日', count: 6 }
-    ]
-
-    this.setData({
-      'overviewData.buildingOccupancy': buildingOccupancy,
-      'overviewData.weeklyRepairTrend': weeklyRepairTrend
-    })
-  },
-
-  /**
    * 下拉刷新
    */
   onPullDownRefresh() {
@@ -664,15 +570,6 @@ Page({
   },
 
   /**
-   * 查看我的房间
-   */
-  goToMyRoom() {
-    wx.navigateTo({
-      url: '/pages/rooms/detail/index'
-    })
-  },
-
-  /**
    * 公告管理/列表
    */
   goToNotices() {
@@ -690,15 +587,6 @@ Page({
   },
 
   /**
-   * 通知公告（学生入口）
-   */
-  goToNoticesStudent() {
-    wx.navigateTo({
-      url: '/pages/notices/list/index'
-    })
-  },
-
-  /**
    * 报修管理/申请
    */
   goToRepairs() {
@@ -713,28 +601,6 @@ Page({
   goToSubmitRepair() {
     wx.navigateTo({
       url: '/pages/repairs/submit/index'
-    })
-  },
-
-  /**
-   * 处理报修（宿管员）
-   */
-  goToHandleRepairs() {
-    wx.switchTab({
-      url: '/pages/repairs/list/index'
-    })
-  },
-
-  /**
-   * 发布通知（宿管员/管理员）
-   */
-  goToPublishNotice() {
-    if (!this.data.permissions.canManageNotices) {
-      wx.showToast({ title: '无权限访问', icon: 'none' })
-      return
-    }
-    wx.navigateTo({
-      url: '/pages/admin/notices/index'
     })
   },
 
@@ -773,24 +639,6 @@ Page({
     })
   },
 
-  /**
-   * 审批管理
-   */
-  goToApprovals() {
-    wx.navigateTo({
-      url: '/pages/admin/approvals/index'
-    })
-  },
-
-  /**
-   * 个人中心
-   */
-  goToProfile() {
-    wx.switchTab({
-      url: '/pages/profile/index'
-    })
-  },
-
   // ===== 维修工专属导航 =====
 
   /**
@@ -799,15 +647,6 @@ Page({
   goToPendingTickets() {
     wx.navigateTo({
       url: '/pages/repairs/list/index?status=Pending'
-    })
-  },
-
-  /**
-   * 处理中工单
-   */
-  goToInProgressTickets() {
-    wx.navigateTo({
-      url: '/pages/repairs/list/index?status=In Progress'
     })
   },
 
@@ -826,16 +665,6 @@ Page({
   goToStatistics() {
     wx.navigateTo({
       url: '/pages/repairs/statistics/index'
-    })
-  },
-
-  /**
-   * 按优先级筛选
-   */
-  filterByPriority(e) {
-    const priority = e.currentTarget.dataset.priority
-    wx.navigateTo({
-      url: `/pages/repairs/list/index?priority=${priority}`
     })
   },
 
@@ -877,75 +706,7 @@ Page({
     })
   },
 
-  /**
-   * 快速接单
-   */
-  quickAccept(e) {
-    const id = e.currentTarget.dataset.id
-    
-    wx.showModal({
-      title: '确认接单',
-      content: '是否接受此工单？',
-      confirmText: '确认接单',
-      cancelText: '取消',
-      success: (res) => {
-        if (res.confirm) {
-          updateRepair(id, { 
-            status: 'In Progress',
-            notes: '维修工已接单，准备处理'
-          }).then(() => {
-            wx.showToast({
-              title: '接单成功',
-              icon: 'success'
-            })
-            this.loadMaintenanceData()
-          }).catch(err => {
-            wx.showToast({
-              title: '接单失败',
-              icon: 'none'
-            })
-          })
-        }
-      }
-    })
-  },
-
-  /**
-   * 处理待办事项点击
-   */
-  onTodoClick(e) {
-    const { action } = e.currentTarget.dataset
-    if (action && this[action]) {
-      this[action]()
-    }
-  },
-
   // ===== 工具方法 =====
-
-  /**
-   * 获取状态标签
-   */
-  getStatusTag(status) {
-    const statusMap = {
-      'Pending': { text: '待处理', color: '#faad14', bgColor: '#fff7e6' },
-      'In Progress': { text: '处理中', color: '#3b82f6', bgColor: '#eff6ff' },
-      'Completed': { text: '已完成', color: '#10b981', bgColor: '#d1fae5' },
-      'Closed': { text: '已关闭', color: '#6b7280', bgColor: '#f3f4f6' }
-    }
-    return statusMap[status] || { text: '未知', color: '#999', bgColor: '#f5f5f5' }
-  },
-
-  /**
-   * 获取优先级标签
-   */
-  getPriorityTag(priority) {
-    const priorityMap = {
-      'Low': { text: '低', color: '#10b981', icon: '🟢' },
-      'Medium': { text: '中', color: '#f59e0b', icon: '🟡' },
-      'High': { text: '紧急', color: '#ef4444', icon: '🔴' }
-    }
-    return priorityMap[priority] || { text: '中', color: '#f59e0b', icon: '🟡' }
-  },
 
   /**
    * 格式化时间
@@ -972,17 +733,6 @@ Page({
       return `${days}天前`
     }
     
-    const month = date.getMonth() + 1
-    const day = date.getDate()
-    return `${month}月${day}日`
-  },
-
-  /**
-   * 格式化日期
-   */
-  formatDate(dateStr) {
-    if (!dateStr) return ''
-    const date = new Date(dateStr)
     const month = date.getMonth() + 1
     const day = date.getDate()
     return `${month}月${day}日`

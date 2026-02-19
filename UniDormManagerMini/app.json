@@ -17,7 +17,8 @@
     "pages/checkout/index/index",
     "pages/admin/users/index",
     "pages/admin/dashboard/index",
-    "pages/admin/settings/index"
+    "pages/admin/settings/index",
+    "pages/admin/logs/index"
   ],
   "window": {
     "backgroundTextStyle": "light",

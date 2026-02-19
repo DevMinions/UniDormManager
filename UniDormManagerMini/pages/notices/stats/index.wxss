@@ -4,15 +4,19 @@
 .container {
   min-height: 100vh;
   background-color: var(--bg-primary);
+  padding-bottom: calc(var(--space-4) + constant(safe-area-inset-bottom));
+  padding-bottom: calc(var(--space-4) + env(safe-area-inset-bottom));
 }
 
 /* 导航栏 */
 .navbar {
   background: var(--primary-gradient);
   padding: var(--space-2) var(--space-3);
+  padding-top: calc(var(--space-2) + constant(safe-area-inset-top));
   padding-top: calc(var(--space-2) + env(safe-area-inset-top));
   display: flex;
   align-items: center;
+  justify-content: space-between;
   position: sticky;
   top: 0;
   z-index: 100;
@@ -51,13 +55,351 @@
   color: #fff;
 }
 
+/* 内容区域 */
+.content-wrapper {
+  padding: var(--space-3);
+}
+
+/* 公告信息卡片 */
+.notice-info-card {
+  background: linear-gradient(135deg, var(--primary-color) 0%, #8b5cf6 100%);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+  margin-bottom: var(--space-3);
+  box-shadow: var(--shadow-lg);
+  color: #fff;
+}
+
+.notice-info-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+  opacity: 0.9;
+}
+
+.info-icon {
+  font-size: 28rpx;
+}
+
+.info-title {
+  font-size: 26rpx;
+  font-weight: 500;
+}
+
+.notice-info-content {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
+  backdrop-filter: blur(10rpx);
+}
+
+.notice-info-content .notice-title {
+  font-size: 32rpx;
+  font-weight: 600;
+  line-height: 1.5;
+  margin-bottom: var(--space-2);
+  color: #fff;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.notice-meta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.meta-tag {
+  background: rgba(255, 255, 255, 0.2);
+  padding: 4rpx 12rpx;
+  border-radius: var(--radius-full);
+  font-size: 22rpx;
+  font-weight: 500;
+}
+
+.meta-text {
+  font-size: 24rpx;
+  opacity: 0.8;
+}
+
+/* 统计概览 */
+.stats-overview {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+}
+
+.stat-card {
+  background: #fff;
+  border-radius: var(--radius-lg);
+  padding: var(--space-3);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  box-shadow: var(--shadow-sm);
+  transition: all 0.2s ease;
+}
+
+.stat-card:active {
+  transform: translateY(-2rpx);
+  box-shadow: var(--shadow-md);
+}
+
+.stat-icon {
+  width: 72rpx;
+  height: 72rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-md);
+  font-size: 36rpx;
+  background: var(--gray-100);
+}
+
+.stat-total .stat-icon {
+  background: var(--primary-light);
+}
+
+.stat-read .stat-icon {
+  background: var(--success-light);
+}
+
+.stat-unread .stat-icon {
+  background: var(--warning-light);
+}
+
+.stat-rate .stat-icon {
+  background: var(--info-light);
+}
+
+.stat-info {
+  flex: 1;
+}
+
+.stat-value {
+  font-size: 40rpx;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1.2;
+}
+
+.stat-label {
+  font-size: 22rpx;
+  color: var(--text-secondary);
+  margin-top: 4rpx;
+}
+
+/* 阅读率进度卡片 */
+.rate-progress-card {
+  background: #fff;
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+  margin-bottom: var(--space-3);
+  box-shadow: var(--shadow-sm);
+}
+
+.rate-progress-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-2);
+}
+
+.rate-progress-title {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.rate-progress-value {
+  font-size: 36rpx;
+  font-weight: 700;
+  color: var(--primary-color);
+}
+
+.rate-progress-bar {
+  height: 16rpx;
+  background: var(--gray-100);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+  margin-bottom: var(--space-2);
+}
+
+.rate-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--primary-color) 0%, #8b5cf6 100%);
+  border-radius: var(--radius-full);
+  transition: width 0.5s ease;
+}
+
+.rate-progress-footer {
+  display: flex;
+  justify-content: center;
+}
+
+.rate-progress-text {
+  font-size: 24rpx;
+  color: var(--text-secondary);
+}
+
+/* 阅读记录区域 */
+.records-section {
+  background: #fff;
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+  box-shadow: var(--shadow-sm);
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  margin-bottom: var(--space-3);
+  padding-bottom: var(--space-2);
+  border-bottom: 1rpx solid var(--gray-100);
+}
+
+.section-icon {
+  font-size: 28rpx;
+}
+
+.section-title {
+  font-size: 30rpx;
+  font-weight: 600;
+  color: var(--text-primary);
+  flex: 1;
+}
+
+.section-count {
+  font-size: 26rpx;
+  color: var(--text-tertiary);
+}
+
+/* 记录列表 */
+.records-list {
+  max-height: 800rpx;
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 120rpx var(--space-3);
+  text-align: center;
+}
+
+.empty-state-icon {
+  font-size: 100rpx;
+  margin-bottom: var(--space-3);
+  opacity: 0.4;
+}
+
+.empty-state-title {
+  font-size: 28rpx;
+  color: var(--text-secondary);
+}
+
+/* 记录项 */
+.record-item {
+  display: flex;
+  align-items: center;
+  padding: var(--space-3) 0;
+  border-bottom: 1rpx solid var(--gray-50);
+}
+
+.record-item:last-child {
+  border-bottom: none;
+}
+
+.record-avatar {
+  width: 88rpx;
+  height: 88rpx;
+  margin-right: var(--space-3);
+}
+
+.avatar-image {
+  width: 100%;
+  height: 100%;
+  border-radius: var(--radius-full);
+  background: var(--gray-100);
+}
+
+.record-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.record-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-1);
+}
+
+.record-name {
+  font-size: 28rpx;
+  font-weight: 500;
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 300rpx;
+}
+
+.record-time {
+  font-size: 22rpx;
+  color: var(--text-tertiary);
+}
+
+.record-room {
+  display: flex;
+  align-items: center;
+  gap: 6rpx;
+}
+
+.room-icon {
+  font-size: 20rpx;
+}
+
+.room-text {
+  font-size: 24rpx;
+  color: var(--text-secondary);
+}
+
+.record-status {
+  width: 56rpx;
+  height: 56rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-full);
+  margin-left: var(--space-2);
+}
+
+.record-status.read {
+  background: var(--success-light);
+}
+
+.status-icon {
+  font-size: 28rpx;
+  color: var(--success);
+  font-weight: bold;
+}
+
 /* 加载状态 */
 .loading-container {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 200rpx var(--space-3);
+  padding: 80rpx var(--space-3);
 }
 
 .loading-spinner {
@@ -75,251 +417,7 @@
 
 .loading-text {
   margin-top: var(--space-2);
-  font-size: 28rpx;
-  color: var(--text-secondary);
-}
-
-/* 滚动区 */
-.stats-scroll {
-  height: 100vh;
-  padding: var(--space-3);
-}
-
-/* 公告信息 */
-.notice-info {
-  background: #fff;
-  border-radius: var(--radius-lg);
-  padding: var(--space-3);
-  margin-bottom: var(--space-3);
-  box-shadow: var(--shadow-sm);
-}
-
-.notice-label {
-  font-size: 22rpx;
-  color: var(--text-tertiary);
-  margin-bottom: var(--space-1);
-  display: block;
-}
-
-.notice-title {
-  font-size: 28rpx;
-  font-weight: 600;
-  color: var(--text-primary);
-  display: block;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-/* 统计卡片 */
-.stats-cards {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: var(--space-2);
-  margin-bottom: var(--space-3);
-}
-
-.stat-card {
-  background: #fff;
-  border-radius: var(--radius-lg);
-  padding: var(--space-3);
-  text-align: center;
-  box-shadow: var(--shadow-sm);
-  transition: transform 0.2s ease;
-}
-
-.stat-card:active {
-  transform: scale(0.98);
-}
-
-.stat-value {
-  display: block;
-  font-size: 40rpx;
-  font-weight: 700;
-  margin-bottom: 4rpx;
-}
-
-.stat-card.stat-primary .stat-value {
-  color: var(--primary-color);
-}
-
-.stat-card.stat-success .stat-value {
-  color: var(--success);
-}
-
-.stat-card.stat-warning .stat-value {
-  color: var(--warning);
-}
-
-.stat-card.stat-info .stat-value {
-  color: var(--info);
-}
-
-.stat-label {
-  display: block;
-  font-size: 22rpx;
-  color: var(--text-secondary);
-}
-
-/* 阅读进度 */
-.progress-section {
-  background: #fff;
-  border-radius: var(--radius-lg);
-  padding: var(--space-4);
-  margin-bottom: var(--space-3);
-  box-shadow: var(--shadow-sm);
-}
-
-.progress-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: var(--space-3);
-}
-
-.progress-title {
-  font-size: 28rpx;
-  font-weight: 600;
-  color: var(--text-primary);
-}
-
-.progress-value {
-  font-size: 32rpx;
-  font-weight: 700;
-  color: var(--primary-color);
-}
-
-.progress-bar {
-  height: 16rpx;
-  background: var(--gray-100);
-  border-radius: var(--radius-full);
-  overflow: hidden;
-  margin-bottom: var(--space-2);
-}
-
-.progress-fill {
-  height: 100%;
-  background: var(--primary-gradient);
-  border-radius: var(--radius-full);
-  transition: width 0.3s ease;
-}
-
-.progress-desc {
-  font-size: 24rpx;
-  color: var(--text-secondary);
-  text-align: center;
-}
-
-/* 阅读记录区块 */
-.records-section {
-  background: #fff;
-  border-radius: var(--radius-lg);
-  padding: var(--space-3);
-  box-shadow: var(--shadow-sm);
-}
-
-.section-header {
-  display: flex;
-  align-items: center;
-  gap: 8rpx;
-  margin-bottom: var(--space-3);
-  padding-bottom: var(--space-2);
-  border-bottom: 1rpx solid var(--gray-100);
-}
-
-.section-icon {
-  font-size: 28rpx;
-}
-
-.section-title {
-  font-size: 28rpx;
-  font-weight: 600;
-  color: var(--text-primary);
-}
-
-.section-count {
-  font-size: 24rpx;
-  color: var(--text-tertiary);
-}
-
-/* 空状态 */
-.empty-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 80rpx var(--space-3);
-}
-
-.empty-icon {
-  font-size: 80rpx;
-  margin-bottom: var(--space-2);
-  opacity: 0.4;
-}
-
-.empty-text {
   font-size: 26rpx;
-  color: var(--text-secondary);
-}
-
-/* 记录列表 */
-.record-list {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-}
-
-.record-item {
-  display: flex;
-  align-items: center;
-  padding: var(--space-2);
-  border-radius: var(--radius-md);
-  transition: background 0.2s ease;
-}
-
-.record-item:active {
-  background: var(--gray-50);
-}
-
-.user-avatar {
-  width: 80rpx;
-  height: 80rpx;
-  border-radius: var(--radius-full);
-  margin-right: var(--space-2);
-  background: var(--gray-100);
-}
-
-.record-info {
-  flex: 1;
-  min-width: 0;
-}
-
-.record-main {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 4rpx;
-}
-
-.user-name {
-  font-size: 28rpx;
-  color: var(--text-primary);
-  font-weight: 500;
-}
-
-.read-time {
-  font-size: 22rpx;
-  color: var(--text-tertiary);
-}
-
-.record-sub {
-  display: flex;
-  align-items: center;
-  gap: var(--space-1);
-}
-
-.room-info {
-  font-size: 24rpx;
   color: var(--text-secondary);
 }
 
@@ -346,9 +444,4 @@
 
 .no-more {
   color: var(--gray-400);
-}
-
-/* 底部留白 */
-.bottom-spacer {
-  height: var(--space-4);
 }

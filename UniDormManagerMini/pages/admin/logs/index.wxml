@@ -1,0 +1,194 @@
+<!--pages/admin/logs/index.wxml-->
+<wxs module="logUtils">
+module.exports = {
+  getLogIcon: function(type) {
+    var icons = {
+      'user': '👤',
+      'room': '🏠',
+      'repair': '🔧',
+      'notice': '📢',
+      'checkin': '📥',
+      'checkout': '📤',
+      'settings': '⚙️'
+    };
+    return icons[type] || '📝';
+  }
+}
+</wxs>
+
+<view class="container">
+  <!-- 页面标题 -->
+  <view class="page-header">
+    <view class="header-title">
+      <text class="heading-2">📝 操作日志</text>
+      <text class="log-count" wx:if="{{!loading}}">共 {{total}} 条记录</text>
+    </view>
+    <view class="export-btn" bindtap="exportLogs" wx:if="{{logList.length > 0}}">
+      <text>📥 导出</text>
+    </view>
+  </view>
+
+  <!-- 搜索栏 -->
+  <view class="search-section">
+    <view class="search-box">
+      <text class="search-icon">🔍</text>
+      <input
+        class="search-input"
+        placeholder="搜索操作人、操作内容"
+        value="{{keyword}}"
+        bindinput="onSearchInput"
+        confirm-type="search"
+      />
+    </view>
+  </view>
+
+  <!-- 筛选栏 -->
+  <view class="filter-section">
+    <scroll-view class="filter-scroll" scroll-x="true" enable-flex="true">
+      <view
+        class="filter-item {{selectedType === 'all' ? 'active' : ''}}"
+        data-type="all"
+        bindtap="filterType"
+      >
+        全部
+      </view>
+      <view
+        class="filter-item {{selectedType === 'user' ? 'active' : ''}}"
+        data-type="user"
+        bindtap="filterType"
+      >
+        用户管理
+      </view>
+      <view
+        class="filter-item {{selectedType === 'room' ? 'active' : ''}}"
+        data-type="room"
+        bindtap="filterType"
+      >
+        房间管理
+      </view>
+      <view
+        class="filter-item {{selectedType === 'repair' ? 'active' : ''}}"
+        data-type="repair"
+        bindtap="filterType"
+      >
+        报修管理
+      </view>
+      <view
+        class="filter-item {{selectedType === 'notice' ? 'active' : ''}}"
+        data-type="notice"
+        bindtap="filterType"
+      >
+        公告管理
+      </view>
+      <view
+        class="filter-item {{selectedType === 'checkin' ? 'active' : ''}}"
+        data-type="checkin"
+        bindtap="filterType"
+      >
+        入住办理
+      </view>
+      <view
+        class="filter-item {{selectedType === 'checkout' ? 'active' : ''}}"
+        data-type="checkout"
+        bindtap="filterType"
+      >
+        退宿办理
+      </view>
+      <view
+        class="filter-item {{selectedType === 'settings' ? 'active' : ''}}"
+        data-type="settings"
+        bindtap="filterType"
+      >
+        系统设置
+      </view>
+    </scroll-view>
+  </view>
+
+  <!-- 日期筛选 -->
+  <view class="date-filter-section">
+    <view
+      class="date-filter {{selectedDate === 'all' ? 'active' : ''}}"
+      data-date="all"
+      bindtap="filterDate"
+    >
+      全部时间
+    </view>
+    <view
+      class="date-filter {{selectedDate === 'today' ? 'active' : ''}}"
+      data-date="today"
+      bindtap="filterDate"
+    >
+      今天
+    </view>
+    <view
+      class="date-filter {{selectedDate === 'yesterday' ? 'active' : ''}}"
+      data-date="yesterday"
+      bindtap="filterDate"
+    >
+      昨天
+    </view>
+    <view
+      class="date-filter {{selectedDate === 'week' ? 'active' : ''}}"
+      data-date="week"
+      bindtap="filterDate"
+    >
+      近7天
+    </view>
+    <view
+      class="date-filter {{selectedDate === 'month' ? 'active' : ''}}"
+      data-date="month"
+      bindtap="filterDate"
+    >
+      近30天
+    </view>
+  </view>
+
+  <!-- 日志列表 -->
+  <view class="log-list">
+    <!-- 加载中 -->
+    <view class="loading" wx:if="{{loading}}">
+      <view class="loading-spinner"></view>
+      <text class="loading-text">加载中...</text>
+    </view>
+
+    <!-- 空状态 -->
+    <view class="empty-state" wx:elif="{{logList.length === 0}}">
+      <view class="empty-icon">📝</view>
+      <text class="empty-title">暂无操作日志</text>
+      <text class="empty-desc">尝试调整筛选条件</text>
+    </view>
+
+    <!-- 列表内容 -->
+    <view class="log-items" wx:else>
+      <view class="log-item" wx:for="{{logList}}" wx:key="id">
+        <view class="log-icon {{item.type}}">
+          <text>{{logUtils.getLogIcon(item.type)}}</text>
+        </view>
+        
+        <view class="log-content">
+          <view class="log-header">
+            <text class="log-action">{{item.action}}</text>
+            <text class="log-time">{{item.timeStr}}</text>
+          </view>
+          
+          <view class="log-description">{{item.description}}</view>
+          
+          <view class="log-footer">
+            <text class="log-operator">操作人: {{item.operatorName}}</text>
+          </view>
+        </view>
+      </view>
+
+      <!-- 加载更多 -->
+      <view class="load-more" wx:if="{{hasMore}}">
+        <view class="load-more-btn" bindtap="loadMore">
+          <text>加载更多</text>
+        </view>
+      </view>
+      
+      <view class="no-more" wx:else>
+        <text>没有更多数据了</text>
+      </view>
+    </view>
+  </view>
+</view>
