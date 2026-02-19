@@ -1,0 +1,18 @@
+<!-- 
+  Tag 标签组件
+  使用示例：
+  <tag color="blue">标签</tag>
+  <tag color="green" closable bind:close="onClose">可关闭</tag>
+  <tag size="small">小标签</tag>
+-->
+<view wx:if="{{visible}}" 
+      class="tag tag-{{color}} tag-{{size}} {{plain ? 'tag-plain' : ''}} {{round ? 'tag-round' : ''}}"
+      style="{{customStyle}}">
+  <!-- 内容 -->
+  <slot />
+  
+  <!-- 关闭按钮 -->
+  <view wx:if="{{closable}}" class="tag-close" catchtap="onClose">
+    <text class="close-icon">×</text>
+  </view>
+</view>

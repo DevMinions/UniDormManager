@@ -1,0 +1,47 @@
+<!-- 
+  Loading 加载组件
+  使用示例：
+  <loading show type="spinner" fullscreen text="加载中..." />
+-->
+<view class="loading-container {{fullscreen ? 'fullscreen' : ''}} {{show ? 'show' : ''}}" 
+      style="{{fullscreen && !overlay ? 'background: transparent;' : ''}}"
+      catchtap="onMaskTap">
+  
+  <view class="loading-wrapper">
+    <!-- default 类型 - 圆形旋转 -->
+    <view wx:if="{{type === 'default'}}" class="loading-default" style="border-color: {{color}};">
+      <view class="loading-default-inner" style="border-top-color: {{color}};"></view>
+    </view>
+    
+    <!-- spinner 类型 - 多瓣旋转 -->
+    <view wx:elif="{{type === 'spinner'}}" class="loading-spinner">
+      <view class="spinner-blade" style="background-color: {{color}};"></view>
+      <view class="spinner-blade" style="background-color: {{color}};"></view>
+      <view class="spinner-blade" style="background-color: {{color}};"></view>
+      <view class="spinner-blade" style="background-color: {{color}};"></view>
+      <view class="spinner-blade" style="background-color: {{color}};"></view>
+      <view class="spinner-blade" style="background-color: {{color}};"></view>
+      <view class="spinner-blade" style="background-color: {{color}};"></view>
+      <view class="spinner-blade" style="background-color: {{color}};"></view>
+      <view class="spinner-blade" style="background-color: {{color}};"></view>
+      <view class="spinner-blade" style="background-color: {{color}};"></view>
+      <view class="spinner-blade" style="background-color: {{color}};"></view>
+      <view class="spinner-blade" style="background-color: {{color}};"></view>
+    </view>
+    
+    <!-- dots 类型 - 三点跳动 -->
+    <view wx:elif="{{type === 'dots'}}" class="loading-dots">
+      <view class="dot" style="background-color: {{color}};"></view>
+      <view class="dot" style="background-color: {{color}};"></view>
+      <view class="dot" style="background-color: {{color}};"></view>
+    </view>
+    
+    <!-- 提示文字 -->
+    <text wx:if="{{text}}" class="loading-text" style="color: {{fullscreen ? '#fff' : '#666'}};">
+      {{text}}
+    </text>
+  </view>
+  
+  <!-- 全屏遮罩层 -->
+  <view wx:if="{{fullscreen && overlay}}" class="loading-mask"></view>
+</view>

@@ -1,0 +1,26 @@
+<!-- 
+  Badge 徽标组件
+  使用示例：
+  <badge count="99" max="99">
+    <view class="icon">通知</view>
+  </badge>
+  
+  <badge dot position="top-right">
+    <view class="avatar"><image src="..." /></view>
+  </badge>
+-->
+<view class="badge-wrap">
+  <!-- 插槽内容 -->
+  <slot />
+  
+  <!-- 徽标 -->
+  <view wx:if="{{dot || count > 0 || (count === 0 && showZero)}}"
+        class="badge badge-{{position}} {{dot ? 'badge-dot' : ''}}"
+        style="background-color: {{color}}; {{offset[0] !== 0 || offset[1] !== 0 ? 'transform: translate(' + offset[0] + 'rpx, ' + offset[1] + 'rpx);' : ''}}">
+    <!-- 圆点模式 -->
+    <view wx:if="{{dot}}" class="dot"></view>
+    
+    <!-- 数字模式 -->
+    <text wx:else class="badge-text">{{displayCount}}</text>
+  </view>
+</view>

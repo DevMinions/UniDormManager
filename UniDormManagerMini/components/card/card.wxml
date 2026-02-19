@@ -1,0 +1,39 @@
+<!-- 
+  Card 卡片组件
+  使用示例：
+  <card title="卡片标题" hoverable bind:tap="onCardTap">
+    <view>卡片内容</view>
+  </card>
+-->
+<view class="card card-{{type}} {{hoverable ? 'card-hoverable' : ''}} {{isHover ? 'card-hover' : ''}} {{!bordered ? 'no-border' : ''}}"
+      style="{{customStyle}}"
+      bindtap="onTap"
+      bindtouchstart="onTouchStart"
+      bindtouchend="onTouchEnd"
+      bindtouchcancel="onTouchEnd">
+  
+  <!-- 头部 -->
+  <view wx:if="{{title}}" class="card-header">
+    <view class="card-title" style="{{titleStyle}}">
+      {{title}}
+    </view>
+    <view class="card-header-right">
+      <slot name="header-right" />
+    </view>
+  </view>
+  
+  <!-- 内容区域 -->
+  <view class="card-body" style="padding: {{padding}};">
+    <slot />
+  </view>
+  
+  <!-- 底部 -->
+  <view wx:if="{{title}}" class="card-footer">
+    <slot name="footer" />
+  </view>
+  
+  <!-- 没有标题时的footer -->
+  <view wx:if="{{!title}}">
+    <slot name="footer" />
+  </view>
+</view>

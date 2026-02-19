@@ -1,0 +1,32 @@
+<!-- 
+  Empty 空状态组件
+  使用示例：
+  <empty icon="📭" title="暂无消息" description="消息列表为空" />
+-->
+<view class="empty-container {{showBg ? 'with-bg' : ''}}">
+  <!-- 图标区域 -->
+  <view class="empty-icon-wrap">
+    <image wx:if="{{isImageIcon}}" class="empty-icon-img" src="{{icon}}" mode="aspectFit" />
+    <text wx:else class="empty-icon-emoji">{{icon}}</text>
+  </view>
+  
+  <!-- 标题 -->
+  <view wx:if="{{title}}" class="empty-title">
+    {{title}}
+  </view>
+  
+  <!-- 描述 -->
+  <view wx:if="{{description}}" class="empty-description">
+    {{description}}
+  </view>
+  
+  <!-- 插槽内容 -->
+  <slot />
+  
+  <!-- 操作按钮 -->
+  <view wx:if="{{btnText}}" class="empty-action">
+    <button class="empty-btn {{btnType}}" bindtap="onBtnTap">
+      {{btnText}}
+    </button>
+  </view>
+</view>
