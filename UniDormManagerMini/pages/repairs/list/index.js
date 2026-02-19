@@ -41,6 +41,13 @@ Page({
     if (app.globalData.isLoggedIn) {
       this.loadRepairList()
     }
+    
+    // 设置 TabBar 选中状态（报修是第3个，index=2）
+    if (typeof this.getTabBar === 'function' && this.getTabBar()) {
+      this.getTabBar().setData({
+        selected: 2
+      })
+    }
   },
 
   /**

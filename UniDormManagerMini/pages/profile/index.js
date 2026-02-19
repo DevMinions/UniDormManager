@@ -29,6 +29,13 @@ Page({
 
   onShow() {
     this.loadUserInfo()
+    
+    // 设置 TabBar 选中状态（"我的"是第4个，index=3）
+    if (typeof this.getTabBar === 'function' && this.getTabBar()) {
+      this.getTabBar().setData({
+        selected: 3
+      })
+    }
   },
 
   /**

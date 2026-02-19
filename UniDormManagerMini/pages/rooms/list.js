@@ -51,6 +51,13 @@ Page({
     if (app.globalData.isLoggedIn) {
       this.loadRooms()
     }
+    
+    // 设置 TabBar 选中状态（房间是第2个，index=1）
+    if (typeof this.getTabBar === 'function' && this.getTabBar()) {
+      this.getTabBar().setData({
+        selected: 1
+      })
+    }
   },
 
   /**

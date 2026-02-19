@@ -75,6 +75,13 @@ Page({
     if (app.globalData.isLoggedIn) {
       this.initializePage()
     }
+    
+    // 设置 TabBar 选中状态
+    if (typeof this.getTabBar === 'function' && this.getTabBar()) {
+      this.getTabBar().setData({
+        selected: 0
+      })
+    }
   },
 
   /**
