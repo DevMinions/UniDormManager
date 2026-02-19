@@ -963,3 +963,159 @@
     grid-template-columns: repeat(3, 1fr);
   }
 }
+
+/* ==================== 维修工专属样式 ==================== */
+
+/* 紧急工单横幅 */
+.urgent-banner {
+  background: linear-gradient(135deg, #fee2e2, #fecaca);
+  border-left: 6rpx solid #ef4444;
+  border-radius: var(--radius-lg);
+  padding: var(--space-3);
+  margin-bottom: var(--space-4);
+  display: flex;
+  align-items: center;
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.2s ease;
+}
+
+.urgent-banner:active {
+  transform: translateX(8rpx);
+}
+
+.urgent-icon {
+  font-size: 44rpx;
+  margin-right: var(--space-3);
+}
+
+.urgent-content {
+  flex: 1;
+}
+
+.urgent-title {
+  display: block;
+  font-size: 28rpx;
+  color: #dc2626;
+  font-weight: 700;
+  margin-bottom: 4rpx;
+}
+
+.urgent-desc {
+  font-size: 24rpx;
+  color: #7f1d1d;
+}
+
+.urgent-arrow {
+  font-size: 40rpx;
+  color: #ef4444;
+}
+
+/* 维修工操作区域 */
+.maintenance-actions .action-grid {
+  grid-template-columns: repeat(4, 1fr);
+}
+
+.maintenance-actions .action-icon {
+  background: linear-gradient(135deg, #d1fae5, #a7f3d0);
+}
+
+.pending-icon { background: linear-gradient(135deg, #fee2e2, #fecaca) !important; }
+.progress-icon { background: linear-gradient(135deg, #fef3c7, #fde68a) !important; }
+.completed-icon { background: linear-gradient(135deg, #d1fae5, #a7f3d0) !important; }
+.stats-icon { background: linear-gradient(135deg, #e0e7ff, #c7d2fe) !important; }
+
+/* 工单列表 */
+.tickets-section {
+  margin-bottom: var(--space-4);
+}
+
+.title-more {
+  font-size: 24rpx;
+  color: var(--primary-color);
+  font-weight: 500;
+}
+
+.ticket-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.ticket-item {
+  display: flex;
+  align-items: center;
+  background: #fff;
+  border-radius: var(--radius-lg);
+  padding: var(--space-3);
+  box-shadow: var(--shadow-sm);
+  transition: all 0.2s ease;
+}
+
+.ticket-item:active {
+  transform: translateY(-4rpx);
+  box-shadow: var(--shadow-md);
+}
+
+.ticket-priority {
+  width: 40rpx;
+  display: flex;
+  justify-content: center;
+  margin-right: var(--space-2);
+}
+
+.priority-icon {
+  font-size: 32rpx;
+}
+
+.ticket-info {
+  flex: 1;
+}
+
+.ticket-title-row {
+  margin-bottom: 8rpx;
+}
+
+.ticket-title {
+  font-size: 28rpx;
+  color: var(--text-primary);
+  font-weight: 600;
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ticket-meta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.ticket-location {
+  font-size: 24rpx;
+  color: var(--text-secondary);
+}
+
+.ticket-time {
+  font-size: 24rpx;
+  color: var(--text-tertiary);
+}
+
+.ticket-action {
+  margin-left: var(--space-2);
+}
+
+.action-btn {
+  background: linear-gradient(135deg, #3b82f6, #60a5fa);
+  color: #fff;
+  font-size: 24rpx;
+  font-weight: 600;
+  padding: 8rpx 24rpx;
+  border-radius: var(--radius-full);
+  transition: all 0.2s ease;
+}
+
+.action-btn:active {
+  background: linear-gradient(135deg, #2563eb, #3b82f6);
+  transform: scale(0.95);
+}
