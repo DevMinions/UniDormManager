@@ -1,6 +1,7 @@
 // pages/notices/list/index.js
 const app = getApp()
 const { getNotices, markNoticeRead } = require('../../../api/notices')
+const { formatRelativeTime } = require('../../../utils/date')
 
 Page({
   data: {
@@ -11,7 +12,16 @@ Page({
     page: 1,
     pageSize: 10,
     hasMore: true,
-    total: 0
+    total: 0,
+    isRefreshing: false,
+    isAdmin: false,
+    categories: [
+      { key: 'all', label: '全部' },
+      { key: 'system', label: '系统' },
+      { key: 'dorm', label: '宿舍' },
+      { key: 'maintenance', label: '维修' },
+      { key: 'other', label: '其他' }
+    ]
   },
 
   onLoad() {
@@ -23,6 +33,9 @@ Page({
       return
     }
 
+    // 检查是否是管理员
+    this.checkAdminStatus()
+    
     this.loadNotices()
   },
 
@@ -36,6 +49,15 @@ Page({
         this.refreshNotices()
       }
     }
+  },
+
+  /**
+   * 检查管理员状态
+   */
+  checkAdminStatus() {
+    const userInfo = app.globalData.userInfo || {}
+    const isAdmin = userInfo.role === 'admin' || userInfo.isAdmin || userInfo.role === 'manager'
+    this.setData({ isAdmin })
   },
 
   /**
@@ -67,35 +89,51 @@ Page({
       const notices = data.notices || data.list || data || []
       const total = data.total || notices.length
       
-      // 处理公告数据，添加已读状态
-      const processedNotices = notices.map(notice => ({
-        ...notice,
-        isRead: notice.isRead || notice.is_read || false,
-        isPinned: notice.isPinned || notice.is_pinned || false,
-        categoryText: this.getCategoryText(notice.category)
-      }))
+      // 处理公告数据
+      const processedNotices = notices.map(notice => this.processNoticeData(notice))
 
-      // 置顶公告排序（置顶在前）
+      // 置顶公告排序
       const sortedNotices = this.sortNotices(reset ? processedNotices : [...this.data.notices, ...processedNotices])
 
       this.setData({
-        notices: reset ? sortedNotices : sortedNotices,
+        notices: sortedNotices,
         loading: false,
         loadingMore: false,
+        isRefreshing: false,
         hasMore: notices.length >= this.data.pageSize,
         total: total
       })
+
+      // 停止下拉刷新
+      if (reset) {
+        wx.stopPullDownRefresh()
+      }
     }).catch(err => {
       console.error('加载公告列表失败:', err)
       this.setData({ 
         loading: false,
-        loadingMore: false
+        loadingMore: false,
+        isRefreshing: false
       })
+      wx.stopPullDownRefresh()
       wx.showToast({
         title: '加载失败',
         icon: 'none'
       })
     })
+  },
+
+  /**
+   * 处理公告数据
+   */
+  processNoticeData(notice) {
+    return {
+      ...notice,
+      isRead: notice.isRead || notice.is_read || false,
+      isPinned: notice.isPinned || notice.is_pinned || false,
+      categoryText: this.getCategoryText(notice.category),
+      formattedTime: formatRelativeTime(notice.publishedAt || notice.published_at || notice.createdAt || notice.created_at)
+    }
   },
 
   /**
@@ -131,8 +169,11 @@ Page({
    */
   getCategoryText(category) {
     const map = {
-      'urgent': '紧急',
+      'system': '系统',
+      'dorm': '宿舍',
       'maintenance': '维修',
+      'other': '其他',
+      'urgent': '紧急',
       'activity': '活动',
       'general': '一般'
     }
@@ -187,17 +228,8 @@ Page({
    * 下拉刷新
    */
   onPullDownRefresh() {
-    this.setData({ page: 1, hasMore: true })
-    this.loadNotices(true).then(() => {
-      wx.stopPullDownRefresh()
-      wx.showToast({
-        title: '刷新成功',
-        icon: 'success',
-        duration: 1000
-      })
-    }).catch(() => {
-      wx.stopPullDownRefresh()
-    })
+    this.setData({ isRefreshing: true })
+    this.loadNotices(true)
   },
 
   /**
@@ -216,6 +248,126 @@ Page({
   refreshNotices() {
     this.setData({ page: 1, hasMore: true })
     this.loadNotices(true)
+  },
+
+  /**
+   * 发布通知（管理员）
+   */
+  goToPublish() {
+    if (!this.data.isAdmin) {
+      wx.showToast({
+        title: '权限不足',
+        icon: 'none'
+      })
+      return
+    }
+    wx.navigateTo({
+      url: '/pages/notices/publish/index'
+    })
+  },
+
+  /**
+   * 长按编辑（管理员）
+   */
+  onLongPress(e) {
+    if (!this.data.isAdmin) return
+    
+    const noticeId = e.currentTarget.dataset.id
+    const index = e.currentTarget.dataset.index
+    const notice = this.data.notices[index]
+    
+    const itemList = ['编辑', '删除']
+    if (notice.isPinned) {
+      itemList.push('取消置顶')
+    } else {
+      itemList.push('置顶')
+    }
+    itemList.push('查看阅读统计')
+    
+    wx.showActionSheet({
+      itemList,
+      success: (res) => {
+        switch (res.tapIndex) {
+          case 0: // 编辑
+            this.editNotice(noticeId)
+            break
+          case 1: // 删除
+            this.deleteNotice(noticeId)
+            break
+          case 2: // 置顶/取消置顶
+            this.togglePin(noticeId, !notice.isPinned)
+            break
+          case 3: // 阅读统计
+            this.viewReadStats(noticeId)
+            break
+        }
+      }
+    })
+  },
+
+  /**
+   * 编辑通知
+   */
+  editNotice(noticeId) {
+    wx.navigateTo({
+      url: `/pages/notices/publish/index?id=${noticeId}&mode=edit`
+    })
+  },
+
+  /**
+   * 删除通知
+   */
+  deleteNotice(noticeId) {
+    wx.showModal({
+      title: '确认删除',
+      content: '删除后无法恢复，是否继续？',
+      confirmColor: '#ef4444',
+      success: (res) => {
+        if (res.confirm) {
+          const { deleteNotice } = require('../../../api/notices')
+          deleteNotice(noticeId).then(() => {
+            wx.showToast({
+              title: '删除成功',
+              icon: 'success'
+            })
+            this.refreshNotices()
+          }).catch(err => {
+            wx.showToast({
+              title: '删除失败',
+              icon: 'none'
+            })
+          })
+        }
+      }
+    })
+  },
+
+  /**
+   * 置顶/取消置顶
+   */
+  togglePin(noticeId, isPinned) {
+    const { updateNotice } = require('../../../api/notices')
+    updateNotice(noticeId, { isPinned }).then(() => {
+      wx.showToast({
+        title: isPinned ? '置顶成功' : '已取消置顶',
+        icon: 'success'
+      })
+      this.refreshNotices()
+    }).catch(err => {
+      wx.showToast({
+        title: '操作失败',
+        icon: 'none'
+      })
+    })
+  },
+
+  /**
+   * 查看阅读统计
+   */
+  viewReadStats(noticeId) {
+    wx.navigateTo({
+      url: `/pages/notices/stats/index?id=${noticeId}`
+    })
   },
 
   /**

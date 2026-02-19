@@ -1,42 +1,25 @@
 <!--pages/notices/list/index.wxml-->
 <view class="container">
+  <!-- 顶部操作栏（管理员） -->
+  <view class="header-bar" wx:if="{{isAdmin}}">
+    <view class="header-title">通知公告管理</view>
+    <view class="publish-btn" bindtap="goToPublish">
+      <text class="publish-icon">+</text>
+      <text>发布通知</text>
+    </view>
+  </view>
+
   <!-- 分类筛选 -->
   <view class="filter-section">
     <scroll-view class="filter-scroll" scroll-x="true" enable-flex="true">
       <view
-        class="filter-item {{selectedCategory === 'all' ? 'active' : ''}}"
-        data-category="all"
+        class="filter-item {{selectedCategory === item.key ? 'active' : ''}}"
+        wx:for="{{categories}}"
+        wx:key="key"
+        data-category="{{item.key}}"
         bindtap="filterCategory"
       >
-        全部
-      </view>
-      <view
-        class="filter-item {{selectedCategory === 'urgent' ? 'active' : ''}}"
-        data-category="urgent"
-        bindtap="filterCategory"
-      >
-        紧急通知
-      </view>
-      <view
-        class="filter-item {{selectedCategory === 'maintenance' ? 'active' : ''}}"
-        data-category="maintenance"
-        bindtap="filterCategory"
-      >
-        维修通知
-      </view>
-      <view
-        class="filter-item {{selectedCategory === 'activity' ? 'active' : ''}}"
-        data-category="activity"
-        bindtap="filterCategory"
-      >
-        活动通知
-      </view>
-      <view
-        class="filter-item {{selectedCategory === 'general' ? 'active' : ''}}"
-        data-category="general"
-        bindtap="filterCategory"
-      >
-        一般通知
+        {{item.label}}
       </view>
     </scroll-view>
   </view>
@@ -47,7 +30,9 @@
     scroll-y="true" 
     enable-back-to-top="true"
     bindscrolltolower="onLoadMore"
-    style="height: calc(100vh - 200rpx);"
+    enhanced="true"
+    show-scrollbar="false"
+    style="height: calc(100vh - {{isAdmin ? 280 : 140}}rpx);"
   >
     <!-- 加载中 -->
     <view class="loading-container" wx:if="{{loading && notices.length === 0}}">
@@ -71,11 +56,17 @@
         data-id="{{item.id}}"
         data-index="{{index}}"
         bindtap="goToDetail"
+        bindlongpress="onLongPress"
       >
         <!-- 置顶标识 -->
         <view class="pinned-badge" wx:if="{{item.isPinned}}">
           <text class="pinned-icon">📌</text>
           <text>置顶</text>
+        </view>
+
+        <!-- 未读标识 -->
+        <view class="unread-badge" wx:if="{{!item.isRead}}">
+          <text>未读</text>
         </view>
 
         <!-- 头部信息 -->
@@ -85,13 +76,13 @@
             <view class="category-tag category-{{item.category}}">
               {{item.categoryText || item.category}}
             </view>
-            <!-- 未读标识 -->
+            <!-- 未读小红点 -->
             <view class="unread-dot" wx:if="{{!item.isRead}}"></view>
           </view>
           <!-- 发布时间 -->
           <view class="notice-date">
-            <text class="date-icon">📅</text>
-            <text>{{item.publishedAt || item.published_at}}</text>
+            <text class="date-icon">🕐</text>
+            <text class="time-text">{{item.formattedTime}}</text>
           </view>
         </view>
 
@@ -106,10 +97,13 @@
         <!-- 底部信息 -->
         <view class="notice-footer">
           <text class="view-detail">查看详情 ›</text>
-          <text class="read-status {{!item.isRead ? 'is-unread' : ''}}">
-            <text class="status-icon">{{item.isRead ? '✓' : '●'}}</text>
-            <text>{{item.isRead ? '已读' : '未读'}}</text>
-          </text>
+          <view class="footer-right">
+            <text class="admin-hint" wx:if="{{isAdmin}}">长按管理</text>
+            <text class="read-status {{!item.isRead ? 'is-unread' : ''}}">
+              <text class="status-icon">{{item.isRead ? '✓' : '●'}}</text>
+              <text>{{item.isRead ? '已读' : '未读'}}</text>
+            </text>
+          </view>
         </view>
       </view>
 
@@ -119,7 +113,7 @@
         <text>上拉加载更多</text>
       </view>
       <view class="load-more" wx:if="{{loadingMore}}">
-        <text class="load-more-icon">⟳</text>
+        <view class="load-more-spinner"></view>
         <text>加载中...</text>
       </view>
       <view class="load-more no-more" wx:if="{{!hasMore && notices.length > 0}}">

@@ -1,0 +1,171 @@
+<!--pages/notices/publish/index.wxml-->
+<view class="container">
+  <!-- 加载中 -->
+  <view class="loading-container" wx:if="{{loading}}">
+    <view class="loading-spinner"></view>
+    <text class="loading-text">加载中...</text>
+  </view>
+
+  <!-- 表单内容 -->
+  <scroll-view class="form-scroll" scroll-y wx:else>
+    <!-- 标题输入 -->
+    <view class="form-section">
+      <view class="section-title">
+        <text class="required">*</text>
+        <text>通知标题</text>
+      </view>
+      <input 
+        class="title-input" 
+        type="text" 
+        placeholder="请输入通知标题（100字以内）"
+        value="{{title}}"
+        bindinput="onTitleInput"
+        maxlength="100"
+      />
+      <view class="char-count">{{title.length}}/100</view>
+    </view>
+
+    <!-- 分类选择 -->
+    <view class="form-section">
+      <view class="section-title">
+        <text class="required">*</text>
+        <text>通知分类</text>
+      </view>
+      <view class="category-grid">
+        <view 
+          class="category-item {{category === item.key ? 'active' : ''}}"
+          wx:for="{{categories}}"
+          wx:key="key"
+          data-category="{{item.key}}"
+          bindtap="selectCategory"
+        >
+          <text class="category-icon">{{item.icon}}</text>
+          <text class="category-label">{{item.label}}</text>
+          <text class="check-icon" wx:if="{{category === item.key}}">✓</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 内容编辑 -->
+    <view class="form-section">
+      <view class="section-title">
+        <text class="required">*</text>
+        <text>通知内容</text>
+      </view>
+      <textarea 
+        class="content-input" 
+        placeholder="请输入通知内容，支持换行"
+        value="{{content}}"
+        bindinput="onContentInput"
+        maxlength="2000"
+        auto-height
+      />
+      <view class="char-count">{{content.length}}/2000</view>
+      
+      <!-- 快捷标签 -->
+      <view class="quick-tags">
+        <text class="tag-label">快捷插入：</text>
+        <view class="tag-item" bindtap="insertTag" data-tag="【重要通知】">
+          <text>【重要通知】</text>
+        </view>
+        <view class="tag-item" bindtap="insertTag" data-tag="【温馨提示】">
+          <text>【温馨提示】</text>
+        </view>
+        <view class="tag-item" bindtap="insertTag" data-tag="【紧急通知】">
+          <text>【紧急通知】</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 接收对象 -->
+    <view class="form-section">
+      <view class="section-title">
+        <text>接收对象</text>
+      </view>
+      <view class="target-list">
+        <view 
+          class="target-item {{targetUsers === item.key ? 'active' : ''}}"
+          wx:for="{{targetOptions}}"
+          wx:key="key"
+          bindtap="selectTarget"
+          data-target="{{item.key}}"
+        >
+          <view class="target-info">
+            <text class="target-label">{{item.label}}</text>
+            <text class="target-desc">{{item.desc}}</text>
+          </view>
+          <view class="target-check" wx:if="{{targetUsers === item.key}}">
+            <text class="check-circle">✓</text>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 置顶选项 -->
+    <view class="form-section">
+      <view class="section-title">
+        <text>其他设置</text>
+      </view>
+      <view class="switch-row">
+        <text class="switch-label">置顶通知</text>
+        <switch 
+          checked="{{isPinned}}" 
+          bindchange="onPinnedChange"
+          color="#3b82f6"
+        />
+      </view>
+    </view>
+
+    <!-- 附件 -->
+    <view class="form-section">
+      <view class="section-title">
+        <text>附件上传（可选）</text>
+      </view>
+      
+      <view class="attachment-list">
+        <view 
+          class="attachment-item" 
+          wx:for="{{attachments}}" 
+          wx:key="id"
+        >
+          <text class="attachment-icon">📄</text>
+          <view class="attachment-info">
+            <text class="attachment-name">{{item.name}}</text>
+            <text class="attachment-size" wx:if="{{item.size}}">{{formatSize(item.size)}}</text>
+          </view>
+          <text class="delete-btn" data-index="{{index}}" bindtap="deleteAttachment">✕</text>
+        </view>
+      </view>
+      
+      <button 
+        class="upload-btn" 
+        bindtap="chooseAttachment"
+        disabled="{{attachments.length >= 5}}"
+      >
+        <text class="upload-icon">+</text>
+        <text>添加附件（最多5个）</text>
+      </button>
+    </view>
+
+    <!-- 底部留白 -->
+    <view class="bottom-spacer"></view>
+  </scroll-view>
+
+  <!-- 底部操作栏 -->
+  <view class="bottom-bar">
+    <button class="cancel-btn" bindtap="cancel">
+      <text>取消</text>
+    </button>
+    <button class="draft-btn" bindtap="saveDraft" wx:if="{{mode === 'create'}}">
+      <text>存草稿</text>
+    </button>
+    <button 
+      class="submit-btn" 
+      bindtap="submit" 
+      loading="{{submitting}}"
+      disabled="{{submitting}}"
+    >
+      <text>{{mode === 'edit' ? '更新' : '发布'}}</text>
+    </button>
+  </view>
+</view>

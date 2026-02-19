@@ -8,7 +8,11 @@
       </view>
       <text class="navbar-title">公告详情</text>
     </view>
-    <view class="navbar-right"></view>
+    <view class="navbar-right">
+      <view class="menu-btn" wx:if="{{isAdmin}}" bindtap="showAdminMenu">
+        <text class="menu-icon">⋮</text>
+      </view>
+    </view>
   </view>
 
   <!-- 加载中 -->
@@ -46,7 +50,7 @@
       <view class="meta-info">
         <view class="meta-item">
           <text class="meta-icon">📅</text>
-          <text>{{notice.publishedAt || notice.published_at || notice.createdAt || notice.created_at}}</text>
+          <text>{{notice.formattedTime}}</text>
         </view>
         
         <view class="meta-divider"></view>
@@ -80,7 +84,7 @@
     <view class="attachments-section" wx:if="{{notice.attachments && notice.attachments.length > 0}}">
       <view class="section-header">
         <text class="section-icon">📎</text>
-        <text class="section-title">相关附件</text>
+        <text class="section-title">相关附件（{{notice.attachments.length}}个）</text>
       </view>
       <view class="attachment-list">
         <view 
@@ -100,6 +104,34 @@
           </view>
           <text class="attachment-action">下载</text>
         </view>
+      </view>
+    </view>
+
+    <!-- 上一篇/下一篇导航 -->
+    <view class="nav-section" wx:if="{{prevNotice || nextNotice}}">
+      <view class="section-header">
+        <text class="section-icon">📖</text>
+        <text class="section-title">更多公告</text>
+      </view>
+      
+      <view class="nav-item nav-prev {{!prevNotice ? 'disabled' : ''}}" bindtap="goToPrev">
+        <view class="nav-label">
+          <text class="nav-arrow">↑</text>
+          <text>上一篇</text>
+        </view>
+        <view class="nav-title" wx:if="{{prevNotice}}">{{prevNotice.title}}</view>
+        <view class="nav-title nav-empty" wx:else>没有了</view>
+      </view>
+      
+      <view class="nav-divider"></view>
+      
+      <view class="nav-item nav-next {{!nextNotice ? 'disabled' : ''}}" bindtap="goToNext">
+        <view class="nav-label">
+          <text class="nav-arrow">↓</text>
+          <text>下一篇</text>
+        </view>
+        <view class="nav-title" wx:if="{{nextNotice}}">{{nextNotice.title}}</view>
+        <view class="nav-title nav-empty" wx:else>没有了</view>
       </view>
     </view>
 

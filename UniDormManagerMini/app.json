@@ -9,6 +9,8 @@
     "pages/repairs/statistics/index",
     "pages/notices/list/index",
     "pages/notices/detail/index",
+    "pages/notices/publish/index",
+    "pages/notices/stats/index",
     "pages/profile/index",
     "pages/inspections/list/index",
     "pages/checkin/index/index",

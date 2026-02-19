@@ -50,9 +50,10 @@ function markNoticeRead(id) {
 /**
  * 获取公告阅读记录（管理员）
  * @param {String} id 公告ID
+ * @param {Object} params 查询参数 { page, pageSize }
  */
-function getNoticeReadRecords(id) {
-  return get(`/api/notices/${id}/read-records`, {}, { showLoading: true })
+function getNoticeReadRecords(id, params = {}) {
+  return get(`/api/notices/${id}/read-records`, params, { showLoading: true })
 }
 
 module.exports = {
