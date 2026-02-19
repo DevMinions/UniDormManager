@@ -11,7 +11,33 @@ Component({
    */
   data: {
     selected: 0,
-    tabBarList: [],
+    // 默认显示学生 TabBar，避免空数组导致不渲染
+    tabBarList: [
+      {
+        pagePath: "/pages/index/index",
+        text: "首页",
+        iconPath: "/images/home.png",
+        selectedIconPath: "/images/home-active.png"
+      },
+      {
+        pagePath: "/pages/rooms/list",
+        text: "房间",
+        iconPath: "/images/room.png",
+        selectedIconPath: "/images/room-active.png"
+      },
+      {
+        pagePath: "/pages/repairs/list/index",
+        text: "报修",
+        iconPath: "/images/repair.png",
+        selectedIconPath: "/images/repair-active.png"
+      },
+      {
+        pagePath: "/pages/profile/index",
+        text: "我的",
+        iconPath: "/images/profile.png",
+        selectedIconPath: "/images/profile-active.png"
+      }
+    ],
     safeAreaBottom: 0
   },
 
@@ -20,18 +46,24 @@ Component({
    */
   lifetimes: {
     attached() {
+      console.log('=== TabBar attached ===')
+      
       // 获取安全区域底部高度
       const systemInfo = wx.getSystemInfoSync()
       const safeAreaBottom = systemInfo.safeArea ? 
         (systemInfo.screenHeight - systemInfo.safeArea.bottom) : 0
       
+      // 获取 TabBar 列表
+      const tabBarList = this.getTabBarList()
+      console.log('TabBar list:', tabBarList)
+      console.log('TabBar list length:', tabBarList.length)
+      
       this.setData({ 
         safeAreaBottom,
-        tabBarList: this.getTabBarList()
+        tabBarList: tabBarList.length > 0 ? tabBarList : this.data.tabBarList
       })
       
-      console.log('TabBar attached, userLevel:', getApp().globalData.userLevel)
-      console.log('TabBar list:', this.getTabBarList())
+      console.log('TabBar data set:', this.data)
     }
   },
 
