@@ -12,7 +12,10 @@
     "pages/profile/index",
     "pages/inspections/list/index",
     "pages/checkin/index/index",
-    "pages/checkout/index/index"
+    "pages/checkout/index/index",
+    "pages/admin/users/index",
+    "pages/admin/dashboard/index",
+    "pages/admin/settings/index"
   ],
   "window": {
     "backgroundTextStyle": "light",

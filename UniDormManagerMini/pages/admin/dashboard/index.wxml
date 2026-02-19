@@ -1,0 +1,214 @@
+<!--pages/admin/dashboard/index.wxml-->
+<view class="container">
+  <!-- 页面标题 -->
+  <view class="page-header">
+    <text class="heading-2">📊 数据统计大屏</text>
+    <text class="subtitle">实时监控宿舍管理各项指标</text>
+  </view>
+
+  <!-- 加载中 -->
+  <view class="loading" wx:if="{{loading}}">
+    <view class="loading-spinner"></view>
+    <text class="loading-text">加载数据中...</text>
+  </view>
+
+  <!-- 数据内容 -->
+  <view wx:else>
+    <!-- 关键指标卡片 -->
+    <view class="stats-grid">
+      <!-- 总用户数 -->
+      <view class="stat-card" bindtap="goToUserManagement">
+        <view class="stat-icon users-icon">👥</view>
+        <view class="stat-info">
+          <text class="stat-value">{{statistics.totalUsers}}</text>
+          <text class="stat-label">总用户数</text>
+        </view>
+        <view class="stat-trend up">
+          <text class="trend-arrow">↑</text>
+          <text class="trend-value">{{statistics.newUsersThisMonth}}</text>
+        </view>
+      </view>
+
+      <!-- 总房间数 -->
+      <view class="stat-card" bindtap="goToRoomManagement">
+        <view class="stat-icon rooms-icon">🏢</view>
+        <view class="stat-info">
+          <text class="stat-value">{{statistics.totalRooms}}</text>
+          <text class="stat-label">总房间数</text>
+        </view>
+        <view class="stat-detail">
+          <text class="detail-text">{{statistics.occupancyRate}}%入住</text>
+        </view>
+      </view>
+
+      <!-- 入住率 -->
+      <view class="stat-card highlight">
+        <view class="stat-icon occupancy-icon">📈</view>
+        <view class="stat-info">
+          <text class="stat-value">{{statistics.occupancyRate}}%</text>
+          <text class="stat-label">入住率</text>
+        </view>
+        <view class="progress-ring">
+          <view class="ring-bg"></view>
+          <view class="ring-fill" style="--progress: {{statistics.occupancyRate}}%"></view>
+        </view>
+      </view>
+
+      <!-- 今日报修 -->
+      <view class="stat-card" bindtap="goToRepairManagement">
+        <view class="stat-icon repair-today-icon">🔧</view>
+        <view class="stat-info">
+          <text class="stat-value">{{statistics.todayRepairs}}</text>
+          <text class="stat-label">今日报修</text>
+        </view>
+        <view class="stat-badge" wx:if="{{statistics.todayRepairs > 0}}">
+          <text>New</text>
+        </view>
+      </view>
+
+      <!-- 待处理报修 -->
+      <view class="stat-card warning" bindtap="goToRepairManagement">
+        <view class="stat-icon repair-pending-icon">⏳</view>
+        <view class="stat-info">
+          <text class="stat-value">{{statistics.pendingRepairs}}</text>
+          <text class="stat-label">待处理</text>
+        </view>
+        <view class="stat-alert" wx:if="{{statistics.pendingRepairs > 5}}">
+          <text>⚠️ 积压</text>
+        </view>
+      </view>
+
+      <!-- 本月新增 -->
+      <view class="stat-card success">
+        <view class="stat-icon new-users-icon">🆕</view>
+        <view class="stat-info">
+          <text class="stat-value">{{statistics.newUsersThisMonth}}</text>
+          <text class="stat-label">本月新增</text>
+        </view>
+        <view class="stat-detail">
+          <text class="detail-text">较上月 +12%</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 图表区域 -->
+    <view class="charts-section">
+      <!-- 入住率趋势 -->
+      <view class="chart-card">
+        <view class="chart-header">
+          <text class="chart-title">📈 入住率趋势（近7天）</text>
+        </view>
+        <view class="chart-body">
+          <view class="trend-chart">
+            <view class="chart-y-axis">
+              <text class="y-label">100%</text>
+              <text class="y-label">75%</text>
+              <text class="y-label">50%</text>
+              <text class="y-label">25%</text>
+              <text class="y-label">0%</text>
+            </view>
+            <view class="chart-content">
+              <view class="trend-line">
+                <view 
+                  class="trend-point" 
+                  wx:for="{{trendData.occupancyRates}}" 
+                  wx:key="index"
+                  style="left: {{index * 16.66}}%; bottom: {{item}}%"
+                >
+                  <view class="point-dot"></view>
+                  <view class="point-value">{{item}}%</view>
+                </view>
+                <view class="trend-line-path"></view>
+              </view>
+              <view class="chart-x-axis">
+                <text 
+                  class="x-label" 
+                  wx:for="{{trendData.dates}}" 
+                  wx:key="index"
+                  style="left: {{index * 16.66}}%"
+                >{{item}}</text>
+              </view>
+            </view>
+          </view>
+        </view>
+      </view>
+
+      <!-- 报修类型分布 -->
+      <view class="chart-card">
+        <view class="chart-header">
+          <text class="chart-title">🔧 报修类型分布</text>
+        </view>
+        <view class="chart-body">
+          <view class="type-distribution">
+            <view class="type-legend">
+              <view class="legend-item" wx:for="{{repairTypes}}" wx:key="name">
+                <view class="legend-color" style="background-color: {{item.color}}"></view>
+                <text class="legend-name">{{item.name}}</text>
+                <text class="legend-value">{{item.value}}%</text>
+              </view>
+            </view>
+            <view class="type-bars">
+              <view 
+                class="type-bar" 
+                wx:for="{{repairTypes}}" 
+                wx:key="name"
+                style="width: {{item.value}}%; background-color: {{item.color}}"
+              >
+                <text class="bar-label" wx:if="{{item.value >= 15}}">{{item.name}}</text>
+              </view>
+            </view>
+          </view>
+        </view>
+      </view>
+
+      <!-- 各楼栋入住情况 -->
+      <view class="chart-card">
+        <view class="chart-header">
+          <text class="chart-title">🏢 各楼栋入住情况</text>
+        </view>
+        <view class="chart-body">
+          <view class="building-list">
+            <view class="building-item" wx:for="{{buildingStats}}" wx:key="name">
+              <view class="building-info">
+                <text class="building-name">{{item.name}}</text>
+                <text class="building-detail">{{item.occupied}}/{{item.total}}间</text>
+              </view>
+              <view class="building-progress">
+                <view class="progress-bg">
+                  <view 
+                    class="progress-fill" 
+                    style="width: {{item.rate}}%; background: linear-gradient(90deg, #667eea, #764ba2)"
+                  ></view>
+                </view>
+                <text class="progress-text">{{item.rate}}%</text>
+              </view>
+            </view>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 快捷入口 -->
+    <view class="quick-actions">
+      <view class="section-title">快速操作</view>
+      <view class="action-grid">
+        <view class="action-item" bindtap="goToUserManagement">
+          <view class="action-icon">👤</view>
+          <text class="action-name">用户管理</text>
+        </view>
+        <view class="action-item" bindtap="goToRepairManagement">
+          <view class="action-icon">🔧</view>
+          <text class="action-name">报修管理</text>
+        </view>
+        <view class="action-item" bindtap="goToSettings">
+          <view class="action-icon">⚙️</view>
+          <text class="action-name">系统设置</text>
+        </view>
+        <view class="action-item" bindtap="goToLogs">
+          <view class="action-icon">📝</view>
+          <text class="action-name">操作日志</text>
+        </view>
+      </view>
+    </view>
+  </view>
+</view>

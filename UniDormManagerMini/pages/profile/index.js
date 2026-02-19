@@ -235,9 +235,8 @@ Page({
       return
     }
     
-    wx.showToast({
-      title: '功能开发中',
-      icon: 'none'
+    wx.navigateTo({
+      url: '/pages/admin/users/index'
     })
   },
 
@@ -253,9 +252,25 @@ Page({
       return
     }
     
-    wx.showToast({
-      title: '功能开发中',
-      icon: 'none'
+    wx.navigateTo({
+      url: '/pages/admin/settings/index'
+    })
+  },
+
+  /**
+   * 跳转到数据统计大屏
+   */
+  goToDashboard() {
+    if (!this.data.isAdmin) {
+      wx.showToast({
+        title: '权限不足',
+        icon: 'none'
+      })
+      return
+    }
+    
+    wx.navigateTo({
+      url: '/pages/admin/dashboard/index'
     })
   },
 

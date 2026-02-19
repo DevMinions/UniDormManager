@@ -155,6 +155,16 @@
         <view class="role-badge admin">管理员</view>
       </view>
       <view class="menu-list">
+        <!-- 数据统计 -->
+        <view class="menu-item" bindtap="goToDashboard" wx:if="{{showUserManagement}}">
+          <view class="menu-icon dashboard">📊</view>
+          <view class="menu-content">
+            <text class="menu-label">数据统计</text>
+            <text class="menu-desc">查看统计数据</text>
+          </view>
+          <view class="menu-arrow">›</view>
+        </view>
+
         <!-- 用户管理 -->
         <view class="menu-item" bindtap="goToUserManagement" wx:if="{{showUserManagement}}">
           <view class="menu-icon users">👤</view>
