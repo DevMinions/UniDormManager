@@ -7,14 +7,25 @@ Page({
   data: {
     currentDate: '',
     currentTime: '',
+    welcomeTitle: '',
+    userRoleName: '',
+    userLevel: 1,
+    userRole: '',
+    // 视图类型: 'student' | 'maintenance' | 'admin'
+    viewType: 'student',
+    loading: true,
+    
+    // 统计数据
     stats: {
       totalRooms: 0,
       occupiedRooms: 0,
       freeRooms: 0,
       pendingRepairs: 0,
+      completedRepairs: 0,
       totalStudents: 0,
       totalBuildings: 0
     },
+    
     // 维修工专属数据
     maintenanceStats: {
       pendingCount: 0,        // 待处理工单数
@@ -24,12 +35,27 @@ Page({
       urgentCount: 0          // 紧急工单数
     },
     recentTickets: [],        // 最新待处理工单
-    loading: true,
-    isAdmin: false,
-    isMaintenance: false,     // 是否为维修工
-    userRole: '',
-    userLevel: 1,
-    userRoleName: ''
+    
+    // 管理功能权限配置
+    permissions: {
+      canManageStudents: false,   // Level 2+
+      canManageRepairs: false,    // Level 3+
+      canManageRooms: false,      // Level 4+
+      canManageNotices: false,    // Level 5+
+      canManageUsers: false,      // Level 6
+      canSystemSettings: false    // Level 6
+    },
+    
+    // 数据概览
+    overviewData: {
+      buildingOccupancy: [],      // 各楼栋入住率
+      weeklyRepairTrend: [],      // 本周报修趋势
+      last7DaysStats: []          // 最近7天数据变化
+    },
+    
+    // 紧急待办
+    urgentTodos: [],
+    hasUrgentTodos: false
   },
 
   onLoad() {
@@ -41,41 +67,72 @@ Page({
       return
     }
 
-    // 设置当前日期时间
-    this.setCurrentDate()
-
-    // 加载用户角色信息
-    const userRole = app.globalData.userRole
-    const userLevel = app.globalData.userLevel
-    const userRoleName = app.globalData.userRoleName || ''
-    const isMaintenance = userRole === 'maintenance' || userLevel === 3
-
-    this.setData({
-      isAdmin: userRole === 'admin',
-      isMaintenance: isMaintenance,
-      userRole: userRole,
-      userLevel: userLevel,
-      userRoleName: userRoleName
-    })
-
-    // 根据角色加载不同数据
-    if (isMaintenance) {
-      this.loadMaintenanceData()
-    } else {
-      this.loadStats()
-    }
+    this.initializePage()
   },
 
   onShow() {
     // 每次显示页面时重新加载数据
     if (app.globalData.isLoggedIn) {
-      this.setCurrentDate()
-      if (this.data.isMaintenance) {
-        this.loadMaintenanceData()
-      } else {
-        this.loadStats()
-      }
+      this.initializePage()
     }
+  },
+
+  /**
+   * 初始化页面
+   */
+  initializePage() {
+    const userLevel = app.globalData.userLevel || 1
+    const userRoleName = app.globalData.userRoleName || '学生'
+    const userRole = app.globalData.userRole || 'student'
+    
+    // 确定视图类型
+    let viewType = 'student'
+    if (userLevel >= 4) {
+      viewType = 'admin'  // 楼栋管理员及以上显示管理控制台
+    } else if (userRole === 'maintenance' || userLevel === 3) {
+      viewType = 'maintenance'  // 维修工
+    }
+
+    this.setData({
+      userLevel: userLevel,
+      userRoleName: userRoleName,
+      userRole: userRole,
+      viewType: viewType
+    })
+
+    // 设置欢迎信息
+    this.setWelcomeInfo(viewType, userRoleName)
+    
+    // 设置当前日期
+    this.setCurrentDate()
+    
+    // 根据视图类型加载不同数据
+    if (viewType === 'maintenance') {
+      this.loadMaintenanceData()
+    } else if (viewType === 'admin') {
+      // 管理员视图
+      this.calculatePermissions(userLevel)
+      this.loadStats()
+      this.loadUrgentTodos()
+      this.loadOverviewData()
+    } else {
+      // 学生视图
+      this.loadStats()
+    }
+  },
+
+  /**
+   * 设置欢迎信息
+   */
+  setWelcomeInfo(viewType, userRoleName) {
+    let welcomeTitle = '欢迎使用宿舍管理系统'
+    if (viewType === 'admin') {
+      welcomeTitle = '管理控制台'
+    } else if (viewType === 'maintenance') {
+      welcomeTitle = '维修工作台'
+    }
+    
+    this.setData({ welcomeTitle })
   },
 
   /**
@@ -100,7 +157,23 @@ Page({
   },
 
   /**
-   * 加载普通用户统计数据
+   * 根据用户等级计算权限
+   */
+  calculatePermissions(userLevel) {
+    const permissions = {
+      canManageStudents: userLevel >= 2,   // 宿管员及以上
+      canManageRepairs: userLevel >= 3,    // 维修工及以上
+      canManageRooms: userLevel >= 4,      // 楼栋管理员及以上
+      canManageNotices: userLevel >= 5,    // 后勤管理员及以上
+      canManageUsers: userLevel >= 6,      // 系统管理员
+      canSystemSettings: userLevel >= 6    // 系统管理员
+    }
+    
+    this.setData({ permissions })
+  },
+
+  /**
+   * 加载统计数据
    */
   loadStats() {
     this.setData({ loading: true })
@@ -237,20 +310,203 @@ Page({
   },
 
   /**
+   * 加载紧急待办事项
+   */
+  loadUrgentTodos() {
+    // 模拟待办数据，实际应从API获取
+    const todos = []
+    const { permissions, stats, userLevel } = this.data
+    
+    // 根据权限生成不同的待办
+    if (permissions.canManageRepairs && stats.pendingRepairs > 0) {
+      todos.push({
+        id: 'repair-1',
+        type: 'repair',
+        icon: '🔧',
+        title: '待处理报修',
+        desc: `${stats.pendingRepairs} 个报修请求待处理`,
+        urgent: true,
+        action: 'goToRepairs'
+      })
+    }
+    
+    // 模拟超时未处理报修
+    if (permissions.canManageRepairs) {
+      todos.push({
+        id: 'repair-overdue',
+        type: 'overdue',
+        icon: '⚠️',
+        title: '超时未处理报修',
+        desc: '2 个报修已超时 24 小时未处理',
+        urgent: true,
+        action: 'goToRepairs'
+      })
+    }
+    
+    // 模拟待审批申请
+    if (userLevel >= 4) {
+      todos.push({
+        id: 'approval',
+        type: 'approval',
+        icon: '📋',
+        title: '待审批调宿申请',
+        desc: '3 个调宿申请待审批',
+        urgent: false,
+        action: 'goToApprovals'
+      })
+    }
+
+    this.setData({
+      urgentTodos: todos,
+      hasUrgentTodos: todos.length > 0
+    })
+  },
+
+  /**
+   * 加载数据概览
+   */
+  loadOverviewData() {
+    // 模拟数据概览，实际应从API获取
+    const buildingOccupancy = [
+      { name: 'A栋', rate: 85 },
+      { name: 'B栋', rate: 92 },
+      { name: 'C栋', rate: 78 },
+      { name: 'D栋', rate: 88 }
+    ]
+    
+    const weeklyRepairTrend = [
+      { day: '周一', count: 5 },
+      { day: '周二', count: 8 },
+      { day: '周三', count: 3 },
+      { day: '周四', count: 12 },
+      { day: '周五', count: 7 },
+      { day: '周六', count: 4 },
+      { day: '周日', count: 6 }
+    ]
+
+    this.setData({
+      'overviewData.buildingOccupancy': buildingOccupancy,
+      'overviewData.weeklyRepairTrend': weeklyRepairTrend
+    })
+  },
+
+  /**
    * 下拉刷新
    */
   onPullDownRefresh() {
-    if (this.data.isMaintenance) {
-      this.loadMaintenanceData()
-    } else {
-      this.loadStats()
-    }
+    this.initializePage()
     setTimeout(() => {
       wx.stopPullDownRefresh()
     }, 1000)
   },
 
-  // ===== 快捷入口导航 =====
+  // ==================== 页面跳转方法 ====================
+
+  /**
+   * 学生管理
+   */
+  goToStudents() {
+    if (!this.data.permissions.canManageStudents) {
+      wx.showToast({ title: '无权限访问', icon: 'none' })
+      return
+    }
+    wx.navigateTo({
+      url: '/pages/admin/students/index'
+    })
+  },
+
+  /**
+   * 房间管理
+   */
+  goToRooms() {
+    const { viewType, permissions } = this.data
+    
+    if (viewType === 'admin' && permissions.canManageRooms) {
+      // 管理员跳转到管理页面
+      wx.navigateTo({
+        url: '/pages/admin/rooms/index'
+      })
+    } else {
+      // 普通用户跳转到查询页面
+      wx.switchTab({
+        url: '/pages/rooms/list'
+      })
+    }
+  },
+
+  /**
+   * 公告管理
+   */
+  goToNotices() {
+    const { permissions } = this.data
+    
+    if (permissions.canManageNotices) {
+      // 有管理权限跳转到管理页面
+      wx.navigateTo({
+        url: '/pages/admin/notices/index'
+      })
+    } else {
+      // 普通查看
+      wx.navigateTo({
+        url: '/pages/notices/list/index'
+      })
+    }
+  },
+
+  /**
+   * 报修管理
+   */
+  goToRepairs() {
+    wx.switchTab({
+      url: '/pages/repairs/list/index'
+    })
+  },
+
+  /**
+   * 用户管理
+   */
+  goToUsers() {
+    if (!this.data.permissions.canManageUsers) {
+      wx.showToast({ title: '无权限访问', icon: 'none' })
+      return
+    }
+    wx.navigateTo({
+      url: '/pages/admin/users/index'
+    })
+  },
+
+  /**
+   * 系统设置
+   */
+  goToSettings() {
+    if (!this.data.permissions.canSystemSettings) {
+      wx.showToast({ title: '无权限访问', icon: 'none' })
+      return
+    }
+    wx.navigateTo({
+      url: '/pages/admin/settings/index'
+    })
+  },
+
+  /**
+   * 审批管理
+   */
+  goToApprovals() {
+    wx.navigateTo({
+      url: '/pages/admin/approvals/index'
+    })
+  },
+
+  /**
+   * 个人中心
+   */
+  goToProfile() {
+    wx.switchTab({
+      url: '/pages/profile/index'
+    })
+  },
+
+  // ===== 维修工专属导航 =====
 
   /**
    * 待处理工单
@@ -342,37 +598,14 @@ Page({
     })
   },
 
-  // ===== 原有快捷入口 =====
-
-  goToRooms() {
-    wx.switchTab({
-      url: '/pages/rooms/list'
-    })
-  },
-
-  goToRepairs() {
-    wx.switchTab({
-      url: '/pages/repairs/list/index'
-    })
-  },
-
-  goToNotices() {
-    wx.navigateTo({
-      url: '/pages/notices/list/index'
-    })
-  },
-
-  goToProfile() {
-    wx.switchTab({
-      url: '/pages/profile/index'
-    })
-  },
-
-  goToStudents() {
-    wx.showToast({
-      title: '功能开发中',
-      icon: 'none'
-    })
+  /**
+   * 处理待办事项点击
+   */
+  onTodoClick(e) {
+    const { action } = e.currentTarget.dataset
+    if (action && this[action]) {
+      this[action]()
+    }
   },
 
   // ===== 工具方法 =====

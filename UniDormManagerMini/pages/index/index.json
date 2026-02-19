@@ -1,0 +1,7 @@
+{
+  "navigationBarTitleText": "宿舍管理系统",
+  "enablePullDownRefresh": true,
+  "backgroundColor": "#f8fafc",
+  "backgroundTextStyle": "dark",
+  "usingComponents": {}
+}

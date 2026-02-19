@@ -8,7 +8,10 @@
     "pages/repairs/detail/index",
     "pages/notices/list/index",
     "pages/notices/detail/index",
-    "pages/profile/index"
+    "pages/profile/index",
+    "pages/inspections/list/index",
+    "pages/checkin/index/index",
+    "pages/checkout/index/index"
   ],
   "window": {
     "backgroundTextStyle": "light",
@@ -19,6 +22,7 @@
     "navigationStyle": "default"
   },
   "tabBar": {
+    "custom": true,
     "color": "#94a3b8",
     "selectedColor": "#667eea",
     "backgroundColor": "#ffffff",

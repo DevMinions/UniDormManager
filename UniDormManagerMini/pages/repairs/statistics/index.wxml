@@ -1,0 +1,320 @@
+<!--pages/repairs/statistics/index.wxml-->
+<view class="container">
+  <!-- 页面标题 -->
+  <view class="page-header">
+    <view class="header-bg"></view>
+    <view class="header-content">
+      <text class="header-title">工单统计</text>
+      <text class="header-subtitle">维修工作数据分析</text>
+    </view>
+  </view>
+
+  <view class="content-wrapper" wx:if="{{!loading}}">
+    <!-- 总览卡片 -->
+    <view class="overview-section">
+      <view class="overview-card">
+        <view class="overview-item" bindtap="viewTickets" data-type="total"
+        >
+          <text class="overview-number total">{{totalStats.totalTickets}}</text>
+          <text class="overview-label">工单总数</text>
+        </view>
+        <view class="overview-divider"></view>
+        <view class="overview-item" bindtap="viewTickets" data-type="completed"
+        >
+          <text class="overview-number completed">{{totalStats.completedTickets}}</text>
+          <text class="overview-label">已完成</text>
+        </view>
+        <view class="overview-divider"></view>
+        <view class="overview-item" bindtap="viewTickets" data-type="pending"
+        >
+          <text class="overview-number pending">{{totalStats.pendingTickets}}</text>
+          <text class="overview-label">待处理</text>
+        </view>
+        <view class="overview-divider"></view>
+        <view class="overview-item"
+        >
+          <text class="overview-number rate">{{totalStats.completionRate}}%</text>
+          <text class="overview-label">完成率</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 今日数据 -->
+    <view class="section">
+      <view class="section-header"
+      >
+        <view class="header-left"
+        >
+          <text class="section-line"></text>
+          <text class="section-title">今日概览</text>
+        </view>
+        <text class="section-date">{{todayDate}}</text>
+      </view>
+      
+      <view class="today-grid"
+      >
+        <view class="today-card new-card"
+        >
+          <view class="today-icon-wrapper"
+        >
+            <text class="today-icon"
+        >📈</text>
+          </view>
+          <view class="today-info"
+        >
+            <text class="today-value"
+        >{{todayStats.newTickets}}</text>
+            <text class="today-label"
+        >新增工单</text>
+          </view>
+        </view>
+        
+        <view class="today-card completed-card"
+        >
+          <view class="today-icon-wrapper"
+        >
+            <text class="today-icon"
+        >✅</text>
+          </view>
+          <view class="today-info"
+        >
+            <text class="today-value"
+        >{{todayStats.completedTickets}}</text>
+            <text class="today-label"
+        >已完成</text>
+          </view>
+        </view>
+        
+        <view class="today-card urgent-card" wx:if="{{todayStats.urgentTickets > 0}}"
+        >
+          <view class="today-icon-wrapper"
+        >
+            <text class="today-icon"
+        >🔴</text>
+          </view>
+          <view class="today-info"
+        >
+            <text class="today-value urgent"
+        >{{todayStats.urgentTickets}}</text>
+            <text class="today-label"
+        >紧急工单</text>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 优先级分布 -->
+    <view class="section"
+    >
+      <view class="section-header"
+      >
+        <view class="header-left"
+        >
+          <text class="section-line"
+        ></text>
+          <text class="section-title"
+        >优先级分布</text>
+        </view>
+      </view>
+      
+      <view class="priority-section"
+      >
+        <view class="priority-item urgent-item" bindtap="viewTickets" data-type="high"
+        >
+          <view class="priority-header"
+        >
+            <view class="priority-dot dot-red"
+        ></view>
+            <text class="priority-name"
+        >紧急</text>
+          </view>
+          <view class="priority-bar-bg"
+        >
+            <view class="priority-bar" style="width: {{totalStats.totalTickets > 0 ? (priorityStats.high / totalStats.totalTickets * 100) : 0}}%; background: linear-gradient(90deg, #ef4444, #f87171);"
+        ></view>
+          </view>
+          <text class="priority-count"
+        >{{priorityStats.high}}</text>
+        </view>
+        
+        <view class="priority-item medium-item" bindtap="viewTickets" data-type="medium"
+        >
+          <view class="priority-header"
+        >
+            <view class="priority-dot dot-yellow"
+        ></view>
+            <text class="priority-name"
+        >中优先级</text>
+          </view>
+          <view class="priority-bar-bg"
+        >
+            <view class="priority-bar" style="width: {{totalStats.totalTickets > 0 ? (priorityStats.medium / totalStats.totalTickets * 100) : 0}}%; background: linear-gradient(90deg, #f59e0b, #fbbf24);"
+        ></view>
+          </view>
+          <text class="priority-count"
+        >{{priorityStats.medium}}</text>
+        </view>
+        
+        <view class="priority-item low-item" bindtap="viewTickets" data-type="low"
+        >
+          <view class="priority-header"
+        >
+            <view class="priority-dot dot-green"
+        ></view>
+            <text class="priority-name"
+        >低优先级</text>
+          </view>
+          <view class="priority-bar-bg"
+        >
+            <view class="priority-bar" style="width: {{totalStats.totalTickets > 0 ? (priorityStats.low / totalStats.totalTickets * 100) : 0}}%; background: linear-gradient(90deg, #10b981, #34d399);"
+        ></view>
+          </view>
+          <text class="priority-count"
+        >{{priorityStats.low}}</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 维修类型分布 -->
+    <view class="section"
+    >
+      <view class="section-header"
+      >
+        <view class="header-left"
+        >
+          <text class="section-line"
+        ></text>
+          <text class="section-title"
+        >维修类型</text>
+        </view>
+      </view>
+      
+      <view class="type-grid"
+      >
+        <view class="type-item" wx:for="{{typeStats}}" wx:key="name"
+        >
+          <view class="type-icon-wrapper" style="background: {{item.color}}15;"
+        >
+            <text class="type-icon"
+        >{{item.icon}}</text>
+          </view>
+          <text class="type-name"
+        >{{item.name}}</text>
+          <text class="type-count" style="color: {{item.color}};"
+        >{{item.count}}</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 近7天趋势 -->
+    <view class="section"
+    >
+      <view class="section-header"
+      >
+        <view class="header-left"
+        >
+          <text class="section-line"
+        ></text>
+          <text class="section-title"
+        >近7天趋势</text>
+        </view>
+      </view>
+      
+      <view class="trend-section"
+      >
+        <view class="trend-chart"
+      >
+          <view class="trend-item" wx:for="{{weeklyTrend}}" wx:key="date"
+        >
+            <view class="trend-bars"
+        >
+              <view class="trend-bar new-bar" style="height: {{item.new > 0 ? Math.min(item.new * 10 + 10, 80) : 10}}rpx;"
+        ></view>
+              <view class="trend-bar completed-bar" style="height: {{item.completed > 0 ? Math.min(item.completed * 10 + 10, 80) : 10}}rpx;"
+        ></view>
+            </view>
+            <text class="trend-date"
+        >{{item.date}}</text>
+          </view>
+        </view>
+        
+        <view class="trend-legend"
+      >
+          <view class="legend-item"
+        >
+            <view class="legend-dot dot-new"
+        ></view>
+            <text class="legend-text"
+        >新增</text>
+          </view>
+          <view class="legend-item"
+        >
+            <view class="legend-dot dot-completed"
+        ></view>
+            <text class="legend-text"
+        >完成</text>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 个人绩效 -->
+    <view class="section"
+    >
+      <view class="section-header"
+      >
+        <view class="header-left"
+        >
+          <text class="section-line"
+        ></text>
+          <text class="section-title"
+        >个人绩效</text>
+        </view>
+      </view>
+      
+      <view class="performance-grid"
+      >
+        <view class="performance-card"
+        >
+          <text class="perf-value"
+        >{{personalStats.weeklyCompleted}}</text>
+          <text class="perf-label"
+        >本周完成</text>
+        </view>
+        
+        <view class="performance-card"
+        >
+          <text class="perf-value"
+        >{{personalStats.monthlyCompleted}}</text>
+          <text class="perf-label"
+        >本月完成</text>
+        </view>
+        
+        <view class="performance-card"
+        >
+          <text class="perf-value highlight"
+        >{{personalStats.avgRating}}</text>
+          <text class="perf-label"
+        >平均评分</text>
+        </view>
+        
+        <view class="performance-card"
+        >
+          <text class="perf-value"
+        >{{personalStats.responseTime}}</text>
+          <text class="perf-label"
+        >平均响应</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 加载状态 -->
+  <view class="loading-state" wx:if="{{loading}}"
+  >
+    <view class="loading-spinner"
+    ></view>
+    <text class="loading-text"
+    >加载统计数据中...</text>
+  </view>
+</view>

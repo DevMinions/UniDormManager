@@ -1,0 +1,146 @@
+<!--pages/checkout/index/index.wxml-->
+<view class="container">
+  
+  <!-- 页面标题 -->
+  <view class="page-header">
+    <text class="header-icon">📤</text>
+    <view class="header-content">
+      <text class="header-title">办理退宿</text>
+      <text class="header-desc">为学生办理宿舍退宿手续</text>
+    </view>
+  </view>
+
+  <!-- 搜索区域 -->
+  <view class="search-section">
+    <view class="search-box">
+      <input 
+        class="search-input" 
+        placeholder="请输入学号或姓名搜索"
+        value="{{searchQuery}}"
+        bindinput="onSearchInput"
+        confirm-type="search"
+        bindconfirm="searchStudent"
+      />
+      <view class="search-btn" bindtap="searchStudent">
+        <text>搜索</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 学生信息卡片 -->
+  <view class="info-card" wx:if="{{studentInfo}}">
+    <view class="card-title">学生信息</view>
+    
+    <view class="info-row">
+      <text class="info-label">姓名</text>
+      <text class="info-value">{{studentInfo.name}}</text>
+    </view>
+    
+    <view class="info-row">
+      <text class="info-label">学号</text>
+      <text class="info-value">{{studentInfo.studentId}}</text>
+    </view>
+    
+    <view class="info-row">
+      <text class="info-label">联系电话</text>
+      <text class="info-value">{{studentInfo.phone}}</text>
+    </view>
+    
+    <view class="info-row">
+      <text class="info-label">当前房间</text>
+      <view class="room-tag">{{studentInfo.buildingName}} {{studentInfo.roomNumber}}</view>
+    </view>
+    
+    <view class="info-row">
+      <text class="info-label">入住日期</text>
+      <text class="info-value">{{studentInfo.checkInDate}}</text>
+    </view>
+  </view>
+
+  <!-- 退宿表单 -->
+  <view class="form-card" wx:if="{{studentInfo}}">
+    
+    <view class="form-section">
+      <view class="section-title">退宿信息</view>
+      
+      <view class="form-item">
+        <text class="form-label">退宿日期 <text class="required">*</text></text>
+        <picker mode="date" value="{{checkoutDate}}" bindchange="onDateChange">
+          <view class="picker">
+            {{checkoutDate}}
+            <text class="picker-arrow">›</text>
+          </view>
+        </picker>
+      </view>
+
+      <view class="form-item">
+        <text class="form-label">退宿原因 <text class="required">*</text></text>
+        <textarea 
+          class="form-textarea" 
+          placeholder="请输入退宿原因"
+          value="{{checkoutReason}}"
+          bindinput="onReasonInput"
+          maxlength="200"
+        />
+      </view>
+    </view>
+
+    <!-- 房间检查 -->
+    <view class="form-section">
+      <view class="section-title">房间检查</view>
+      
+      <view class="check-item" bindtap="toggleKeyStatus">
+        <view class="checkbox {{roomCheckStatus.keyReturned ? 'checked' : ''}}">
+          <text wx:if="{{roomCheckStatus.keyReturned}}">✓</text>
+        </view>
+        <text class="check-label">钥匙已归还</text>
+      </view>
+
+      <view class="check-item" bindtap="toggleItemsStatus">
+        <view class="checkbox {{roomCheckStatus.itemsComplete ? 'checked' : ''}}">
+          <text wx:if="{{roomCheckStatus.itemsComplete}}">✓</text>
+        </view>
+        <text class="check-label">物品已清点完毕</text>
+      </view>
+
+      <view class="check-item" bindtap="toggleDamageStatus">
+        <view class="checkbox {{roomCheckStatus.noDamage ? 'checked' : ''}}">
+          <text wx:if="{{roomCheckStatus.noDamage}}">✓</text>
+        </view>
+        <text class="check-label">房间无损坏</text>
+      </view>
+    </view>
+
+    <!-- 备注 -->
+    <view class="form-section">
+      <view class="section-title">备注</view>
+      <textarea 
+        class="form-textarea" 
+        placeholder="如有其他情况请在此备注"
+        value="{{remarks}}"
+        bindinput="onRemarksInput"
+        maxlength="200"
+      />
+    </view>
+
+  </view>
+
+  <!-- 提交按钮 -->
+  <view class="submit-section" wx:if="{{studentInfo}}">
+    <button 
+      class="submit-btn {{loading ? 'loading' : ''}}" 
+      bindtap="submitCheckOut"
+      disabled="{{loading}}"
+    >
+      <text wx:if="{{!loading}}">确认办理退宿</text>
+      <text wx:else>处理中...</text>
+    </button>
+  </view>
+
+  <!-- 空状态提示 -->
+  <view class="empty-tip" wx:if="{{!studentInfo && !loading}}">
+    <text class="tip-icon">🔍</text>
+    <text class="tip-text">请先搜索要办理退宿的学生</text>
+  </view>
+
+</view>

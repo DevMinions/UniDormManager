@@ -7,13 +7,17 @@ App({
     userLevel: 1,     // 1:学生, 2:宿管员, 3:维修工, 4:楼栋管理员, 5:后勤管理员, 6:系统管理员
     userRoleName: null,  // '学生', '宿管员', '维修工', '楼栋管理员', '后勤管理员', '系统管理员'
     baseUrl: 'http://localhost:8080', // 开发环境API地址
-    isLoggedIn: false
+    isLoggedIn: false,
+    tabBarList: [],  // 动态 TabBar 列表
+    tabBarConfig: null  // TabBar 配置缓存
   },
 
   onLaunch() {
     console.log('小程序启动')
     // 检查登录状态
     this.checkLoginStatus()
+    // 初始化 TabBar 配置
+    this.initTabBarConfig()
   },
 
   onShow() {
@@ -22,6 +26,192 @@ App({
 
   onHide() {
     console.log('小程序隐藏')
+  },
+
+  /**
+   * 初始化 TabBar 配置
+   */
+  initTabBarConfig() {
+    const tabBarList = this.getTabBarListByRole()
+    this.globalData.tabBarList = tabBarList
+    this.globalData.tabBarConfig = {
+      color: '#94a3b8',
+      selectedColor: '#667eea',
+      backgroundColor: '#ffffff',
+      borderStyle: 'white'
+    }
+    console.log('TabBar 配置已初始化:', tabBarList)
+  },
+
+  /**
+   * 根据用户角色获取 TabBar 列表
+   */
+  getTabBarListByRole() {
+    const userLevel = this.globalData.userLevel || 1
+
+    // 学生角色 (level 1)
+    const studentTabs = [
+      {
+        pagePath: '/pages/index/index',
+        text: '首页',
+        iconPath: '/images/home.png',
+        selectedIconPath: '/images/home-active.png'
+      },
+      {
+        pagePath: '/pages/rooms/list',
+        text: '房间',
+        iconPath: '/images/room.png',
+        selectedIconPath: '/images/room-active.png'
+      },
+      {
+        pagePath: '/pages/repairs/list/index',
+        text: '报修',
+        iconPath: '/images/repair.png',
+        selectedIconPath: '/images/repair-active.png'
+      },
+      {
+        pagePath: '/pages/profile/index',
+        text: '我的',
+        iconPath: '/images/profile.png',
+        selectedIconPath: '/images/profile-active.png'
+      }
+    ]
+
+    // 宿管员角色 (level 2)
+    const dormManagerTabs = [
+      {
+        pagePath: '/pages/index/index',
+        text: '工作台',
+        iconPath: '/images/home.png',
+        selectedIconPath: '/images/home-active.png'
+      },
+      {
+        pagePath: '/pages/rooms/list',
+        text: '学生',
+        iconPath: '/images/profile.png',
+        selectedIconPath: '/images/profile-active.png'
+      },
+      {
+        pagePath: '/pages/repairs/list/index',
+        text: '报修',
+        iconPath: '/images/repair.png',
+        selectedIconPath: '/images/repair-active.png'
+      },
+      {
+        pagePath: '/pages/profile/index',
+        text: '我的',
+        iconPath: '/images/profile.png',
+        selectedIconPath: '/images/profile-active.png'
+      }
+    ]
+
+    // 维修工角色 (level 3)
+    const maintenanceTabs = [
+      {
+        pagePath: '/pages/index/index',
+        text: '工单',
+        iconPath: '/images/home.png',
+        selectedIconPath: '/images/home-active.png'
+      },
+      {
+        pagePath: '/pages/repairs/list/index',
+        text: '待处理',
+        iconPath: '/images/room.png',
+        selectedIconPath: '/images/room-active.png'
+      },
+      {
+        pagePath: '/pages/profile/index',
+        text: '统计',
+        iconPath: '/images/repair.png',
+        selectedIconPath: '/images/repair-active.png'
+      },
+      {
+        pagePath: '/pages/profile/index',
+        text: '我的',
+        iconPath: '/images/profile.png',
+        selectedIconPath: '/images/profile-active.png'
+      }
+    ]
+
+    // 管理员角色 (level 4+)
+    const adminTabs = [
+      {
+        pagePath: '/pages/index/index',
+        text: '控制台',
+        iconPath: '/images/home.png',
+        selectedIconPath: '/images/home-active.png'
+      },
+      {
+        pagePath: '/pages/rooms/list',
+        text: '管理',
+        iconPath: '/images/room.png',
+        selectedIconPath: '/images/room-active.png'
+      },
+      {
+        pagePath: '/pages/repairs/list/index',
+        text: '报修',
+        iconPath: '/images/repair.png',
+        selectedIconPath: '/images/repair-active.png'
+      },
+      {
+        pagePath: '/pages/profile/index',
+        text: '我的',
+        iconPath: '/images/profile.png',
+        selectedIconPath: '/images/profile-active.png'
+      }
+    ]
+
+    // 根据角色返回对应的 TabBar 配置
+    if (userLevel === 1) {
+      return studentTabs
+    } else if (userLevel === 2) {
+      return dormManagerTabs
+    } else if (userLevel === 3) {
+      return maintenanceTabs
+    } else if (userLevel >= 4) {
+      return adminTabs
+    }
+
+    return studentTabs
+  },
+
+  /**
+   * 刷新 TabBar 配置（角色切换后调用）
+   */
+  refreshTabBarConfig() {
+    const tabBarList = this.getTabBarListByRole()
+    this.globalData.tabBarList = tabBarList
+    
+    // 通知自定义 TabBar 组件更新
+    const pages = getCurrentPages()
+    if (pages.length > 0) {
+      const currentPage = pages[pages.length - 1]
+      if (currentPage.getTabBar) {
+        const tabBar = currentPage.getTabBar()
+        if (tabBar) {
+          tabBar.setData({
+            tabBarList: tabBarList
+          })
+        }
+      }
+    }
+    
+    console.log('TabBar 配置已刷新:', tabBarList)
+  },
+
+  /**
+   * 获取当前角色的 TabBar 配置
+   */
+  getTabBarConfig() {
+    return {
+      list: this.globalData.tabBarList || this.getTabBarListByRole(),
+      config: this.globalData.tabBarConfig || {
+        color: '#94a3b8',
+        selectedColor: '#667eea',
+        backgroundColor: '#ffffff',
+        borderStyle: 'white'
+      }
+    }
   },
 
   /**
@@ -91,10 +281,16 @@ App({
       this.globalData.token = token
       this.globalData.userInfo = userInfo
       this.globalData.userRole = userRole
+      this.globalData.userLevel = wx.getStorageSync('userLevel') || 1
+      this.globalData.userRoleName = wx.getStorageSync('userRoleName') || '学生'
       this.globalData.isLoggedIn = true
+      // 初始化 TabBar 配置
+      this.initTabBarConfig()
       console.log('用户已登录:', userInfo)
     } else {
       this.globalData.isLoggedIn = false
+      // 使用默认配置（学生角色）
+      this.initTabBarConfig()
       console.log('用户未登录')
     }
   },
@@ -152,6 +348,9 @@ App({
     wx.setStorageSync('userRole', primaryRole)
     wx.setStorageSync('userLevel', primaryLevel)
     wx.setStorageSync('userRoleName', primaryName)
+
+    // 刷新 TabBar 配置
+    this.refreshTabBarConfig()
 
     console.log('登录状态已更新:', {
       backendRoles: backendRoles,
