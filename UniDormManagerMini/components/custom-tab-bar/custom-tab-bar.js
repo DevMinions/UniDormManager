@@ -29,6 +29,9 @@ Component({
         safeAreaBottom,
         tabBarList: this.getTabBarList()
       })
+      
+      console.log('TabBar attached, userLevel:', getApp().globalData.userLevel)
+      console.log('TabBar list:', this.getTabBarList())
     }
   },
 
