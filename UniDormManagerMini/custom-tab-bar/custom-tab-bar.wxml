@@ -1,0 +1,22 @@
+<view class="custom-tabbar" style="padding-bottom: {{safeAreaBottom}}px;">
+  <view class="tabbar-container">
+    <view 
+      class="tabbar-item {{selected === index ? 'active' : ''}}"
+      wx:for="{{tabBarList}}"
+      wx:key="index"
+      data-index="{{index}}"
+      data-path="{{item.pagePath}}"
+      bindtap="switchTab"
+    >
+      <view class="tabbar-icon-wrapper">
+        <image 
+          class="tabbar-icon"
+          src="{{selected === index ? item.selectedIconPath : item.iconPath}}"
+          mode="aspectFit"
+        />
+      </view>
+      <text class="tabbar-text">{{item.text}}</text>
+    </view>
+  </view>
+  <view class="tabbar-safe-area" style="height: {{safeAreaBottom}}px;"></view>
+</view>
