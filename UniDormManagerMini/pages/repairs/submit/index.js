@@ -9,10 +9,17 @@ Page({
     repairType: '',
     priority: 'medium',
     description: '',
-    selectedTypeLabel: '请选择',
-    selectedPriorityLabel: '中',
+    selectedTypeLabel: '请选择报修类型',
     images: [],
     submitting: false,
+    errors: {},
+
+    // 房间选项
+    roomOptions: [
+      'A101', 'A102', 'A103', 'A201', 'A202', 'A203', 'A301', 'A302', 'A303',
+      'B101', 'B102', 'B103', 'B201', 'B202', 'B203', 'B301', 'B302', 'B303',
+      'C101', 'C102', 'C103', 'C201', 'C202', 'C203', 'C301', 'C302', 'C303'
+    ],
 
     // 报修类型选项
     repairTypes: [
@@ -25,9 +32,9 @@ Page({
 
     // 优先级选项
     priorityOptions: [
-      { value: 'low', label: '低' },
-      { value: 'medium', label: '中' },
-      { value: 'high', label: '高' }
+      { value: 'low', label: '低', desc: '一般问题' },
+      { value: 'medium', label: '中', desc: '需要处理' },
+      { value: 'high', label: '高', desc: '紧急处理' }
     ]
   },
 
@@ -45,6 +52,9 @@ Page({
       })
       return
     }
+
+    // 设置默认优先级为"中"
+    this.setData({ priority: 'medium' })
   },
 
   /**
@@ -52,13 +62,25 @@ Page({
    */
   onTitleInput(e) {
     this.setData({ title: e.detail.value })
+    // 清除错误
+    if (this.data.errors.title) {
+      this.setData({ 'errors.title': '' })
+    }
   },
 
   /**
-   * 输入房间号
+   * 选择房间号
    */
-  onRoomNumberInput(e) {
-    this.setData({ roomNumber: e.detail.value })
+  onRoomChange(e) {
+    const index = e.detail.value
+    const roomNumber = this.data.roomOptions[index]
+    this.setData({
+      roomNumber: roomNumber
+    })
+    // 清除错误
+    if (this.data.errors.roomNumber) {
+      this.setData({ 'errors.roomNumber': '' })
+    }
   },
 
   /**
@@ -71,18 +93,18 @@ Page({
       repairType: type.value,
       selectedTypeLabel: type.label
     })
+    // 清除错误
+    if (this.data.errors.repairType) {
+      this.setData({ 'errors.repairType': '' })
+    }
   },
 
   /**
-   * 选择优先级
+   * 选择优先级 - 卡片式单选
    */
-  onPriorityChange(e) {
-    const index = e.detail.value
-    const priority = this.data.priorityOptions[index]
-    this.setData({
-      priority: priority.value,
-      selectedPriorityLabel: priority.label
-    })
+  onPrioritySelect(e) {
+    const value = e.currentTarget.dataset.value
+    this.setData({ priority: value })
   },
 
   /**
@@ -90,26 +112,45 @@ Page({
    */
   onDescriptionInput(e) {
     this.setData({ description: e.detail.value })
+    // 清除错误
+    if (this.data.errors.description) {
+      this.setData({ 'errors.description': '' })
+    }
   },
 
   /**
    * 选择图片
    */
   chooseImage() {
+    const remainingSlots = 3 - this.data.images.length
+    if (remainingSlots <= 0) {
+      wx.showToast({
+        title: '最多上传3张图片',
+        icon: 'none'
+      })
+      return
+    }
+
     wx.chooseImage({
-      count: 3,
+      count: remainingSlots,
       sizeType: ['compressed'],
       sourceType: ['album', 'camera'],
       success: (res) => {
         const images = this.data.images.concat(res.tempFilePaths)
-        if (images.length > 3) {
-          images.splice(3)
+        this.setData({ images })
+        wx.showToast({
+          title: '添加成功',
+          icon: 'success',
+          duration: 1000
+        })
+      },
+      fail: (err) => {
+        if (err.errMsg && !err.errMsg.includes('cancel')) {
           wx.showToast({
-            title: '最多上传3张图片',
+            title: '选择图片失败',
             icon: 'none'
           })
         }
-        this.setData({ images })
       }
     })
   },
@@ -119,8 +160,7 @@ Page({
    */
   deleteImage(e) {
     const index = e.currentTarget.dataset.index
-    const images = this.data.images
-    images.splice(index, 1)
+    const images = this.data.images.filter((_, i) => i !== index)
     this.setData({ images })
   },
 
@@ -136,49 +176,62 @@ Page({
   },
 
   /**
+   * 字段失焦验证
+   */
+  validateField(e) {
+    const field = e.currentTarget.dataset.field
+    const value = this.data[field]
+    const errors = { ...this.data.errors }
+
+    if (field === 'title' && !value.trim()) {
+      errors.title = '请输入报修标题'
+    } else if (field === 'description' && !value.trim()) {
+      errors.description = '请输入报修描述'
+    }
+
+    this.setData({ errors })
+  },
+
+  /**
    * 表单验证
    */
   validate() {
-    if (!this.data.title.trim()) {
-      wx.showToast({
-        title: '请输入报修标题',
-        icon: 'none'
-      })
-      return false
+    const { title, roomNumber, repairType, description } = this.data
+    const errors = {}
+
+    if (!title.trim()) {
+      errors.title = '请输入报修标题'
     }
 
-    if (!this.data.description.trim()) {
-      wx.showToast({
-        title: '请输入报修描述',
-        icon: 'none'
-      })
-      return false
+    if (!roomNumber.trim()) {
+      errors.roomNumber = '请选择房间号'
     }
 
-    if (!this.data.roomNumber.trim()) {
-      wx.showToast({
-        title: '请输入房间号',
-        icon: 'none'
-      })
-      return false
+    if (!repairType) {
+      errors.repairType = '请选择报修类型'
     }
 
-    if (!this.data.repairType) {
-      wx.showToast({
-        title: '请选择报修类型',
-        icon: 'none'
-      })
-      return false
+    if (!description.trim()) {
+      errors.description = '请输入报修描述'
     }
 
-    return true
+    this.setData({ errors })
+    return Object.keys(errors).length === 0
   },
 
   /**
    * 提交报修
    */
   submitRepair() {
-    if (!this.validate()) return
+    if (!this.validate()) {
+      // 滚动到第一个错误项
+      wx.showToast({
+        title: '请完善表单信息',
+        icon: 'none',
+        duration: 2000
+      })
+      return
+    }
 
     if (this.data.submitting) return
 
@@ -189,7 +242,8 @@ Page({
       description: this.data.description,
       roomNumber: this.data.roomNumber,
       type: this.data.repairType,
-      priority: this.data.priority
+      priority: this.data.priority,
+      images: this.data.images
     }
 
     createRepair(data).then(res => {
@@ -203,7 +257,6 @@ Page({
       setTimeout(() => {
         wx.navigateBack()
       }, 1500)
-
     }).catch(err => {
       console.error('报修提交失败:', err)
       this.setData({ submitting: false })
