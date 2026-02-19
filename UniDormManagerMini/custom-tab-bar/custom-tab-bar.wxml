@@ -1,22 +1,7 @@
-<view class="custom-tabbar" style="padding-bottom: {{safeAreaBottom}}px;">
-  <view class="tabbar-container">
-    <view 
-      class="tabbar-item {{selected === index ? 'active' : ''}}"
-      wx:for="{{tabBarList}}"
-      wx:key="index"
-      data-index="{{index}}"
-      data-path="{{item.pagePath}}"
-      bindtap="switchTab"
-    >
-      <view class="tabbar-icon-wrapper">
-        <image 
-          class="tabbar-icon"
-          src="{{selected === index ? item.selectedIconPath : item.iconPath}}"
-          mode="aspectFit"
-        />
-      </view>
-      <text class="tabbar-text">{{item.text}}</text>
-    </view>
-  </view>
-  <view class="tabbar-safe-area" style="height: {{safeAreaBottom}}px;"></view>
+<!-- 最小化 TabBar 测试 -->
+<view style="position: fixed; left: 0; right: 0; bottom: 0; height: 100rpx; background: red; z-index: 99999; display: flex; justify-content: space-around; align-items: center;">
+  <text style="color: white; font-size: 32rpx;">首页</text>
+  <text style="color: white; font-size: 32rpx;">房间</text>
+  <text style="color: white; font-size: 32rpx;">报修</text>
+  <text style="color: white; font-size: 32rpx;">我的</text>
 </view>
