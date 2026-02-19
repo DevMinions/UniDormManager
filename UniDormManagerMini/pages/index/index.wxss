@@ -8,7 +8,9 @@
   padding-bottom: calc(var(--space-5) + env(safe-area-inset-bottom));
 }
 
-/* ----- 欢迎区域 - 毛玻璃效果 ----- */
+/* ============================================
+   欢迎区域 - 毛玻璃效果
+   ============================================ */
 .welcome-section {
   position: relative;
   padding: 48rpx 32rpx;
@@ -52,16 +54,287 @@
   text-shadow: 0 2rpx 4rpx rgba(0, 0, 0, 0.1);
 }
 
+.welcome-subtitle {
+  display: block;
+  position: relative;
+  z-index: 1;
+  font-size: 28rpx;
+  color: rgba(255, 255, 255, 0.85);
+  margin-bottom: var(--space-2);
+  font-weight: 400;
+}
+
 .date-text {
   display: block;
   position: relative;
   z-index: 1;
   font-size: 26rpx;
-  color: rgba(255, 255, 255, 0.85);
+  color: rgba(255, 255, 255, 0.7);
   font-weight: 500;
 }
 
-/* ----- 统计卡片区域 ----- */
+/* ============================================
+   学生专属区域样式
+   ============================================ */
+
+/* 快捷入口 - 学生版 */
+.student-actions {
+  background: transparent;
+  box-shadow: none;
+  padding: 0;
+  margin-bottom: var(--space-4);
+}
+
+.student-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-2);
+}
+
+.student-grid .action-item {
+  background: #fff;
+  border-radius: var(--radius-lg);
+  padding: var(--space-3) var(--space-2);
+  box-shadow: var(--shadow-md);
+}
+
+.student-grid .action-icon {
+  width: 80rpx;
+  height: 80rpx;
+  border-radius: var(--radius-md);
+  font-size: 40rpx;
+  margin-bottom: var(--space-2);
+}
+
+/* 学生快捷入口图标背景 */
+.my-repair-icon::before { background: linear-gradient(135deg, #3b82f6, #60a5fa); }
+.submit-repair-icon::before { background: linear-gradient(135deg, #f59e0b, #fbbf24); }
+.my-dorm-icon::before { background: linear-gradient(135deg, #10b981, #34d399); }
+.latest-notice-icon::before { background: linear-gradient(135deg, #8b5cf6, #a78bfa); }
+
+/* 区块头部 */
+.student-section {
+  background: #fff;
+  border-radius: var(--radius-xl);
+  padding: var(--space-4);
+  margin-bottom: var(--space-4);
+  box-shadow: var(--shadow-md);
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-3);
+}
+
+.section-title {
+  font-size: 32rpx;
+  font-weight: 700;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+}
+
+.section-title::before {
+  content: '';
+  width: 8rpx;
+  height: 32rpx;
+  background: var(--primary-gradient);
+  border-radius: var(--radius-full);
+  margin-right: var(--space-2);
+}
+
+.section-more {
+  font-size: 26rpx;
+  color: var(--primary-color);
+  font-weight: 500;
+}
+
+/* ============================================
+   报修状态卡片
+   ============================================ */
+.repair-status-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-3);
+}
+
+.repair-status-card {
+  background: var(--gray-50);
+  border-radius: var(--radius-lg);
+  padding: var(--space-3);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transition: all 0.2s ease;
+  border: 2rpx solid transparent;
+}
+
+.repair-status-card:active {
+  transform: translateY(-4rpx);
+  box-shadow: var(--shadow-md);
+}
+
+.repair-status-card.pending {
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  border-color: #fbbf24;
+}
+
+.repair-status-card.processing {
+  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+  border-color: #60a5fa;
+}
+
+.repair-status-card.completed {
+  background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+  border-color: #34d399;
+}
+
+.status-icon {
+  font-size: 40rpx;
+  margin-bottom: var(--space-1);
+}
+
+.status-count {
+  font-size: 40rpx;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1.2;
+  margin-bottom: var(--space-1);
+}
+
+.status-label {
+  font-size: 24rpx;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+/* ============================================
+   宿舍信息卡片
+   ============================================ */
+.dorm-card {
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+  border: 2rpx solid var(--gray-200);
+}
+
+.dorm-info-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: var(--space-3);
+}
+
+.dorm-info-row:last-child {
+  margin-bottom: 0;
+}
+
+.dorm-info-item {
+  flex: 1;
+  text-align: center;
+  padding: var(--space-2);
+}
+
+.dorm-info-label {
+  display: block;
+  font-size: 24rpx;
+  color: var(--text-tertiary);
+  margin-bottom: var(--space-1);
+}
+
+.dorm-info-value {
+  display: block;
+  font-size: 32rpx;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.dorm-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: var(--space-5);
+}
+
+.dorm-empty-icon {
+  font-size: 64rpx;
+  margin-bottom: var(--space-2);
+  opacity: 0.5;
+}
+
+.dorm-empty-text {
+  font-size: 28rpx;
+  color: var(--text-secondary);
+}
+
+/* ============================================
+   公告列表
+   ============================================ */
+.notice-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.notice-item {
+  display: flex;
+  align-items: center;
+  padding: var(--space-3);
+  background: var(--gray-50);
+  border-radius: var(--radius-md);
+  transition: all 0.2s ease;
+}
+
+.notice-item:active {
+  background: var(--gray-100);
+}
+
+.notice-badge {
+  background: linear-gradient(135deg, #ef4444, #f87171);
+  color: #fff;
+  font-size: 20rpx;
+  font-weight: 600;
+  padding: 4rpx 12rpx;
+  border-radius: var(--radius-full);
+  margin-right: var(--space-2);
+  flex-shrink: 0;
+}
+
+.notice-title {
+  flex: 1;
+  font-size: 28rpx;
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.notice-title.pinned {
+  font-weight: 600;
+  color: var(--primary-dark);
+}
+
+.notice-date {
+  font-size: 24rpx;
+  color: var(--text-tertiary);
+  margin-left: var(--space-2);
+  flex-shrink: 0;
+}
+
+.notice-empty {
+  text-align: center;
+  padding: var(--space-4);
+}
+
+.notice-empty-text {
+  font-size: 28rpx;
+  color: var(--text-tertiary);
+}
+
+/* ============================================
+   统计卡片区域 - 管理员
+   ============================================ */
 .stats-section {
   margin-bottom: var(--space-4);
 }
@@ -148,7 +421,9 @@
   font-weight: 500;
 }
 
-/* ----- 快捷操作区域 ----- */
+/* ============================================
+   快捷操作区域
+   ============================================ */
 .quick-actions {
   background: #fff;
   border-radius: var(--radius-xl);
@@ -234,7 +509,9 @@
   font-weight: 500;
 }
 
-/* ----- 提示信息区域 ----- */
+/* ============================================
+   提示信息区域
+   ============================================ */
 .tips-section {
   margin-bottom: var(--space-3);
 }
@@ -272,7 +549,9 @@
   flex: 1;
 }
 
-/* ----- 加载状态 ----- */
+/* ============================================
+   加载状态
+   ============================================ */
 .loading-state {
   display: flex;
   flex-direction: column;
@@ -300,7 +579,9 @@
   color: var(--text-secondary);
 }
 
-/* ----- 响应式调整 ----- */
+/* ============================================
+   响应式调整
+   ============================================ */
 @media screen and (min-width: 768px) {
   .stats-grid {
     grid-template-columns: repeat(3, 1fr);
@@ -308,5 +589,9 @@
   
   .action-grid {
     grid-template-columns: repeat(6, 1fr);
+  }
+  
+  .repair-status-grid {
+    grid-template-columns: repeat(3, 1fr);
   }
 }

@@ -1,101 +1,281 @@
 <!--pages/index/index.wxml-->
 <view class="container">
-  <!-- 欢迎区域 -->
-  <view class="welcome-section">
-    <text class="welcome-text">欢迎使用宿舍管理系统</text>
-    <text class="date-text">{{currentDate}}</text>
-  </view>
+  <!-- ========== 维修工专属首页 ========== -->
+  <block wx:if="{{isMaintenance}}">
+    <!-- 1. 欢迎区域 -->
+    <view class="maintenance-welcome">
+      <view class="welcome-content">
+        <text class="welcome-title">维修工作台</text>
+        <text class="welcome-date">{{currentDate}}</text>
+        <text class="welcome-time">{{currentTime}}</text>
+      </view>
+      <view class="welcome-avatar">
+        <text class="avatar-icon">🔧</text>
+      </view>
+      <!-- 背景装饰 -->
+      <view class="welcome-bg-circle circle-1"></view>
+      <view class="welcome-bg-circle circle-2"></view>
+    </view>
 
-  <!-- 统计卡片 -->
-  <view class="stats-section" wx:if="{{!loading}}">
-    <view class="stats-grid">
-      <view class="stat-card primary" bindtap="goToRooms">
-        <view class="stat-header">
-          <view class="stat-icon">🏠</view>
+    <!-- 2. 工单状态卡片（重点） -->
+    <view class="status-overview" wx:if="{{!loading}}">
+      <!-- 待处理大数字卡片 -->
+      <view class="big-status-card pending-card" bindtap="goToPendingTickets">
+        <view class="big-status-content">
+          <text class="big-status-number">{{maintenanceStats.pendingCount}}</text>
+          <text class="big-status-label">待处理工单</text>
         </view>
-        <text class="stat-value">{{stats.totalRooms}}</text>
-        <text class="stat-label">房间总数</text>
+        <view class="big-status-icon">
+          <text class="status-emoji">📋</text>
+        </view>
+        <!-- 紧急标识 -->
+        <view class="urgent-badge" wx:if="{{maintenanceStats.urgentCount > 0}}">
+          <text class="urgent-icon">🔴</text>
+          <text class="urgent-text">{{maintenanceStats.urgentCount}} 个紧急</text>
+        </view>
       </view>
 
-      <view class="stat-card success" bindtap="goToRooms">
-        <view class="stat-header">
-          <view class="stat-icon">✅</view>
+      <!-- 今日统计 -->
+      <view class="today-stats-row">
+        <view class="today-stat-item new-item">
+          <view class="today-stat-header">
+            <text class="today-icon">📈</text>
+          </view>
+          <text class="today-value">{{maintenanceStats.newToday}}</text>
+          <text class="today-label">今日新增</text>
         </view>
-        <text class="stat-value">{{stats.freeRooms}}</text>
-        <text class="stat-label">空闲房间</text>
-      </view>
-
-      <view class="stat-card warning" bindtap="goToRooms">
-        <view class="stat-header">
-          <view class="stat-icon">👥</view>
+        <view class="today-stat-item completed-item">
+          <view class="today-stat-header">
+            <text class="today-icon">✅</text>
+          </view>
+          <text class="today-value">{{maintenanceStats.completedToday}}</text>
+          <text class="today-label">今日完成</text>
         </view>
-        <text class="stat-value">{{stats.occupiedRooms}}</text>
-        <text class="stat-label">已入住</text>
-      </view>
-
-      <view class="stat-card danger" bindtap="goToRepairs">
-        <view class="stat-header">
-          <view class="stat-icon">🔧</view>
+        <view class="today-stat-item progress-item">
+          <view class="today-stat-header">
+            <text class="today-icon">🔨</text>
+          </view>
+          <text class="today-value">{{maintenanceStats.inProgressCount}}</text>
+          <text class="today-label">处理中</text>
         </view>
-        <text class="stat-value">{{stats.pendingRepairs}}</text>
-        <text class="stat-label">待处理报修</text>
-      </view>
-
-      <view class="stat-card info" wx:if="{{isAdmin}}" bindtap="goToStudents">
-        <view class="stat-header">
-          <view class="stat-icon">🎓</view>
-        </view>
-        <text class="stat-value">{{stats.totalStudents}}</text>
-        <text class="stat-label">学生总数</text>
-      </view>
-
-      <view class="stat-card secondary" wx:if="{{isAdmin}}" bindtap="goToRooms">
-        <view class="stat-header">
-          <view class="stat-icon">🏢</view>
-        </view>
-        <text class="stat-value">{{stats.totalBuildings}}</text>
-        <text class="stat-label">楼栋总数</text>
       </view>
     </view>
-  </view>
+
+    <!-- 3. 维修工专属快捷入口（4个） -->
+    <view class="maintenance-actions" wx:if="{{!loading}}">
+      <view class="action-title">
+        <text class="title-line"></text>
+        <text class="title-text">快捷入口</text>
+      </view>
+      <view class="maintenance-grid">
+        <view class="maintenance-item" bindtap="goToPendingTickets">
+          <view class="maintenance-icon pending-icon">
+            <text class="item-emoji">📋</text>
+            <view class="item-badge" wx:if="{{maintenanceStats.pendingCount > 0}}">{{maintenanceStats.pendingCount > 99 ? '99+' : maintenanceStats.pendingCount}}</view>
+          </view>
+          <text class="maintenance-text">待处理工单</text>
+          <text class="maintenance-desc">待接收的报修</text>
+        </view>
+
+        <view class="maintenance-item" bindtap="goToInProgressTickets">
+          <view class="maintenance-icon progress-icon">
+            <text class="item-emoji">🔧</text>
+          </view>
+          <text class="maintenance-text">处理中</text>
+          <text class="maintenance-desc">正在处理的报修</text>
+        </view>
+
+        <view class="maintenance-item" bindtap="goToCompletedTickets">
+          <view class="maintenance-icon completed-icon">
+            <text class="item-emoji">✅</text>
+          </view>
+          <text class="maintenance-text">已完成</text>
+          <text class="maintenance-desc">历史完成的报修</text>
+        </view>
+
+        <view class="maintenance-item" bindtap="goToStatistics">
+          <view class="maintenance-icon stats-icon">
+            <text class="item-emoji">📊</text>
+          </view>
+          <text class="maintenance-text">工单统计</text>
+          <text class="maintenance-desc">个人工作统计</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 4. 优先级筛选快捷入口 -->
+    <view class="priority-filter" wx:if="{{!loading}}">
+      <view class="filter-title">
+        <text class="title-line"></text>
+        <text class="title-text">按优先级筛选</text>
+      </view>
+      <view class="filter-buttons">
+        <view class="filter-btn urgent-btn" bindtap="filterByPriority" data-priority="High">
+          <text class="filter-dot dot-red"></text>
+          <text class="filter-label">紧急</text>
+          <text class="filter-count" wx:if="{{maintenanceStats.urgentCount > 0}}">{{maintenanceStats.urgentCount}}</text>
+        </view>
+        <view class="filter-btn medium-btn" bindtap="filterByPriority" data-priority="Medium">
+          <text class="filter-dot dot-yellow"></text>
+          <text class="filter-label">中优先级</text>
+        </view>
+        <view class="filter-btn low-btn" bindtap="filterByPriority" data-priority="Low">
+          <text class="filter-dot dot-green"></text>
+          <text class="filter-label">低优先级</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 5. 最新待处理工单列表 -->
+    <view class="recent-tickets" wx:if="{{!loading}}">
+      <view class="tickets-header">
+        <view class="header-left">
+          <text class="title-line"></text>
+          <text class="title-text">最新待处理</text>
+          <text class="tickets-count" wx:if="{{recentTickets.length > 0}}">{{recentTickets.length}}</text>
+        </view>
+        <view class="header-right" bindtap="goToPendingTickets">
+          <text class="view-all">查看全部</text>
+          <text class="arrow">→</text>
+        </view>
+      </view>
+
+      <!-- 工单列表 -->
+      <view class="tickets-list" wx:if="{{recentTickets.length > 0}}">
+        <view class="ticket-item" wx:for="{{recentTickets}}" wx:key="id" bindtap="goToTicketDetail" data-id="{{item.id}}">
+          <view class="ticket-main">
+            <view class="ticket-header-row">
+              <text class="ticket-title">{{item.title || '未命名工单'}}</text>
+              <view class="priority-tag priority-{{item.priority === 'High' ? 'high' : item.priority === 'Low' ? 'low' : 'medium'}}">
+                <text class="priority-dot"></text>
+                <text class="priority-text">{{item.priority === 'High' ? '紧急' : item.priority === 'Low' ? '低' : '中'}}</text>
+              </view>
+            </view>
+            <view class="ticket-info">
+              <text class="info-item">
+                <text class="info-icon">🏠</text>
+                <text class="info-text">{{item.roomNumber || '未知房间'}}</text>
+              </text>
+              <text class="info-item">
+                <text class="info-icon">🕐</text>
+                <text class="info-text">{{item.createdAt ? (item.createdAt.split('T')[1] ? item.createdAt.split('T')[1].substring(0, 5) : '') : ''}}</text>
+              </text>
+            </view>
+          </view>
+          <view class="ticket-action" catchtap="quickAccept" data-id="{{item.id}}">
+            <text class="action-btn">接单</text>
+          </view>
+        </view>
+      </view>
+
+      <!-- 空状态 -->
+      <view class="tickets-empty" wx:if="{{recentTickets.length === 0}}">
+        <text class="empty-icon">🎉</text>
+        <text class="empty-text">太棒了！暂无待处理工单</text>
+        <text class="empty-desc">可以休息一下了</text>
+      </view>
+    </view>
+  </block>
+
+  <!-- ========== 普通用户/管理员首页 ========== -->
+  <block wx:else>
+    <!-- 欢迎区域 -->
+    <view class="welcome-section">
+      <text class="welcome-text">欢迎使用宿舍管理系统</text>
+      <text class="date-text">{{currentDate}}</text>
+    </view>
+
+    <!-- 统计卡片 -->
+    <view class="stats-section" wx:if="{{!loading}}">
+      <view class="stats-grid">
+        <view class="stat-card primary" bindtap="goToRooms">
+          <view class="stat-header">
+            <view class="stat-icon">🏠</view>
+          </view>
+          <text class="stat-value">{{stats.totalRooms}}</text>
+          <text class="stat-label">房间总数</text>
+        </view>
+
+        <view class="stat-card success" bindtap="goToRooms">
+          <view class="stat-header">
+            <view class="stat-icon">✅</view>
+          </view>
+          <text class="stat-value">{{stats.freeRooms}}</text>
+          <text class="stat-label">空闲房间</text>
+        </view>
+
+        <view class="stat-card warning" bindtap="goToRooms">
+          <view class="stat-header">
+            <view class="stat-icon">👥</view>
+          </view>
+          <text class="stat-value">{{stats.occupiedRooms}}</text>
+          <text class="stat-label">已入住</text>
+        </view>
+
+        <view class="stat-card danger" bindtap="goToRepairs">
+          <view class="stat-header">
+            <view class="stat-icon">🔧</view>
+          </view>
+          <text class="stat-value">{{stats.pendingRepairs}}</text>
+          <text class="stat-label">待处理报修</text>
+        </view>
+
+        <view class="stat-card info" wx:if="{{isAdmin}}" bindtap="goToStudents">
+          <view class="stat-header">
+            <view class="stat-icon">🎓</view>
+          </view>
+          <text class="stat-value">{{stats.totalStudents}}</text>
+          <text class="stat-label">学生总数</text>
+        </view>
+
+        <view class="stat-card secondary" wx:if="{{isAdmin}}" bindtap="goToRooms">
+          <view class="stat-header">
+            <view class="stat-icon">🏢</view>
+          </view>
+          <text class="stat-value">{{stats.totalBuildings}}</text>
+          <text class="stat-label">楼栋总数</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 快捷入口 -->
+    <view class="quick-actions" wx:if="{{!loading}}">
+      <view class="action-title">快捷操作</view>
+      <view class="action-grid">
+        <view class="action-item" bindtap="goToRooms">
+          <view class="action-icon room-icon">🏠</view>
+          <text class="action-text">房间查询</text>
+        </view>
+
+        <view class="action-item" bindtap="goToRepairs">
+          <view class="action-icon repair-icon">🔧</view>
+          <text class="action-text">报修申请</text>
+        </view>
+
+        <view class="action-item" bindtap="goToNotices">
+          <view class="action-icon notice-icon">📢</view>
+          <text class="action-text">公告通知</text>
+        </view>
+
+        <view class="action-item" bindtap="goToProfile">
+          <view class="action-icon profile-icon">👤</view>
+          <text class="action-text">个人中心</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 提示信息 -->
+    <view class="tips-section" wx:if="{{stats.pendingRepairs > 0 && isAdmin && !loading}}">
+      <view class="tip-card" bindtap="goToRepairs">
+        <text class="tip-icon">⚠️</text>
+        <text class="tip-text">您有 {{stats.pendingRepairs}} 个待处理报修请求，点击查看</text>
+      </view>
+    </view>
+  </block>
 
   <!-- 加载状态 -->
   <view class="loading-state" wx:if="{{loading}}">
     <view class="loading-spinner"></view>
     <text class="loading-text">加载中...</text>
-  </view>
-
-  <!-- 快捷入口 -->
-  <view class="quick-actions" wx:if="{{!loading}}">
-    <view class="action-title">快捷操作</view>
-    <view class="action-grid">
-      <view class="action-item" bindtap="goToRooms">
-        <view class="action-icon room-icon">🏠</view>
-        <text class="action-text">房间查询</text>
-      </view>
-
-      <view class="action-item" bindtap="goToRepairs">
-        <view class="action-icon repair-icon">🔧</view>
-        <text class="action-text">报修申请</text>
-      </view>
-
-      <view class="action-item" bindtap="goToNotices">
-        <view class="action-icon notice-icon">📢</view>
-        <text class="action-text">公告通知</text>
-      </view>
-
-      <view class="action-item" bindtap="goToProfile">
-        <view class="action-icon profile-icon">👤</view>
-        <text class="action-text">个人中心</text>
-      </view>
-    </view>
-  </view>
-
-  <!-- 提示信息 -->
-  <view class="tips-section" wx:if="{{stats.pendingRepairs > 0 && isAdmin && !loading}}">
-    <view class="tip-card" bindtap="goToRepairs">
-      <text class="tip-icon">⚠️</text>
-      <text class="tip-text">您有 {{stats.pendingRepairs}} 个待处理报修请求，点击查看</text>
-    </view>
   </view>
 </view>
