@@ -1,6 +1,6 @@
 // pages/repairs/list/index.js
 const app = getApp()
-const { getRepairRequests } = require('../../../api/repairs')
+const { getRepairs } = require('../../../api/repairs')
 
 Page({
   data: {
@@ -80,7 +80,7 @@ Page({
       sortBy: 'date'
     }
 
-    getRepairRequests(params).then(data => {
+    getRepairs(params).then(data => {
       console.log('报修列表:', data)
       this.setData({
         repairList: data.data || [],

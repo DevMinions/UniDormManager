@@ -58,6 +58,7 @@ func InitAuthData(ctx context.Context) error {
 		// 学生角色
 		`INSERT INTO role_permissions (role_id, permission_id, scope) VALUES
 		('role-student', 'perm-students-read', 'self'),
+		('role-student', 'perm-rooms-read', 'all'),
 		('role-student', 'perm-repairs-create', 'self'),
 		('role-student', 'perm-repairs-read', 'self'),
 		('role-student', 'perm-notices-read', 'all'),
