@@ -1,0 +1,6 @@
+{
+  "navigationBarTitleText": "房间列表",
+  "enablePullDownRefresh": true,
+  "backgroundColor": "#f8fafc",
+  "usingComponents": {}
+}

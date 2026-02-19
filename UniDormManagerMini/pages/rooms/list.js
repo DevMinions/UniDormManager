@@ -195,13 +195,33 @@ Page({
   },
 
   /**
+   * 重置筛选条件
+   */
+  resetFilters() {
+    this.setData({
+      keyword: '',
+      selectedBuilding: '',
+      selectedFloor: '',
+      selectedStatus: ''
+    })
+    this.loadRooms()
+  },
+
+  /**
+   * 判断是否有活跃筛选条件
+   */
+  hasActiveFilters() {
+    return this.data.keyword || this.data.selectedBuilding || 
+           this.data.selectedFloor || this.data.selectedStatus
+  },
+
+  /**
    * 查看房间详情
    */
   goToDetail(e) {
     const roomId = e.currentTarget.dataset.id
-    wx.showToast({
-      title: '功能开发中',
-      icon: 'none'
+    wx.navigateTo({
+      url: `/pages/rooms/detail/index?id=${roomId}`
     })
   },
 
