@@ -80,7 +80,7 @@
       <view class="empty-icon">🏠</view>
       <text class="empty-title">暂无房间数据</text>
       <text class="empty-desc" wx:if="{{keyword || selectedBuilding || selectedFloor || selectedStatus}}">暂无符合条件的房间，请调整筛选条件</text>
-      <text class="empty-desc" wx:else">暂无房间数据，请联系管理员</text>
+      <text class="empty-desc" wx:else>暂无房间数据，请联系管理员</text>
       <view class="empty-action" wx:if="{{keyword || selectedBuilding || selectedFloor || selectedStatus}}" bindtap="resetFilters">
         <text class="empty-btn">清除筛选</text>
       </view>

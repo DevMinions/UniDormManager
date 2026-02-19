@@ -53,7 +53,7 @@
 
 .status-card.status-in_progress,
 .status-card.status-in-progress,
-.status-card.status-In\ Progress {
+.status-card.status-InProgress {
   background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
 }
 
