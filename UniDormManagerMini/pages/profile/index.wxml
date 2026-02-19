@@ -2,6 +2,7 @@
 <view class="container">
   <!-- 未登录状态 -->
   <view class="login-prompt" wx:if="{{!hasLogin}}">
+    <view class="prompt-icon">🔒</view>
     <text class="prompt-text">请先登录</text>
     <button class="login-btn" bindtap="goToLogin">
       去登录
@@ -12,117 +13,199 @@
   <view wx:if="{{hasLogin}}">
     <!-- 用户信息卡片 -->
     <view class="user-card">
-      <view class="avatar">
+      <view class="avatar-section">
         <image
           class="avatar-img"
           src="/images/default-avatar.png"
           mode="aspectFill"
         />
+        <view class="avatar-badge {{userRole}}"></view>
       </view>
       <view class="user-info">
-        <view class="user-role-tag {{userRole}}">
-          {{userRoleName}}
+        <view class="user-header">
+          <text class="user-name">{{userInfo.realName || userInfo.username || '用户'}}</text>
+          <view class="user-role-tag {{userRole}}">
+            {{userRoleName}}
+          </view>
         </view>
-        <text class="user-name">{{userInfo.realName || userInfo.username}}</text>
-        <text class="user-email">{{userInfo.email}}</text>
-        <text class="user-id" wx:if="{{userInfo.studentId}}">学号: {{userInfo.studentId}}</text>
+        <view class="user-meta">
+          <text class="user-id" wx:if="{{userInfo.studentId || userInfo.employeeId}}">
+            📋 {{userInfo.studentId || userInfo.employeeId}}
+          </text>
+          <text class="user-contact" wx:if="{{userInfo.phone}}">
+            📱 {{userInfo.phone}}
+          </text>
+          <text class="user-email" wx:if="{{userInfo.email}}">
+            ✉️ {{userInfo.email}}
+          </text>
+        </view>
       </view>
     </view>
 
-    <!-- 管理员专属功能提示 -->
-    <view class="admin-notice" wx:if="{{canManageStudents || canManageRooms || canManageNotices || canManageRepairs}}">
-      <view class="notice-icon">📋</view>
-      <view class="notice-text">
-        <text>您拥有管理权限</text>
-        <text wx:if="{{canManageStudents}}">• 可管理学生信息</text>
-        <text wx:if="{{canManageRooms}}">• 可管理房间分配</text>
-        <text wx:if="{{canManageNotices}}">• 可发布公告通知</text>
-        <text wx:if="{{canManageRepairs}}">• 可处理报修请求</text>
+    <!-- 通用功能菜单 -->
+    <view class="menu-card">
+      <view class="menu-header">
+        <text class="menu-title">常用功能</text>
+      </view>
+      <view class="menu-list">
+        <!-- 我的报修 -->
+        <view class="menu-item" bindtap="goToMyRepairs">
+          <view class="menu-icon repair">🔧</view>
+          <view class="menu-content">
+            <text class="menu-label">我的报修</text>
+            <text class="menu-desc">查看报修记录</text>
+          </view>
+          <view class="menu-arrow">›</view>
+        </view>
+        
+        <!-- 修改密码 -->
+        <view class="menu-item" bindtap="goToChangePassword">
+          <view class="menu-icon password">🔐</view>
+          <view class="menu-content">
+            <text class="menu-label">修改密码</text>
+            <text class="menu-desc">更改登录密码</text>
+          </view>
+          <view class="menu-arrow">›</view>
+        </view>
+        
+        <!-- 设置 -->
+        <view class="menu-item" bindtap="goToSettings">
+          <view class="menu-icon settings">⚙️</view>
+          <view class="menu-content">
+            <text class="menu-label">设置</text>
+            <text class="menu-desc">应用偏好设置</text>
+          </view>
+          <view class="menu-arrow">›</view>
+        </view>
       </view>
     </view>
 
-    <!-- 学生专属功能 -->
-    <view class="student-notice" wx:if="{{userRole === 'student'}}">
-      <view class="notice-icon">👥</view>
-      <view class="notice-text">
-        <text>学生用户</text>
-        <text>• 可以提交报修申请</text>
-        <text>• 可以查看公告通知</text>
-        <text>• 可以查看宿舍分配</text>
+    <!-- 宿管员功能菜单 -->
+    <view class="menu-card admin-card" wx:if="{{showStudentManagement || showRoomAllocation || showCheckInOut}}">
+      <view class="menu-header">
+        <text class="menu-title">🏠 宿管功能</text>
+        <view class="role-badge">宿管员</view>
+      </view>
+      <view class="menu-list">
+        <!-- 学生管理 -->
+        <view class="menu-item" bindtap="goToStudentManagement" wx:if="{{showStudentManagement}}">
+          <view class="menu-icon student">👥</view>
+          <view class="menu-content">
+            <text class="menu-label">学生管理</text>
+            <text class="menu-desc">查看和管理学生信息</text>
+          </view>
+          <view class="menu-arrow">›</view>
+        </view>
+        
+        <!-- 房间分配 -->
+        <view class="menu-item" bindtap="goToRoomAllocation" wx:if="{{showRoomAllocation}}">
+          <view class="menu-icon room">🏢</view>
+          <view class="menu-content">
+            <text class="menu-label">房间分配</text>
+            <text class="menu-desc">分配宿舍房间</text>
+          </view>
+          <view class="menu-arrow">›</view>
+        </view>
+        
+        <!-- 入住/退住办理 -->
+        <view class="menu-item" bindtap="goToCheckInOut" wx:if="{{showCheckInOut}}">
+          <view class="menu-icon checkin">📝</view>
+          <view class="menu-content">
+            <text class="menu-label">入住/退住办理</text>
+            <text class="menu-desc">办理入住退住手续</text>
+          </view>
+          <view class="menu-arrow">›</view>
+        </view>
       </view>
     </view>
 
-    <!-- 维修工专属功能 -->
-    <view class="maintenance-notice" wx:if="{{userRole === 'maintenance'}}">
-      <view class="notice-icon">🔧</view>
-      <view class="notice-text">
-        <text>维修工角色</text>
-        <text>• 可以处理报修请求</text>
-        <text>• 可以更新报修状态</text>
-        <text>• 可以添加维修备注</text>
+    <!-- 维修工功能菜单 -->
+    <view class="menu-card maintenance-card" wx:if="{{showMyWorkOrders || showWorkOrderStats}}">
+      <view class="menu-header">
+        <text class="menu-title">🔨 维修功能</text>
+        <view class="role-badge maintenance">维修工</view>
+      </view>
+      <view class="menu-list">
+        <!-- 我的工单 -->
+        <view class="menu-item" bindtap="goToMyWorkOrders" wx:if="{{showMyWorkOrders}}">
+          <view class="menu-icon workorder">📋</view>
+          <view class="menu-content">
+            <text class="menu-label">我的工单</text>
+            <text class="menu-desc">查看待处理工单</text>
+          </view>
+          <view class="menu-arrow">›</view>
+        </view>
+        
+        <!-- 工单统计 -->
+        <view class="menu-item" bindtap="goToWorkOrderStats" wx:if="{{showWorkOrderStats}}">
+          <view class="menu-icon stats">📊</view>
+          <view class="menu-content">
+            <text class="menu-label">工单统计</text>
+            <text class="menu-desc">查看工作统计数据</text>
+          </view>
+          <view class="menu-arrow">›</view>
+        </view>
       </view>
     </view>
 
-    <!-- 功能菜单 -->
-    <view class="menu-section">
-      <view class="section-title">我的功能</view>
-      
-      <!-- 查看我的报修（所有角色都有） -->
-      <view class="menu-item" bindtap="goToMyRepairs">
-        <view class="menu-icon repair-icon">🔧</view>
-        <view class="menu-content">
-          <text class="menu-title">我的报修</text>
-          <text class="menu-desc">查看我提交的报修记录</text>
-        </view>
-        <view class="menu-arrow">›</view>
+    <!-- 管理员功能菜单 -->
+    <view class="menu-card super-admin-card" wx:if="{{showUserManagement || showSystemSettings}}">
+      <view class="menu-header">
+        <text class="menu-title">⚡ 管理功能</text>
+        <view class="role-badge admin">管理员</view>
       </view>
-
-      <!-- 学生管理（宿管员及以上） -->
-      <view class="menu-item" bindtap="goToStudentManagement" wx:if="{{canManageStudents}}">
-        <view class="menu-icon student-icon">👥</view>
-        <view class="menu-content">
-          <text class="menu-title">学生管理</text>
-          <text class="menu-desc">查看和管理学生信息</text>
+      <view class="menu-list">
+        <!-- 用户管理 -->
+        <view class="menu-item" bindtap="goToUserManagement" wx:if="{{showUserManagement}}">
+          <view class="menu-icon users">👤</view>
+          <view class="menu-content">
+            <text class="menu-label">用户管理</text>
+            <text class="menu-desc">管理系统用户</text>
+          </view>
+          <view class="menu-arrow">›</view>
         </view>
-        <view class="menu-arrow admin-arrow">›</view>
+        
+        <!-- 系统设置 -->
+        <view class="menu-item" bindtap="goToSystemSettings" wx:if="{{showSystemSettings}}">
+          <view class="menu-icon system">🔧</view>
+          <view class="menu-content">
+            <text class="menu-label">系统设置</text>
+            <text class="menu-desc">系统配置管理</text>
+          </view>
+          <view class="menu-arrow">›</view>
+        </view>
       </view>
+    </view>
 
-      <!-- 房间管理（楼栋管理员及以上） -->
-      <view class="menu-item" bindtap="goToRoomManagement" wx:if="{{canManageRooms}}">
-        <view class="menu-icon room-icon">🏢</view>
-        <view class="menu-content">
-          <text class="menu-title">房间管理</text>
-          <text class="menu-desc">查看和管理宿舍房间</text>
-        </view>
-        <view class="menu-arrow admin-arrow">›</view>
+    <!-- 系统信息 -->
+    <view class="menu-card">
+      <view class="menu-header">
+        <text class="menu-title">系统</text>
       </view>
-
-      <!-- 公告管理（后勤管理员及以上） -->
-      <view class="menu-item" bindtap="goToNoticeManagement" wx:if="{{canManageNotices}}">
-        <view class="menu-icon notice-icon">📢</view>
-        <view class="menu-content">
-          <text class="menu-title">公告管理</text>
-          <text class="menu-desc">发布和管理公告通知</text>
+      <view class="menu-list">
+        <!-- 关于我们 -->
+        <view class="menu-item" bindtap="goToAbout">
+          <view class="menu-icon about">ℹ️</view>
+          <view class="menu-content">
+            <text class="menu-label">关于我们</text>
+            <text class="menu-desc">版本 {{version}}</text>
+          </view>
+          <view class="menu-arrow">›</view>
         </view>
-        <view class="menu-arrow admin-arrow">›</view>
-      </view>
-
-      <!-- 报修管理（维修工及以上） -->
-      <view class="menu-item" bindtap="goToRepairManagement" wx:if="{{canManageRepairs}}">
-        <view class="menu-icon repair-icon">🔧</view>
-        <view class="menu-content">
-          <text class="menu-title">报修管理</text>
-          <text class="menu-desc">查看和处理报修请求</text>
-        </view>
-        <view class="menu-arrow admin-arrow">›</view>
       </view>
     </view>
 
     <!-- 退出登录 -->
     <view class="logout-section">
       <button class="logout-btn" bindtap="handleLogout">
-        退出登录
+        <text class="logout-icon">🚪</text>
+        <text>退出登录</text>
       </button>
+    </view>
+
+    <!-- 版本信息 -->
+    <view class="version-info">
+      <text>UniDormManager v{{version}}</text>
     </view>
   </view>
 </view>
