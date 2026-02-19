@@ -51,11 +51,12 @@ func (qb *QueryBuilder) WhereLike(column, value string) *QueryBuilder {
 func (qb *QueryBuilder) WhereIn(column string, values []string) *QueryBuilder {
 	if len(values) > 0 {
 		placeholders := make([]string, len(values))
-		for i := range values {
+		args := make([]interface{}, len(values))
+		for i, v := range values {
 			placeholders[i] = fmt.Sprintf("$%d", len(qb.args)+i+1)
-			qb.args = append(qb.args, values[i])
+			args[i] = v
 		}
-		return qb.Where(fmt.Sprintf("%s IN (%s)", column, strings.Join(placeholders, ",")))
+		return qb.Where(fmt.Sprintf("%s IN (%s)", column, strings.Join(placeholders, ",")), args...)
 	}
 	return qb
 }
@@ -138,7 +139,7 @@ func BuildStudentQuery(ctx context.Context, req *models.PaginatedRequest, filter
 func BuildRoomQuery(ctx context.Context, req *models.PaginatedRequest, filter *models.RoomFilter) (*QueryBuilder, *QueryBuilder) {
 	// 修正 SELECT 列以匹配 store_pagination.go 中的 scan
 	baseQuery := `
-		SELECT r.id, r.number, r.building, r.capacity, r.occupied, r.type, r.status
+		SELECT r.id, r.number, r.building, r.floor, r.capacity, r.occupied, r.type, r.status
 		FROM rooms r
 	`
 

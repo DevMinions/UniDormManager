@@ -108,4 +108,5 @@ go test ./... -cover
 ```
 
 ### Git 提交
-- 待提交: test: add unit tests for student and room management handlers
+- ✅ 已提交: test: add unit tests for student and room management handlers
+- 提交哈希: a86863e

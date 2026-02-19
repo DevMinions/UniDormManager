@@ -8,42 +8,65 @@
 
   <!-- 统计卡片 -->
   <view class="stats-section" wx:if="{{!loading}}">
-    <view class="stats-row">
-      <view class="stat-card primary">
+    <view class="stats-grid">
+      <view class="stat-card primary" bindtap="goToRooms">
+        <view class="stat-header">
+          <view class="stat-icon">🏠</view>
+        </view>
         <text class="stat-value">{{stats.totalRooms}}</text>
         <text class="stat-label">房间总数</text>
       </view>
-      <view class="stat-card success">
+
+      <view class="stat-card success" bindtap="goToRooms">
+        <view class="stat-header">
+          <view class="stat-icon">✅</view>
+        </view>
         <text class="stat-value">{{stats.freeRooms}}</text>
         <text class="stat-label">空闲房间</text>
       </view>
-    </view>
 
-    <view class="stats-row">
-      <view class="stat-card warning">
+      <view class="stat-card warning" bindtap="goToRooms">
+        <view class="stat-header">
+          <view class="stat-icon">👥</view>
+        </view>
         <text class="stat-value">{{stats.occupiedRooms}}</text>
         <text class="stat-label">已入住</text>
       </view>
-      <view class="stat-card danger">
+
+      <view class="stat-card danger" bindtap="goToRepairs">
+        <view class="stat-header">
+          <view class="stat-icon">🔧</view>
+        </view>
         <text class="stat-value">{{stats.pendingRepairs}}</text>
         <text class="stat-label">待处理报修</text>
       </view>
-    </view>
 
-    <view class="stats-row" wx:if="{{isAdmin}}">
-      <view class="stat-card info">
+      <view class="stat-card info" wx:if="{{isAdmin}}" bindtap="goToStudents">
+        <view class="stat-header">
+          <view class="stat-icon">🎓</view>
+        </view>
         <text class="stat-value">{{stats.totalStudents}}</text>
         <text class="stat-label">学生总数</text>
       </view>
-      <view class="stat-card secondary">
+
+      <view class="stat-card secondary" wx:if="{{isAdmin}}" bindtap="goToRooms">
+        <view class="stat-header">
+          <view class="stat-icon">🏢</view>
+        </view>
         <text class="stat-value">{{stats.totalBuildings}}</text>
         <text class="stat-label">楼栋总数</text>
       </view>
     </view>
   </view>
 
+  <!-- 加载状态 -->
+  <view class="loading-state" wx:if="{{loading}}">
+    <view class="loading-spinner"></view>
+    <text class="loading-text">加载中...</text>
+  </view>
+
   <!-- 快捷入口 -->
-  <view class="quick-actions">
+  <view class="quick-actions" wx:if="{{!loading}}">
     <view class="action-title">快捷操作</view>
     <view class="action-grid">
       <view class="action-item" bindtap="goToRooms">
@@ -69,10 +92,10 @@
   </view>
 
   <!-- 提示信息 -->
-  <view class="tips-section">
-    <view class="tip-card" wx:if="{{stats.pendingRepairs > 0 && isAdmin}}">
+  <view class="tips-section" wx:if="{{stats.pendingRepairs > 0 && isAdmin && !loading}}">
+    <view class="tip-card" bindtap="goToRepairs">
       <text class="tip-icon">⚠️</text>
-      <text class="tip-text">您有 {{stats.pendingRepairs}} 个待处理报修请求</text>
+      <text class="tip-text">您有 {{stats.pendingRepairs}} 个待处理报修请求，点击查看</text>
     </view>
   </view>
 </view>

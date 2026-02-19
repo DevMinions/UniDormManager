@@ -29,6 +29,7 @@ type Room struct {
 	ID       string `json:"id"`
 	Number   string `json:"number"`
 	Building string `json:"building"`
+	Floor    int    `json:"floor"`
 	Capacity int    `json:"capacity"`
 	Occupied int    `json:"occupied"`
 	Type     string `json:"type"`   // Male, Female, Co-ed

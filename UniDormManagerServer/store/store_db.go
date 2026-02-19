@@ -451,7 +451,7 @@ func (s *DBStore) GetAllRooms() []*models.Room {
 
 	// 从数据库查询
 	rows, err := database.DB.Query(ctx,
-		"SELECT id, number, building, capacity, occupied, type, status FROM rooms ORDER BY building, number")
+		"SELECT id, number, building, floor, capacity, occupied, type, status FROM rooms ORDER BY building, number")
 	if err != nil {
 		return []*models.Room{}
 	}
@@ -460,7 +460,7 @@ func (s *DBStore) GetAllRooms() []*models.Room {
 	rooms := []*models.Room{}
 	for rows.Next() {
 		var room models.Room
-		if err := rows.Scan(&room.ID, &room.Number, &room.Building,
+		if err := rows.Scan(&room.ID, &room.Number, &room.Building, &room.Floor,
 			&room.Capacity, &room.Occupied, &room.Type, &room.Status); err == nil {
 			rooms = append(rooms, &room)
 		}
@@ -490,8 +490,8 @@ func (s *DBStore) GetRoomByID(id string) (*models.Room, bool) {
 	// 从数据库查询
 	var room models.Room
 	err := database.DB.QueryRow(ctx,
-		"SELECT id, number, building, capacity, occupied, type, status FROM rooms WHERE id = $1",
-		id).Scan(&room.ID, &room.Number, &room.Building,
+		"SELECT id, number, building, floor, capacity, occupied, type, status FROM rooms WHERE id = $1",
+		id).Scan(&room.ID, &room.Number, &room.Building, &room.Floor,
 		&room.Capacity, &room.Occupied, &room.Type, &room.Status)
 
 	if err == pgx.ErrNoRows {

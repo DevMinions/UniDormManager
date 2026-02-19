@@ -40,7 +40,7 @@ func (s *DBStore) GetRoomsPaginated(req *models.PaginatedRequest, filter *models
 	for rows.Next() {
 		var room models.Room
 		if err := rows.Scan(
-			&room.ID, &room.Number, &room.Building,
+			&room.ID, &room.Number, &room.Building, &room.Floor,
 			&room.Capacity, &room.Occupied, &room.Type, &room.Status,
 		); err == nil {
 			rooms = append(rooms, &room)
