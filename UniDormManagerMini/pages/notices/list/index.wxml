@@ -2,7 +2,7 @@
 <view class="container">
   <!-- 分类筛选 -->
   <view class="filter-section">
-    <scroll-view class="filter-scroll" scroll-x="true">
+    <scroll-view class="filter-scroll" scroll-x="true" enable-flex="true">
       <view
         class="filter-item {{selectedCategory === 'all' ? 'active' : ''}}"
         data-category="all"
@@ -42,38 +42,89 @@
   </view>
 
   <!-- 公告列表 -->
-  <view class="notice-list">
-    <view class="loading" wx:if="{{loading}}">
-      <text>加载中...</text>
+  <scroll-view 
+    class="notice-list" 
+    scroll-y="true" 
+    enable-back-to-top="true"
+    bindscrolltolower="onLoadMore"
+    style="height: calc(100vh - 200rpx);"
+  >
+    <!-- 加载中 -->
+    <view class="loading-container" wx:if="{{loading && notices.length === 0}}">
+      <view class="loading-spinner"></view>
+      <text class="loading-text">加载中...</text>
     </view>
 
-    <view class="empty-state" wx:elif="{{notices.length === 0}}">
-      <text>暂无公告</text>
+    <!-- 空状态 -->
+    <view class="empty-state" wx:elif="{{!loading && notices.length === 0}}">
+      <text class="empty-state-icon">📭</text>
+      <text class="empty-state-title">暂无公告</text>
+      <text class="empty-state-desc">暂时没有相关公告通知</text>
     </view>
 
-    <view
-      class="notice-card"
-      wx:for="{{notices}}"
-      wx:key="id"
-      data-id="{{item.id}}"
-      bindtap="goToDetail"
-    >
-      <view class="notice-header">
-        <view class="notice-category category-{{item.category}}">
-          {{item.categoryText || item.category}}
+    <!-- 公告卡片列表 -->
+    <block wx:if="{{notices.length > 0}}">
+      <view
+        class="notice-card {{item.isRead ? 'is-read' : ''}} {{item.isPinned ? 'is-pinned' : ''}}"
+        wx:for="{{notices}}"
+        wx:key="id"
+        data-id="{{item.id}}"
+        data-index="{{index}}"
+        bindtap="goToDetail"
+      >
+        <!-- 置顶标识 -->
+        <view class="pinned-badge" wx:if="{{item.isPinned}}">
+          <text class="pinned-icon">📌</text>
+          <text>置顶</text>
         </view>
-        <view class="notice-date">{{item.publishedAt || item.published_at}}</view>
+
+        <!-- 头部信息 -->
+        <view class="notice-header">
+          <view class="notice-meta-left">
+            <!-- 分类标签 -->
+            <view class="category-tag category-{{item.category}}">
+              {{item.categoryText || item.category}}
+            </view>
+            <!-- 未读标识 -->
+            <view class="unread-dot" wx:if="{{!item.isRead}}"></view>
+          </view>
+          <!-- 发布时间 -->
+          <view class="notice-date">
+            <text class="date-icon">📅</text>
+            <text>{{item.publishedAt || item.published_at}}</text>
+          </view>
+        </view>
+
+        <!-- 标题 -->
+        <view class="notice-title">{{item.title}}</view>
+
+        <!-- 摘要 -->
+        <view class="notice-preview" wx:if="{{item.summary || item.description || item.content}}">
+          {{item.summary || item.description || item.content}}
+        </view>
+
+        <!-- 底部信息 -->
+        <view class="notice-footer">
+          <text class="view-detail">查看详情 ›</text>
+          <text class="read-status {{!item.isRead ? 'is-unread' : ''}}">
+            <text class="status-icon">{{item.isRead ? '✓' : '●'}}</text>
+            <text>{{item.isRead ? '已读' : '未读'}}</text>
+          </text>
+        </view>
       </view>
 
-      <view class="notice-title">{{item.title}}</view>
-
-      <view class="notice-preview">
-        {{item.description || item.content}}
+      <!-- 加载更多 -->
+      <view class="load-more" wx:if="{{hasMore && !loadingMore}}">
+        <text class="load-more-icon">↓</text>
+        <text>上拉加载更多</text>
       </view>
-
-      <view class="notice-footer">
-        <text class="view-detail">查看详情 ›</text>
+      <view class="load-more" wx:if="{{loadingMore}}">
+        <text class="load-more-icon">⟳</text>
+        <text>加载中...</text>
       </view>
-    </view>
-  </view>
+      <view class="load-more no-more" wx:if="{{!hasMore && notices.length > 0}}">
+        <text>—— 已经到底了 ——</text>
+      </view>
+    </block>
+  </scroll-view>
 </view>
