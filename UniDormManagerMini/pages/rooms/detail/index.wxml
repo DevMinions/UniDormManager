@@ -1,0 +1,225 @@
+<!--pages/rooms/detail/index.wxml-->
+<view class="container">
+  <!-- 加载中 -->
+  <view class="loading" wx:if="{{loading}}">
+    <view class="loading-spinner"></view>
+    <text class="loading-text">加载中...</text>
+  </view>
+
+  <!-- 错误状态 -->
+  <view class="error-state" wx:elif="{{error}}">
+    <text class="error-icon">⚠️</text>
+    <text class="error-text">{{errorMessage}}</text>
+    <button class="retry-btn" bindtap="loadRoomDetail">重新加载</button>
+  </view>
+
+  <!-- 房间详情 -->
+  <view class="room-detail" wx:else>
+    <!-- 房间状态卡片 -->
+    <view class="status-card status-{{room.status}}">
+      <view class="status-icon">
+        <text wx:if="{{room.status === 'available'}}">🚪</text>
+        <text wx:elif="{{room.status === 'occupied'}}">🏠</text>
+        <text wx:elif="{{room.status === 'maintenance'}}">🔧</text>
+        <text wx:elif="{{room.status === 'cleaning'}}">🧹</text>
+        <text wx:else">📋</text>
+      </view>
+      <view class="status-info">
+        <text class="status-text">{{room.number || room.roomNumber || room.name}}</text>
+        <text class="status-desc">{{room.statusText}} · {{room.typeText}}</text>
+      </view>
+      <view class="status-badge" wx:if="{{room.status === 'available'}}">
+        可入住
+      </view>
+    </view>
+
+    <!-- 标签切换 -->
+    <view class="tab-bar">
+      <view class="tab-item {{activeTab === 'info' ? 'active' : ''}}" 
+            data-tab="info" 
+            bindtap="switchTab">
+        <text class="tab-icon">📋</text>
+        <text class="tab-text">基本信息</text>
+      </view>
+      <view class="tab-item {{activeTab === 'students' ? 'active' : ''}}" 
+            data-tab="students" 
+            bindtap="switchTab">
+        <text class="tab-icon">👥</text>
+        <text class="tab-text">入住学生</text>
+        <text class="tab-badge" wx:if="{{students.length > 0}}">{{students.length}}</text>
+      </view>
+      <view class="tab-item {{activeTab === 'repairs' ? 'active' : ''}}" 
+            data-tab="repairs" 
+            bindtap="switchTab">
+        <text class="tab-icon">🔧</text>
+        <text class="tab-text">报修记录</text>
+        <text class="tab-badge" wx:if="{{repairs.length > 0}}">{{repairs.length}}</text>
+      </view>
+    </view>
+
+    <!-- 基本信息标签 -->
+    <view class="tab-content" wx:if="{{activeTab === 'info'}}">
+      <view class="info-card">
+        <view class="card-header">
+          <text class="card-title">房间信息</text>
+          <button class="btn-edit" wx:if="{{isAdmin}}" bindtap="editRoom">
+            <text class="btn-icon">✏️</text>
+            编辑
+          </button>
+        </view>
+        <view class="info-list">
+          <view class="info-item">
+            <text class="info-label">房间号</text>
+            <text class="info-value">{{room.number || room.roomNumber || '-'}}</text>
+          </view>
+          <view class="info-item">
+            <text class="info-label">楼栋</text>
+            <text class="info-value">{{room.buildingName || room.building_name || '-'}}</text>
+          </view>
+          <view class="info-item">
+            <text class="info-label">楼层</text>
+            <text class="info-value">{{room.floor ? room.floor + '层' : '-'}}</text>
+          </view>
+          <view class="info-item">
+            <text class="info-label">房间类型</text>
+            <text class="info-value">{{room.typeText || room.type || '-'}}</text>
+          </view>
+          <view class="info-item">
+            <text class="info-label">房间状态</text>
+            <view class="status-tag status-{{room.status}}">
+              {{room.statusText}}
+            </view>
+          </view>
+          <view class="info-item">
+            <text class="info-label">容量</text>
+            <text class="info-value">{{room.capacity ? room.capacity + '人' : '-'}}</text>
+          </view>
+          <view class="info-item">
+            <text class="info-label">面积</text>
+            <text class="info-value">{{room.area ? room.area + 'm²' : '-'}}</text>
+          </view>
+          <view class="info-item">
+            <text class="info-label">朝向</text>
+            <text class="info-value">{{room.orientation || '-'}}</text>
+          </view>
+          <view class="info-item">
+            <text class="info-label">当前入住</text>
+            <text class="info-value">{{students.length}}/{{room.capacity || '-'}} 人</text>
+          </view>
+        </view>
+      </view>
+
+      <!-- 设施信息 -->
+      <view class="facilities-card" wx:if="{{room.facilities && room.facilities.length > 0}}">
+        <view class="card-header">
+          <text class="card-title">房间设施</text>
+        </view>
+        <view class="facilities-grid">
+          <view class="facility-item" wx:for="{{room.facilities}}" wx:key="*this">
+            <text class="facility-icon">✓</text>
+            <text class="facility-name">{{item}}</text>
+          </view>
+        </view>
+      </view>
+
+      <!-- 备注信息 -->
+      <view class="remark-card" wx:if="{{room.remark || room.description}}">
+        <view class="card-header">
+          <text class="card-title">备注说明</text>
+        </view>
+        <text class="remark-text">{{room.remark || room.description}}</text>
+      </view>
+    </view>
+
+    <!-- 入住学生标签 -->
+    <view class="tab-content" wx:if="{{activeTab === 'students'}}">
+      <view class="students-card" wx:if="{{students.length > 0}}">
+        <view class="card-header">
+          <text class="card-title">入住学生</text>
+          <text class="card-subtitle">共 {{students.length}} 人</text>
+        </view>
+        <view class="student-list">
+          <view class="student-item" wx:for="{{students}}" wx:key="id">
+            <view class="student-avatar">
+              <text class="avatar-text">{{item.name ? item.name[0] : '?'}}</text>
+            </view>
+            <view class="student-info">
+              <view class="student-header">
+                <text class="student-name">{{item.name || '未知'}}</text>
+                <text class="student-tag" wx:if="{{item.isLeader}}">舍长</text>
+              </view>
+              <view class="student-detail">
+                <text class="detail-item" wx:if="{{item.studentId}}">学号: {{item.studentId}}</text>
+                <text class="detail-item" wx:if="{{item.major}}">专业: {{item.major}}</text>
+                <text class="detail-item" wx:if="{{item.grade}}">年级: {{item.grade}}</text>
+              </view>
+            </view>
+            <view class="student-actions" wx:if="{{item.phone}}">
+              <button class="btn-call" data-phone="{{item.phone}}" bindtap="makePhoneCall">
+                <text class="call-icon">📞</text>
+              </button>
+            </view>
+          </view>
+        </view>
+      </view>
+
+      <!-- 空状态 -->
+      <view class="empty-state" wx:else>
+        <text class="empty-icon">👤</text>
+        <text class="empty-title">暂无入住学生</text>
+        <text class="empty-desc">该房间目前没有学生入住</text>
+      </view>
+    </view>
+
+    <!-- 报修记录标签 -->
+    <view class="tab-content" wx:if="{{activeTab === 'repairs'}}">
+      <view class="repairs-card" wx:if="{{repairs.length > 0}}">
+        <view class="card-header">
+          <text class="card-title">报修记录</text>
+          <text class="card-subtitle">共 {{repairs.length}} 条</text>
+        </view>
+        <view class="repair-list">
+          <view class="repair-item" 
+                wx:for="{{repairs}}" 
+                wx:key="id"
+                data-id="{{item.id}}"
+                bindtap="goToRepairDetail">
+            <view class="repair-header">
+              <text class="repair-title">{{item.title}}</text>
+              <view class="repair-status" style="background: {{statusColorMap[item.status]}}20; color: {{statusColorMap[item.status]}};">
+                {{item.statusText}}
+              </view>
+            </view>
+            <view class="repair-meta">
+              <text class="repair-type" wx:if="{{item.type}}">{{item.type}}</text>
+              <text class="repair-time">{{item.createdAt || item.created_at}}</text>
+            </view>
+            <view class="repair-desc" wx:if="{{item.description}}">
+              {{item.description}}
+            </view>
+          </view>
+        </view>
+      </view>
+
+      <!-- 空状态 -->
+      <view class="empty-state" wx:else>
+        <text class="empty-icon">🔧</text>
+        <text class="empty-title">暂无报修记录</text>
+        <text class="empty-desc">该房间没有历史报修记录</text>
+        <button class="empty-btn" bindtap="addRepair">提交报修</button>
+      </view>
+    </view>
+  </view>
+
+  <!-- 底部操作栏 -->
+  <view class="bottom-actions" wx:if="{{!loading && !error}}">
+    <button class="bottom-btn btn-secondary" bindtap="viewFloorPlan">
+      <text class="btn-icon">🗺️</text>
+      <text>楼层图</text>
+    </button>
+    <button class="bottom-btn btn-primary" bindtap="addRepair">
+      <text class="btn-icon">🔧</text>
+      <text>提交报修</text>
+    </button>
+  </view>
+</view>
