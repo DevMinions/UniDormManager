@@ -6,6 +6,7 @@
     "pages/repairs/list/index",
     "pages/repairs/submit/index",
     "pages/repairs/detail/index",
+    "pages/repairs/statistics/index",
     "pages/notices/list/index",
     "pages/notices/detail/index",
     "pages/profile/index",

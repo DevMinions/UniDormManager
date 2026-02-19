@@ -82,14 +82,14 @@ App({
       {
         pagePath: '/pages/index/index',
         text: '工作台',
-        iconPath: '/images/home.png',
-        selectedIconPath: '/images/home-active.png'
+        iconPath: '/images/workbench.png',
+        selectedIconPath: '/images/workbench-active.png'
       },
       {
         pagePath: '/pages/rooms/list',
         text: '学生',
-        iconPath: '/images/profile.png',
-        selectedIconPath: '/images/profile-active.png'
+        iconPath: '/images/student.png',
+        selectedIconPath: '/images/student-active.png'
       },
       {
         pagePath: '/pages/repairs/list/index',
@@ -110,20 +110,20 @@ App({
       {
         pagePath: '/pages/index/index',
         text: '工单',
-        iconPath: '/images/home.png',
-        selectedIconPath: '/images/home-active.png'
+        iconPath: '/images/workbench.png',
+        selectedIconPath: '/images/workbench-active.png'
       },
       {
         pagePath: '/pages/repairs/list/index',
         text: '待处理',
-        iconPath: '/images/room.png',
-        selectedIconPath: '/images/room-active.png'
+        iconPath: '/images/list.png',
+        selectedIconPath: '/images/list-active.png'
       },
       {
         pagePath: '/pages/profile/index',
         text: '统计',
-        iconPath: '/images/repair.png',
-        selectedIconPath: '/images/repair-active.png'
+        iconPath: '/images/chart.png',
+        selectedIconPath: '/images/chart-active.png'
       },
       {
         pagePath: '/pages/profile/index',
@@ -138,14 +138,14 @@ App({
       {
         pagePath: '/pages/index/index',
         text: '控制台',
-        iconPath: '/images/home.png',
-        selectedIconPath: '/images/home-active.png'
+        iconPath: '/images/workbench.png',
+        selectedIconPath: '/images/workbench-active.png'
       },
       {
         pagePath: '/pages/rooms/list',
         text: '管理',
-        iconPath: '/images/room.png',
-        selectedIconPath: '/images/room-active.png'
+        iconPath: '/images/management.png',
+        selectedIconPath: '/images/management-active.png'
       },
       {
         pagePath: '/pages/repairs/list/index',

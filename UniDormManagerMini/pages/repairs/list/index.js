@@ -15,11 +15,25 @@ Page({
     canUpdateStatus: false,      // 更新报修状态
     canDeleteRepair: false,      // 删除报修
     canSubmitRepair: true,        // 提交报修（学生可以）
+    // 筛选参数
+    filterStatus: '',
+    filterPriority: '',
+    keyword: ''
   },
 
-  onLoad() {
+  onLoad(options) {
     this.checkLoginStatus()
     this.loadPermissions()
+    
+    // 处理传入的筛选参数
+    const filterStatus = options.status || ''
+    const filterPriority = options.priority || ''
+    
+    this.setData({
+      filterStatus,
+      filterPriority
+    })
+    
     this.loadRepairList()
   },
 
@@ -82,8 +96,30 @@ Page({
 
     getRepairs(params).then(data => {
       console.log('报修列表:', data)
+      let repairList = data.data || []
+      
+      // 前端筛选 - 按状态
+      if (this.data.filterStatus) {
+        repairList = repairList.filter(item => item.status === this.data.filterStatus)
+      }
+      
+      // 前端筛选 - 按优先级
+      if (this.data.filterPriority) {
+        repairList = repairList.filter(item => item.priority === this.data.filterPriority)
+      }
+      
+      // 前端筛选 - 按关键词
+      if (this.data.keyword) {
+        const keyword = this.data.keyword.toLowerCase()
+        repairList = repairList.filter(item => 
+          (item.title && item.title.toLowerCase().includes(keyword)) ||
+          (item.description && item.description.toLowerCase().includes(keyword)) ||
+          (item.roomNumber && item.roomNumber.toLowerCase().includes(keyword))
+        )
+      }
+      
       this.setData({
-        repairList: data.data || [],
+        repairList: repairList,
         loading: false
       })
     }).catch(err => {
