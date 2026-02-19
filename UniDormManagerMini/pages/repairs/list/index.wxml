@@ -1,67 +1,133 @@
 <!--pages/repairs/list/index.wxml-->
 <view class="container">
+  <!-- 页面标题 -->
+  <view class="page-header">
+    <text class="heading-2">报修管理</text>
+    <text class="subtitle">{{userRoleName}}视角</text>
+  </view>
+
+  <!-- 搜索栏 -->
+  <view class="search-section">
+    <view class="search-box">
+      <text class="search-icon">🔍</text>
+      <input
+        class="search-input"
+        placeholder="搜索报修标题、描述、房间号"
+        value="{{keyword}}"
+        bindinput="onSearchInput"
+        confirm-type="search"
+      />
+    </view>
+  </view>
+
   <!-- 状态筛选 -->
   <view class="filter-section">
-    <scroll-view class="filter-scroll" scroll-x="true">
+    <scroll-view class="filter-scroll" scroll-x="true" enable-flex="true">
       <view
         class="filter-item {{selectedStatus === 'all' ? 'active' : ''}}"
         data-status="all"
         bindtap="filterStatus"
       >
-        全部
+        <text>全部</text>
       </view>
       <view
         class="filter-item {{selectedStatus === 'pending' ? 'active' : ''}}"
         data-status="pending"
         bindtap="filterStatus"
       >
-        待处理
+        <text class="filter-dot dot-pending"></text>
+        <text>待处理</text>
       </view>
       <view
         class="filter-item {{selectedStatus === 'in_progress' ? 'active' : ''}}"
         data-status="in_progress"
         bindtap="filterStatus"
       >
-        处理中
+        <text class="filter-dot dot-in_progress"></text>
+        <text>处理中</text>
       </view>
       <view
         class="filter-item {{selectedStatus === 'completed' ? 'active' : ''}}"
         data-status="completed"
         bindtap="filterStatus"
       >
-        已完成
+        <text class="filter-dot dot-completed"></text>
+        <text>已完成</text>
       </view>
       <view
         class="filter-item {{selectedStatus === 'closed' ? 'active' : ''}}"
         data-status="closed"
         bindtap="filterStatus"
       >
-        已关闭
+        <text class="filter-dot dot-closed"></text>
+        <text>已关闭</text>
       </view>
     </scroll-view>
   </view>
 
+  <!-- 优先级筛选 -->
+  <view class="priority-filter-section">
+    <view class="filter-label">优先级：</view>
+    <view class="priority-options">
+      <view
+        class="priority-option {{selectedPriority === 'all' ? 'active' : ''}}"
+        data-priority="all"
+        bindtap="filterPriority"
+      >
+        全部
+      </view>
+      <view
+        class="priority-option priority-high {{selectedPriority === 'high' ? 'active' : ''}}"
+        data-priority="high"
+        bindtap="filterPriority"
+      >
+        高
+      </view>
+      <view
+        class="priority-option priority-medium {{selectedPriority === 'medium' ? 'active' : ''}}"
+        data-priority="medium"
+        bindtap="filterPriority"
+      >
+        中
+      </view>
+      <view
+        class="priority-option priority-low {{selectedPriority === 'low' ? 'active' : ''}}"
+        data-priority="low"
+        bindtap="filterPriority"
+      >
+        低
+      </view>
+    </view>
+  </view>
+
   <!-- 报修列表 -->
   <view class="repair-list">
+    <!-- 加载中 -->
     <view class="loading" wx:if="{{loading}}">
-      <text>加载中...</text>
+      <view class="loading-spinner"></view>
+      <text class="loading-text">加载中...</text>
     </view>
 
-    <view class="empty-state" wx:elif="{{repairs.length === 0}}">
-      <text>暂无报修记录</text>
+    <!-- 空状态 -->
+    <view class="empty-state" wx:elif="{{repairList.length === 0}}">
+      <view class="empty-icon">🔧</view>
+      <text class="empty-title">暂无报修记录</text>
+      <text class="empty-desc" wx:if="{{canSubmitRepair}}">点击下方按钮提交报修</text>
+      <text class="empty-desc" wx:else>暂无相关报修工单</text>
     </view>
 
+    <!-- 列表内容 -->
     <view
-      class="repair-card"
-      wx:for="{{repairs}}"
+      class="repair-card {{item.statusClass}}"
+      wx:for="{{repairList}}"
       wx:key="id"
       data-id="{{item.id}}"
       bindtap="goToDetail"
     >
       <view class="repair-header">
         <text class="repair-title">{{item.title}}</text>
-        <view class="repair-status status-{{item.status}}">
-          {{item.statusText || item.status}}
+        <view class="repair-status {{item.statusClass}}">
+          {{item.statusText}}
         </view>
       </view>
 
@@ -72,25 +138,67 @@
         </view>
         <view class="info-row">
           <text class="info-label">优先级:</text>
-          <view class="priority-tag priority-{{item.priority}}">
-            {{item.priorityText || item.priority}}
+          <view class="priority-tag {{item.priorityClass}}">
+            {{item.priorityText}}
           </view>
         </view>
         <view class="info-row">
           <text class="info-label">时间:</text>
           <text class="info-value">{{item.createdAt || item.created_at}}</text>
         </view>
+        <view class="info-row" wx:if="{{item.description}}">
+          <text class="info-label">描述:</text>
+          <text class="info-desc" class="info-value desc-text">{{item.description}}</text>
+        </view>
       </view>
 
       <view class="repair-footer">
-        <text class="view-detail">查看详情 ›</text>
+        <view class="repair-actions" catchtap="preventBubble"
+        >
+          <!-- 学生操作：取消待处理的报修 -->
+          <view
+            class="action-btn btn-cancel"
+            wx:if="{{userRole === 'student' && item.status === 'pending'}}"
+            data-id="{{item.id}}"
+            catchtap="cancelRepair"
+          >
+            取消
+          </view>
+
+          <!-- 维修工操作：接单 -->
+          <view
+            class="action-btn btn-take"
+            wx:if="{{userRole === 'maintenance' && item.status === 'pending'}}"
+            data-id="{{item.id}}"
+            catchtap="takeOrder"
+          >
+            接单
+          </view>
+
+          <!-- 管理员操作：删除 -->
+          <view
+            class="action-btn btn-delete"
+            wx:if="{{canDeleteRepair}}"
+            data-id="{{item.id}}"
+            catchtap="deleteRepair"
+          >
+            删除
+          </view>
+        </view>
+        
+        <view class="view-detail">
+          <text>查看详情</text>
+          <text class="arrow">›</text>
+        </view>
       </view>
     </view>
   </view>
 
   <!-- 提交报修按钮 -->
-  <view class="submit-btn" bindtap="goToSubmit" wx:if="{{!isAdmin}}">
-    <text class="submit-icon">＋</text>
-    <text class="submit-text">提交报修</text>
+  <view class="submit-btn-wrapper" wx:if="{{canSubmitRepair}}">
+    <view class="submit-btn" bindtap="goToSubmit">
+      <text class="submit-icon">+</text>
+      <text class="submit-text">提交报修</text>
+    </view>
   </view>
 </view>

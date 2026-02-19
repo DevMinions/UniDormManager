@@ -86,7 +86,14 @@ Page({
       content: '确定要退出登录吗？',
       success: (res) => {
         if (res.confirm) {
+          // 清理登录状态
           app.clearLoginStatus()
+          // 重置 TabBar 为学生角色
+          app.globalData.userLevel = 1
+          app.globalData.userRole = 'student'
+          app.globalData.userRoleName = '学生'
+          app.refreshTabBarConfig()
+          
           wx.showToast({
             title: '已退出登录',
             icon: 'success'
@@ -99,6 +106,16 @@ Page({
         }
       }
     })
+  },
+
+  /**
+   * 下拉刷新
+   */
+  onPullDownRefresh() {
+    this.loadUserInfo()
+    setTimeout(() => {
+      wx.stopPullDownRefresh()
+    }, 1000)
   },
 
   /**

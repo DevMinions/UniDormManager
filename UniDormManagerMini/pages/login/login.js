@@ -83,18 +83,20 @@ Page({
     wechatLogin(code).then(data => {
       console.log('登录成功:', data)
 
-      // 根据后端角色代码映射到小程序角色
-      const miniAppRole = this.mapBackendRoleToMiniAppRole(data.user.roles || [])
-
-      // 保存登录信息
+      // 保存登录信息 - 使用后端返回的原始角色数据
       app.updateLoginStatus(
         data.token,
         data.user,
-        miniAppRole
+        data.user.roles || [],
+        data.user.userRole,
+        data.user.userLevel
       )
 
+      // 刷新 TabBar 配置
+      app.refreshTabBarConfig()
+
       // 显示角色提示
-      const roleName = this.getRoleDisplayName(miniAppRole)
+      const roleName = app.globalData.userRoleName || '学生'
       wx.showToast({
         title: `登录成功 - ${roleName}`,
         icon: 'success',
@@ -115,63 +117,6 @@ Page({
       })
       this.setData({ loading: false })
     })
-  },
-
-  /**
-   * 映射后端角色代码到小程序角色代码
-   */
-  mapBackendRoleToMiniAppRole(backendRoles) {
-    // 后端角色列表，按优先级排序
-    const roleCode = backendRoles[0] || 'student'
-
-    // 角色映射表
-    const roleMap = {
-      'student': {
-        role: 'student',
-        level: 1,
-        name: '学生'
-      },
-      'dorm_manager': {
-        role: 'student',  // 宿管员主要处理宿舍，对学生可见
-        level: 2,
-        name: '宿管员'
-      },
-      'maintenance_staff': {
-        role: 'maintenance',  // 维修工
-        level: 3,
-        name: '维修工'
-      },
-      'building_manager': {
-        role: 'admin',  // 楼栋管理员，有部分管理权限
-        level: 4,
-        name: '楼栋管理员'
-      },
-      'logistics_admin': {
-        role: 'admin',  // 后勤管理员
-        level: 5,
-        name: '后勤管理员'
-      },
-      'system_admin': {
-        role: 'admin',  // 系统管理员
-        level: 6,
-        name: '系统管理员'
-      }
-    }
-
-    const mapped = roleMap[roleCode]
-    return mapped || roleMap['student']
-  },
-
-  /**
-   * 获取角色显示名称
-   */
-  getRoleDisplayName(miniAppRole) {
-    const roleNames = {
-      'student': '学生',
-      'maintenance': '维修工',
-      'admin': '管理员'
-    }
-    return roleNames[miniAppRole] || '未知角色'
   },
 
   /**

@@ -32,26 +32,26 @@
       {
         "pagePath": "pages/index/index",
         "text": "首页",
-        "iconPath": "images/home.png",
-        "selectedIconPath": "images/home-active.png"
+        "iconPath": "/images/home.png",
+        "selectedIconPath": "/images/home-active.png"
       },
       {
         "pagePath": "pages/rooms/list",
         "text": "房间",
-        "iconPath": "images/room.png",
-        "selectedIconPath": "images/room-active.png"
+        "iconPath": "/images/room.png",
+        "selectedIconPath": "/images/room-active.png"
       },
       {
         "pagePath": "pages/repairs/list/index",
         "text": "报修",
-        "iconPath": "images/repair.png",
-        "selectedIconPath": "images/repair-active.png"
+        "iconPath": "/images/repair.png",
+        "selectedIconPath": "/images/repair-active.png"
       },
       {
         "pagePath": "pages/profile/index",
         "text": "我的",
-        "iconPath": "images/profile.png",
-        "selectedIconPath": "images/profile-active.png"
+        "iconPath": "/images/profile.png",
+        "selectedIconPath": "/images/profile-active.png"
       }
     ]
   },

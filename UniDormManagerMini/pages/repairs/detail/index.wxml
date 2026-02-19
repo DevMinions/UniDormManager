@@ -19,16 +19,18 @@
     <view class="status-card status-{{repair.status}}">
       <view class="status-icon">🔧</view>
       <view class="status-info">
-        <text class="status-text">{{repair.statusText || statusMap[repair.status]}}</text>
-        <text class="status-desc">{{repair.statusDescription || getStatusDescription(repair.status)}}</text>
+        <text class="status-text">{{statusMap[repair.status]}}</text>
+        <text class="status-desc">{{getStatusDescription(repair.status)}}</text>
       </view>
     </view>
 
     <!-- 状态时间线 -->
-    <view class="timeline-card">
-      <view class="timeline-title">处理进度</view>
+    <view class="timeline-card card">
+      <view class="card-header">
+        <text class="card-title">处理进度</text>
+      </view>
       <view class="timeline">
-        <view class="timeline-item {{item.status === repair.status ? 'active' : ''}} {{item.completed ? 'completed' : ''}}" 
+        <view class="timeline-item {{item.completed ? 'completed' : ''}} {{item.status === repair.status ? 'active' : ''}} {{item.isFirst ? 'first' : ''}} {{item.isLast ? 'last' : ''}}" 
               wx:for="{{timeline}}" 
               wx:key="status">
           <view class="timeline-dot"></view>
@@ -42,7 +44,7 @@
     </view>
 
     <!-- 报修信息卡片 -->
-    <view class="info-card">
+    <view class="info-card card">
       <view class="card-header">
         <text class="card-title">报修信息</text>
       </view>
@@ -61,8 +63,8 @@
         </view>
         <view class="info-item">
           <text class="info-label">优先级</text>
-          <view class="priority-tag priority-{{repair.priority}}">
-            {{repair.priorityText || priorityMap[repair.priority]}}
+          <view class="priority-tag {{priorityMap[repair.priority].class || 'priority-medium'}}">
+            {{priorityMap[repair.priority].text || repair.priority}}
           </view>
         </view>
         <view class="info-item">
@@ -85,7 +87,7 @@
     </view>
 
     <!-- 报修描述 -->
-    <view class="description-card">
+    <view class="description-card card">
       <view class="card-header">
         <text class="card-title">问题描述</text>
       </view>
@@ -93,9 +95,10 @@
     </view>
 
     <!-- 相关图片 -->
-    <view class="images-card" wx:if="{{repair.images && repair.images.length > 0}}">
+    <view class="images-card card" wx:if="{{repair.images && repair.images.length > 0}}">
       <view class="card-header">
         <text class="card-title">相关图片</text>
+        <text class="image-count">共{{repair.images.length}}张</text>
       </view>
       <view class="image-grid">
         <view class="image-item" wx:for="{{repair.images}}" wx:key="*this">
@@ -111,82 +114,96 @@
     </view>
 
     <!-- 处理记录 -->
-    <view class="history-card">
+    <view class="history-card card">
       <view class="card-header">
         <text class="card-title">处理记录</text>
       </view>
-      <view class="history-list" wx:if="{{repair.history && repair.history.length > 0}}">
-        <view class="history-item" wx:for="{{repair.history}}" wx:key="id">
+      <view class="history-list" wx:if="{{history.length > 0}}">
+        <view class="history-item" wx:for="{{history}}" wx:key="id">
           <view class="history-header">
-            <text class="history-action">{{item.action}}</text>
-            <text class="history-time">{{item.time}}</text>
+            <text class="history-action">{{item.actionText}}</text>
+            <text class="history-time">{{item.timeFormatted}}</text>
           </view>
           <text class="history-operator" wx:if="{{item.operator}}">处理人：{{item.operator}}</text>
-          <view class="history-content" wx:if="{{item.content}}">{{item.content}}</view>
+          <view class="history-content" wx:if="{{item.content || item.notes}}"
+          >{{item.content || item.notes}}</view>
         </view>
       </view>
       <view class="empty-history" wx:else>
-        暂无处理记录
+        <text class="empty-icon">📝</text>
+        <text>暂无处理记录</text>
       </view>
     </view>
 
-    <!-- 管理员操作区域 -->
-    <view class="actions-card" wx:if="{{isAdmin && repair.status !== 'closed' && repair.status !== 'completed'}}">
+    <!-- 处理备注输入 -->
+    <view class="notes-card card" wx:if="{{canUpdateStatus && repair.status !== 'closed' && repair.status !== 'completed'}}"
+    >
       <view class="card-header">
-        <text class="card-title">管理员操作</text>
+        <text class="card-title">处理备注</text>
       </view>
-      <view class="notes-input">
-        <text class="notes-label">处理备注</text>
-        <textarea
-          class="notes-textarea"
-          placeholder="添加处理备注（可选，最多200字）"
-          value="{{notes}}"
-          bindinput="onNotesInput"
-          maxlength="200"
-        />
+      <textarea
+        class="notes-textarea"
+        placeholder="添加处理备注（可选，最多200字）"
+        value="{{notes}}"
+        bindinput="onNotesInput"
+        maxlength="200"
+      />
+      <text class="char-count">{{notes.length}}/200</text>
+    </view>
+
+    <!-- 底部操作按钮 -->
+    <view class="bottom-actions" wx:if="{{!loading && !error}}"
+    >
+      <!-- 学生操作 -->
+      <view class="action-row" wx:if="{{canCancel}}">
+        <button class="action-btn btn-danger" bindtap="cancelRepair">
+          取消报修
+        </button>
       </view>
-      <view class="action-buttons">
-        <view class="action-btn-row">
-          <button
-            class="action-btn action-btn-warning"
-            wx:if="{{repair.status === 'pending'}}"
-            bindtap="markInProgress"
-          >
-            标记为处理中
-          </button>
-          <button
-            class="action-btn action-btn-success"
-            wx:if="{{repair.status === 'in_progress' || repair.status === 'pending'}}"
-            bindtap="markCompleted"
-          >
-            标记为已完成
-          </button>
-        </view>
-        <button
-          class="action-btn action-btn-danger"
-          bindtap="closeRepair"
+
+      <!-- 维修工操作 -->
+      <view class="action-row" wx:if="{{canTakeOrder || canComplete}}"
+      >
+        <button class="action-btn btn-primary" wx:if="{{canTakeOrder}}" bindtap="takeOrder"
         >
-          关闭报修
+          接单
+        </button>
+        <button class="action-btn btn-success" wx:if="{{canComplete}}" bindtap="completeRepair"
+        >
+          完成工单
+        </button>
+      </view>
+
+      <!-- 管理员操作 -->
+      <view class="action-row" wx:if="{{canAssign || canUpdateStatus}}"
+      >
+        <button class="action-btn btn-warning" wx:if="{{canAssign}}" bindtap="markInProgress"
+        >
+          标记处理中
+        </button>
+        <button class="action-btn btn-success" wx:if="{{repair.status === 'in_progress'}}" bindtap="markCompleted"
+        >
+          标记完成
+        </button>
+      </view>
+
+      <!-- 通用操作 -->
+      <view class="action-row" wx:if="{{canDelete}}"
+      >
+        <button class="action-btn btn-secondary" bindtap="deleteRepair"
+        >
+          删除报修
+        </button>
+      </view>
+
+      <!-- 联系管理员 -->
+      <view class="action-row" wx:if="{{userRole === 'student' && repair.status !== 'closed' && repair.status !== 'completed'}}"
+      >
+        <button class="action-btn btn-ghost" bindtap="contactAdmin"
+        >
+          联系管理员
         </button>
       </view>
     </view>
-  </view>
-
-  <!-- 底部操作按钮 -->
-  <view class="bottom-actions" wx:if="{{!loading && !error && !isAdmin}}">
-    <button 
-      class="bottom-btn action-btn-secondary" 
-      bindtap="contactAdmin"
-      wx:if="{{repair.status !== 'closed' && repair.status !== 'completed'}}"
-    >
-      联系管理员
-    </button>
-    <button 
-      class="bottom-btn action-btn-primary" 
-      bindtap="goToRoom"
-      data-room-id="{{repair.roomId || repair.room_id}}"
-    >
-      查看房间
-    </button>
   </view>
 </view>
