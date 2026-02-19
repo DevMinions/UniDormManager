@@ -1,7 +1,0 @@
-<!-- 最小化 TabBar 测试 -->
-<view style="position: fixed; left: 0; right: 0; bottom: 0; height: 100rpx; background: red; z-index: 99999; display: flex; justify-content: space-around; align-items: center;">
-  <text style="color: white; font-size: 32rpx;">首页</text>
-  <text style="color: white; font-size: 32rpx;">房间</text>
-  <text style="color: white; font-size: 32rpx;">报修</text>
-  <text style="color: white; font-size: 32rpx;">我的</text>
-</view>
