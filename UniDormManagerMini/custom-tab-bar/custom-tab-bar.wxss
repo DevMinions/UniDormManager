@@ -6,8 +6,10 @@
   bottom: 0;
   background: #ffffff;
   border-top: 1rpx solid var(--gray-200);
-  z-index: 1000;
+  z-index: 9999;
   box-shadow: 0 -2rpx 10rpx rgba(0, 0, 0, 0.05);
+  /* 调试：红色边框 */
+  border: 4rpx solid red !important;
 }
 
 .tabbar-container {
