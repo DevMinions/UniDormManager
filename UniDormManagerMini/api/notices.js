@@ -39,10 +39,28 @@ function deleteNotice(id) {
   return del(`/api/notices/${id}`, {}, { showLoading: true })
 }
 
+/**
+ * 标记公告已读
+ * @param {String} id 公告ID
+ */
+function markNoticeRead(id) {
+  return post(`/api/notices/${id}/read`, {}, { showLoading: false })
+}
+
+/**
+ * 获取公告阅读记录（管理员）
+ * @param {String} id 公告ID
+ */
+function getNoticeReadRecords(id) {
+  return get(`/api/notices/${id}/read-records`, {}, { showLoading: true })
+}
+
 module.exports = {
   getNotices,
   getNoticeDetail,
   createNotice,
   updateNotice,
-  deleteNotice
+  deleteNotice,
+  markNoticeRead,
+  getNoticeReadRecords
 }
