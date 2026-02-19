@@ -105,6 +105,32 @@
         </view>
       </view>
 
+      <!-- 优先级筛选快捷入口 -->
+      <view class="priority-filter-section">
+        <view class="section-title">
+          <text class="title-icon">🔖</text>
+          <text class="title-text">按优先级筛选</text>
+        </view>
+        
+        <view class="priority-filter-grid">
+          <view class="priority-filter-item urgent-filter" bindtap="filterByPriority" data-priority="High">
+            <view class="priority-dot red"></view>
+            <text class="priority-label">紧急</text>
+            <text class="priority-count" wx:if="{{maintenanceStats.urgentCount > 0}}">{{maintenanceStats.urgentCount}}</text>
+          </view>
+          
+          <view class="priority-filter-item medium-filter" bindtap="filterByPriority" data-priority="Medium">
+            <view class="priority-dot yellow"></view>
+            <text class="priority-label">中等</text>
+          </view>
+          
+          <view class="priority-filter-item low-filter" bindtap="filterByPriority" data-priority="Low">
+            <view class="priority-dot green"></view>
+            <text class="priority-label">普通</text>
+          </view>
+        </view>
+      </view>
+
       <!-- 最新待处理工单 -->
       <view class="tickets-section" wx:if="{{recentTickets.length > 0}}">
         <view class="section-title">
