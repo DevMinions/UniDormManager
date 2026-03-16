@@ -11,3 +11,8 @@ export {
   useDebounce,
   useThrottle
 } from './usePerformance'
+
+export {
+  useAuth,
+  authGuard
+} from './useAuth'
