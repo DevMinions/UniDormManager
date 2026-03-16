@@ -3,6 +3,30 @@
 // ============================================
 
 /**
+ * 显示成功提示
+ * @param {string} title - 提示内容
+ */
+export const showSuccess = (title) => {
+  uni.showToast({
+    title,
+    icon: 'success',
+    duration: 2000
+  })
+}
+
+/**
+ * 显示错误提示
+ * @param {string} title - 提示内容
+ */
+export const showError = (title) => {
+  uni.showToast({
+    title,
+    icon: 'error',
+    duration: 2000
+  })
+}
+
+/**
  * 格式化日期
  * @param {string|number|Date} date - 日期
  * @param {string} format - 格式
