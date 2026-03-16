@@ -1,0 +1,7 @@
+{
+  "navigationBarTitleText": "退宿办理",
+  "navigationStyle": "custom",
+  "usingComponents": {
+    "app-navbar": "../../components/AppNavbar/AppNavbar"
+  }
+}

@@ -1,0 +1,1 @@
+<view class="app-container"><view class="bg-decoration"><view class="bg-blob blob-1"></view><view class="bg-blob blob-2"></view></view><slot/></view>

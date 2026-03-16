@@ -200,6 +200,13 @@
       }
     },
     {
+      "path": "pages/late-returns/notification-settings",
+      "style": {
+        "navigationBarTitleText": "通知设置",
+        "navigationStyle": "custom"
+      }
+    },
+    {
       "path": "pages/access-logs/list",
       "style": {
         "navigationBarTitleText": "门禁记录",

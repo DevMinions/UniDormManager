@@ -1,0 +1,1 @@
+"use strict";const e=require("../utils/request.js"),t={getNoticeList:(t={})=>e.request.get("/api/notices",t),getNoticeDetail:t=>e.request.get(`/api/notices/${t}`),createNotice:t=>e.request.post("/api/notices",t),updateNotice:(t,i)=>e.request.put(`/api/notices/${t}`,i),deleteNotice:t=>e.request.delete(`/api/notices/${t}`)};exports.noticeApi=t;
