@@ -1,140 +1,145 @@
+# ============================================
+# Docker Compose 配置
+# 一键启动整个应用栈
+# ============================================
+
+version: '3.8'
+
 services:
-  # PostgreSQL 数据库
-  postgres:
-    image: postgres:16-alpine
-    container_name: unidorm-postgres
+  # MySQL 数据库
+  mysql:
+    image: mysql:8.0
+    container_name: unidorm_mysql
+    restart: unless-stopped
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: unidorm
-    ports:
-      - "5433:5432"
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root_password}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-unidorm_db}
+      MYSQL_USER: ${MYSQL_USER:-unidorm}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-user_password}
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - mysql_data:/var/lib/mysql
+      - ./UniDormManagerServer/migrations:/docker-entrypoint-initdb.d:ro
+    ports:
+      - "${MYSQL_PORT:-3306}:3306"
+    networks:
+      - unidorm_network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
       interval: 10s
       timeout: 5s
       retries: 5
-    networks:
-      - unidorm-network
+      start_period: 30s
 
   # Redis 缓存
   redis:
     image: redis:7-alpine
-    container_name: unidorm-redis
-    ports:
-      - "6380:6379"
+    container_name: unidorm_redis
+    restart: unless-stopped
+    command: redis-server --requirepass ${REDIS_PASSWORD:-redis_pass}
     volumes:
       - redis_data:/data
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    networks:
+      - unidorm_network
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
-      timeout: 5s
+      timeout: 3s
       retries: 5
-    networks:
-      - unidorm-network
 
   # 后端服务
   backend:
     build:
       context: ./UniDormManagerServer
       dockerfile: Dockerfile
-    container_name: unidorm-backend
+    container_name: unidorm_backend
+    restart: unless-stopped
     environment:
-      PORT: "8080"
-      DB_HOST: postgres
-      DB_PORT: "5432"
-      DB_USER: postgres
-      DB_PASSWORD: postgres
-      DB_NAME: unidorm
-      DB_SSLMODE: disable
+      # 数据库配置
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_USER: ${MYSQL_USER:-unidorm}
+      DB_PASSWORD: ${MYSQL_PASSWORD:-user_password}
+      DB_NAME: ${MYSQL_DATABASE:-unidorm_db}
+      
+      # Redis 配置
       REDIS_HOST: redis
-      REDIS_PORT: "6379"
-      REDIS_PASSWORD: ""
-      USE_CACHE: "true"
-      JWT_SECRET: "UniDormManager2024SecureJWTSecretKeyForProductionEnvironment-PleaseChangeThis!"
-      # 日志配置
-      LOG_LEVEL: "info"
-      LOG_FILE: "/var/log/unidorm/app.log"
-      GIN_MODE: "release"
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-redis_pass}
+      
+      # 应用配置
+      APP_ENV: ${APP_ENV:-production}
+      APP_PORT: 8080
+      JWT_SECRET: ${JWT_SECRET:-your_jwt_secret_key}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+    volumes:
+      - ./uploads:/app/uploads
+      - ./logs:/app/logs
     ports:
-      - "8080:8080"
+      - "${BACKEND_PORT:-8080}:8080"
+    networks:
+      - unidorm_network
     depends_on:
-      postgres:
+      mysql:
         condition: service_healthy
       redis:
         condition: service_healthy
-    networks:
-      - unidorm-network
-    restart: unless-stopped
-    volumes:
-      # 日志文件挂载
-      - ./logs:/var/log/unidorm
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
 
   # 前端服务
   frontend:
     build:
-      context: ./UniDormManagerWeb
+      context: ./UniDormManager-UniApp
       dockerfile: Dockerfile
-      args:
-        - VITE_API_URL=http://backend:8080
-    container_name: unidorm-frontend
+    container_name: unidorm_frontend
+    restart: unless-stopped
     ports:
-      - "3000:80"
+      - "${FRONTEND_PORT:-80}:80"
+    networks:
+      - unidorm_network
     depends_on:
       - backend
-    networks:
-      - unidorm-network
-    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:80/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
-  # Prometheus 监控
-  prometheus:
-    image: prom/prometheus:latest
-    container_name: unidorm-prometheus
-    ports:
-      - "9090:9090"
-    volumes:
-      - ./prometheus.yml:/etc/prometheus/prometheus.yml
-      - prometheus_data:/prometheus
-    command:
-      - '--config.file=/etc/prometheus/prometheus.yml'
-      - '--storage.tsdb.path=/prometheus'
-      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
-      - '--web.console.templates=/usr/share/prometheus/consoles'
-    networks:
-      - unidorm-network
+  # Nginx 反向代理（可选，用于生产环境）
+  nginx:
+    image: nginx:alpine
+    container_name: unidorm_nginx
     restart: unless-stopped
+    ports:
+      - "${NGINX_HTTP_PORT:-80}:80"
+      - "${NGINX_HTTPS_PORT:-443}:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+      - ./logs/nginx:/var/log/nginx
+    networks:
+      - unidorm_network
     depends_on:
+      - frontend
       - backend
-
-  # Grafana 可视化
-  grafana:
-    image: grafana/grafana:latest
-    container_name: unidorm-grafana
-    ports:
-      - "3001:3000"
-    volumes:
-      - grafana_data:/var/lib/grafana
-      - ./grafana/provisioning:/etc/grafana/provisioning
-      - ./grafana/dashboards:/etc/grafana/provisioning/dashboards
-    environment:
-      - GF_SECURITY_ADMIN_USER=admin
-      - GF_SECURITY_ADMIN_PASSWORD=admin
-      - GF_USERS_ALLOW_SIGN_UP=false
-    networks:
-      - unidorm-network
-    restart: unless-stopped
-    depends_on:
-      - prometheus
+    profiles:
+      - production
 
 volumes:
-  postgres_data:
+  mysql_data:
+    driver: local
   redis_data:
-  prometheus_data:
-  grafana_data:
+    driver: local
 
 networks:
-  unidorm-network:
+  unidorm_network:
     driver: bridge
-
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16

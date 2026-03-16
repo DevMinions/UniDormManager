@@ -1,0 +1,202 @@
+# ============================================
+# CI/CD 工作流
+# 构建、测试、部署
+# ============================================
+
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+    tags: [ 'v*' ]
+  pull_request:
+    branches: [ main, develop ]
+
+env:
+  REGISTRY: ghcr.io
+  BACKEND_IMAGE: ${{ github.repository }}/backend
+  FRONTEND_IMAGE: ${{ github.repository }}/frontend
+
+jobs:
+  # 后端测试和构建
+  backend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./UniDormManagerServer
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: '1.21'
+    
+    - name: Cache Go modules
+      uses: actions/cache@v3
+      with:
+        path: ~/go/pkg/mod
+        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+        restore-keys: |
+          ${{ runner.os }}-go-
+    
+    - name: Download dependencies
+      run: go mod download
+    
+    - name: Run tests
+      run: go test -v -race -coverprofile=coverage.out ./...
+    
+    - name: Upload coverage
+      uses: codecov/codecov-action@v3
+      with:
+        files: ./UniDormManagerServer/coverage.out
+        flags: backend
+        name: backend-coverage
+    
+    - name: Build
+      run: |
+        CGO_ENABLED=0 GOOS=linux go build \
+          -ldflags="-s -w" \
+          -o server main.go
+    
+    - name: Build Docker image
+      if: github.event_name != 'pull_request'
+      run: |
+        docker build -t ${{ env.REGISTRY }}/${{ env.BACKEND_IMAGE }}:${{ github.sha }} .
+        docker tag ${{ env.REGISTRY }}/${{ env.BACKEND_IMAGE }}:${{ github.sha }} \
+          ${{ env.REGISTRY }}/${{ env.BACKEND_IMAGE }}:latest
+
+  # 前端测试和构建
+  frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./UniDormManager-UniApp
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: ./UniDormManager-UniApp/package-lock.json
+    
+    - name: Install dependencies
+      run: npm ci
+    
+    - name: Run linter
+      run: npm run lint
+    
+    - name: Run tests
+      run: npm run test:coverage
+    
+    - name: Build H5
+      run: npm run build:h5
+    
+    - name: Build Docker image
+      if: github.event_name != 'pull_request'
+      run: |
+        docker build -t ${{ env.REGISTRY }}/${{ env.FRONTEND_IMAGE }}:${{ github.sha }} .
+        docker tag ${{ env.REGISTRY }}/${{ env.FRONTEND_IMAGE }}:${{ github.sha }} \
+          ${{ env.REGISTRY }}/${{ env.FRONTEND_IMAGE }}:latest
+
+  # 安全扫描
+  security:
+    runs-on: ubuntu-latest
+    if: github.event_name != 'pull_request'
+    needs: [backend, frontend]
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Run Trivy vulnerability scanner
+      uses: aquasecurity/trivy-action@master
+      with:
+        scan-type: 'fs'
+        scan-ref: '.'
+        format: 'sarif'
+        output: 'trivy-results.sarif'
+    
+    - name: Upload Trivy scan results
+      uses: github/codeql-action/upload-sarif@v2
+      with:
+        sarif_file: 'trivy-results.sarif'
+
+  # 发布镜像
+  publish:
+    runs-on: ubuntu-latest
+    if: github.event_name != 'pull_request'
+    needs: [backend, frontend, security]
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Log in to Container Registry
+      uses: docker/login-action@v3
+      with:
+        registry: ${{ env.REGISTRY }}
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+    
+    - name: Build and push backend
+      uses: docker/build-push-action@v5
+      with:
+        context: ./UniDormManagerServer
+        push: true
+        tags: |
+          ${{ env.REGISTRY }}/${{ env.BACKEND_IMAGE }}:${{ github.sha }}
+          ${{ env.REGISTRY }}/${{ env.BACKEND_IMAGE }}:latest
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+    
+    - name: Build and push frontend
+      uses: docker/build-push-action@v5
+      with:
+        context: ./UniDormManager-UniApp
+        push: true
+        tags: |
+          ${{ env.REGISTRY }}/${{ env.FRONTEND_IMAGE }}:${{ github.sha }}
+          ${{ env.REGISTRY }}/${{ env.FRONTEND_IMAGE }}:latest
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+
+  # 部署到测试环境
+  deploy-staging:
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/develop'
+    needs: [publish]
+    environment: staging
+    
+    steps:
+    - name: Deploy to staging
+      run: |
+        echo "Deploying to staging environment..."
+        # 这里添加实际的部署脚本
+        # 例如：SSH 到服务器执行 docker-compose pull && docker-compose up -d
+
+  # 部署到生产环境
+  deploy-production:
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [publish]
+    environment: production
+    
+    steps:
+    - name: Deploy to production
+      run: |
+        echo "Deploying to production environment..."
+        # 这里添加实际的部署脚本
+        # 例如：SSH 到服务器执行部署
+    
+    - name: Create Release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ github.ref }}
+        release_name: Release ${{ github.ref }}
+        draft: false
+        prerelease: false
