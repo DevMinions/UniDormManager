@@ -242,6 +242,13 @@
         "navigationBarTitleText": "智能宿舍分配",
         "navigationStyle": "custom"
       }
+    },
+    {
+      "path": "pages/admin/dataTransfer",
+      "style": {
+        "navigationBarTitleText": "数据导入导出",
+        "navigationStyle": "custom"
+      }
     }
   ],
   "globalStyle": {
