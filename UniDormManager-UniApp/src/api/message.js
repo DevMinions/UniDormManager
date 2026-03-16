@@ -4,50 +4,33 @@ import { request } from '@/utils/request.js'
 export const messageApi = {
   // 获取消息列表
   getMessages(params = {}) {
-    return request({
-      url: '/api/messages',
-      method: 'GET',
-      data: params
-    })
+    return request.get('/api/messages', params)
   },
 
   // 获取未读消息数
   getUnreadCount() {
-    return request({
-      url: '/api/messages/unread-count',
-      method: 'GET'
-    })
+    return request.get('/api/messages/unread-count')
   },
 
   // 标记消息为已读
   markAsRead(messageId) {
-    return request({
-      url: `/api/messages/${messageId}/read`,
-      method: 'POST'
-    })
+    return request.post(`/api/messages/${messageId}/read`)
   },
 
   // 标记所有消息为已读
   markAllAsRead() {
-    return request({
-      url: '/api/messages/read-all',
-      method: 'POST'
-    })
+    return request.post('/api/messages/read-all')
   },
 
   // 删除消息
   deleteMessage(messageId) {
-    return request({
-      url: `/api/messages/${messageId}`,
-      method: 'DELETE'
-    })
+    return request.delete(`/api/messages/${messageId}`)
   },
 
   // 获取消息详情
   getMessageDetail(messageId) {
-    return request({
-      url: `/api/messages/${messageId}`,
-      method: 'GET'
-    })
+    return request.get(`/api/messages/${messageId}`)
   }
 }
+
+export default messageApi

@@ -66,7 +66,11 @@ onUnmounted(() => {
 
 const switchTab = (item) => {
   const url = '/' + item.pagePath
-  uni.switchTab({ url })
+  // 使用 navigateTo 代替 switchTab，因为这些页面不是真正的 tabBar 页面
+  uni.navigateTo({ url, fail: () => {
+    // 如果 navigateTo 失败（页面层级太深），尝试 redirectTo
+    uni.redirectTo({ url })
+  }})
 }
 </script>
 
