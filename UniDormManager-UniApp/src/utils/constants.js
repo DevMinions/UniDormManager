@@ -1,157 +1,157 @@
+
 // ============================================
-// 常量定义
+// 业务常量定义
 // ============================================
 
-// 页面路径常量
-export const PAGES = {
-  HOME: '/pages/index/index',
-  LOGIN: '/pages/login/login',
-  PROFILE: '/pages/profile/index',
-  
-  // 报修
-  REPAIRS_LIST: '/pages/repairs/list',
-  REPAIRS_DETAIL: '/pages/repairs/detail',
-  REPAIRS_SUBMIT: '/pages/repairs/submit',
-  
-  // 房间
-  ROOMS_LIST: '/pages/rooms/list',
-  ROOMS_DETAIL: '/pages/rooms/detail',
-  
-  // 公告
-  NOTICES_LIST: '/pages/notices/list',
-  NOTICES_DETAIL: '/pages/notices/detail',
-  
-  // 查寝
-  INSPECTIONS_LIST: '/pages/inspections/list',
-  INSPECTIONS_RANKINGS: '/pages/inspections/rankings',
-  INSPECTIONS_SCORE: '/pages/inspections/score',
-  
-  // 换寝
-  ROOM_SWAPS_LIST: '/pages/room-swaps/list',
-  ROOM_SWAPS_APPLY: '/pages/room-swaps/apply',
-  ROOM_SWAPS_DETAIL: '/pages/room-swaps/detail',
-  
-  // 入住退宿
-  CHECKIN: '/pages/checkin/index',
-  CHECKOUT: '/pages/checkout/index',
-  
-  // 管理员
-  ADMIN_DASHBOARD: '/pages/admin/dashboard',
-  ADMIN_USERS: '/pages/admin/users'
-}
-
-// 角色代码常量
+/**
+ * 用户角色
+ */
 export const ROLES = {
   STUDENT: 'student',
   DORM_MANAGER: 'dorm_manager',
-  MAINTENANCE: 'maintenance_staff',
+  MAINTENANCE_STAFF: 'maintenance_staff',
   BUILDING_MANAGER: 'building_manager',
   LOGISTICS_ADMIN: 'logistics_admin',
   SYSTEM_ADMIN: 'system_admin'
 }
 
-// 状态常量
-export const STATUS = {
-  // 报修状态
-  REPAIR: {
-    PENDING: 'pending',
-    PROCESSING: 'processing',
-    COMPLETED: 'completed'
-  },
-  
-  // 换寝状态
-  ROOM_SWAP: {
-    PENDING: 'Pending',
-    COUNSELOR_APPROVED: 'CounselorApproved',
-    COUNSELOR_REJECTED: 'CounselorRejected',
-    COLLEGE_APPROVED: 'CollegeApproved',
-    COLLEGE_REJECTED: 'CollegeRejected',
-    FINAL_APPROVED: 'FinalApproved',
-    FINAL_REJECTED: 'FinalRejected',
-    COMPLETED: 'Completed',
-    CANCELLED: 'Cancelled'
-  },
-  
-  // 查寝状态
-  INSPECTION: {
-    EXCELLENT: 'excellent',
-    GOOD: 'good',
-    PASS: 'pass',
-    WARNING: 'warning'
-  },
-  
-  // 房间状态
-  ROOM: {
-    FREE: 'free',
-    OCCUPIED: 'occupied',
-    FULL: 'full'
-  }
+/**
+ * 角色显示名称
+ */
+export const ROLE_NAMES = {
+  [ROLES.STUDENT]: '学生',
+  [ROLES.DORM_MANAGER]: '宿管员',
+  [ROLES.MAINTENANCE_STAFF]: '维修人员',
+  [ROLES.BUILDING_MANAGER]: '楼栋管理员',
+  [ROLES.LOGISTICS_ADMIN]: '后勤管理员',
+  [ROLES.SYSTEM_ADMIN]: '系统管理员'
 }
 
-// 缓存键常量
-export const CACHE_KEYS = {
-  USER_INFO: 'user_info',
-  TOKEN: 'token',
-  ROOMS_LIST: 'rooms_list',
-  REPAIRS_LIST: 'repairs_list',
-  NOTICES_LIST: 'notices_list',
-  INSPECTIONS_LIST: 'inspections_list'
+/**
+ * 报修状态
+ */
+export const REPAIR_STATUS = {
+  PENDING: 'Pending',     // 待处理
+  ASSIGNED: 'Assigned',   // 已分配
+  PROCESSING: 'Processing', // 处理中
+  COMPLETED: 'Completed', // 已完成
+  CANCELLED: 'Cancelled'  // 已取消
 }
 
-// 颜色常量
-export const COLORS = {
-  PRIMARY: '#9A3412',
-  PRIMARY_LIGHT: '#F8F2F0',
-  PRIMARY_DARK: '#7C2D12',
-  
-  SUCCESS: '#059669',
-  SUCCESS_LIGHT: '#ECFDF5',
-  
-  WARNING: '#D97706',
-  WARNING_LIGHT: '#FEF3C7',
-  
-  ERROR: '#DC2626',
-  ERROR_LIGHT: '#FEE2E2',
-  
-  INFO: '#3B82F6',
-  INFO_LIGHT: '#DBEAFE',
-  
-  GRAY: {
-    50: '#F9FAFB',
-    100: '#F3F4F6',
-    200: '#E5E7EB',
-    300: '#D1D5DB',
-    400: '#9CA3AF',
-    500: '#6B7280',
-    600: '#4B5563',
-    700: '#374151',
-    800: '#1F2937',
-    900: '#111827'
-  }
+/**
+ * 报修状态显示配置
+ */
+export const REPAIR_STATUS_CONFIG = {
+  [REPAIR_STATUS.PENDING]: { label: '待处理', color: '#F59E0B', bgColor: '#FEF3C7' },
+  [REPAIR_STATUS.ASSIGNED]: { label: '已分配', color: '#3B82F6', bgColor: '#DBEAFE' },
+  [REPAIR_STATUS.PROCESSING]: { label: '处理中', color: '#8B5CF6', bgColor: '#EDE9FE' },
+  [REPAIR_STATUS.COMPLETED]: { label: '已完成', color: '#059669', bgColor: '#D1FAE5' },
+  [REPAIR_STATUS.CANCELLED]: { label: '已取消', color: '#6B7280', bgColor: '#F3F4F6' }
 }
 
-// 分页常量
+/**
+ * 换寝申请状态
+ */
+export const ROOM_SWAP_STATUS = {
+  PENDING: 'Pending',     // 待审批
+  APPROVED: 'Approved',   // 已通过
+  REJECTED: 'Rejected',   // 已拒绝
+  CANCELLED: 'Cancelled'  // 已取消
+}
+
+/**
+ * 换寝状态显示配置
+ */
+export const ROOM_SWAP_STATUS_CONFIG = {
+  [ROOM_SWAP_STATUS.PENDING]: { label: '待审批', color: '#F59E0B', bgColor: '#FEF3C7' },
+  [ROOM_SWAP_STATUS.APPROVED]: { label: '已通过', color: '#059669', bgColor: '#D1FAE5' },
+  [ROOM_SWAP_STATUS.REJECTED]: { label: '已拒绝', color: '#DC2626', bgColor: '#FEE2E2' },
+  [ROOM_SWAP_STATUS.CANCELLED]: { label: '已取消', color: '#6B7280', bgColor: '#F3F4F6' }
+}
+
+/**
+ * 晚归状态
+ */
+export const LATE_RETURN_STATUS = {
+  PENDING: 'Pending',   // 待处理
+  HANDLED: 'Handled',   // 已处理
+  IGNORED: 'Ignored'    // 已忽略
+}
+
+/**
+ * 晚归状态显示配置
+ */
+export const LATE_RETURN_STATUS_CONFIG = {
+  [LATE_RETURN_STATUS.PENDING]: { label: '待处理', color: '#D97706', bgColor: '#FEF3C7' },
+  [LATE_RETURN_STATUS.HANDLED]: { label: '已处理', color: '#059669', bgColor: '#D1FAE5' },
+  [LATE_RETURN_STATUS.IGNORED]: { label: '已忽略', color: '#64748B', bgColor: '#F1F5F9' }
+}
+
+/**
+ * 门禁进出方向
+ */
+export const ACCESS_DIRECTION = {
+  IN: 'In',
+  OUT: 'Out'
+}
+
+/**
+ * 门禁状态
+ */
+export const ACCESS_STATUS = {
+  NORMAL: 'Normal',   // 正常
+  LATE: 'Late',       // 晚归
+  ABSENT: 'Absent'    // 未归
+}
+
+/**
+ * 查寝评分等级
+ */
+export const INSPECTION_LEVEL = {
+  EXCELLENT: { min: 90, label: '优秀', color: '#059669' },
+  GOOD: { min: 80, label: '良好', color: '#3B82F6' },
+  PASS: { min: 60, label: '及格', color: '#F59E0B' },
+  FAIL: { min: 0, label: '不及格', color: '#DC2626' }
+}
+
+/**
+ * 消息类型
+ */
+export const MESSAGE_TYPE = {
+  SYSTEM: 'system',
+  REPAIR: 'repair',
+  ROOMSWAP: 'roomswap',
+  LATE: 'late',
+  INSPECTION: 'inspection'
+}
+
+/**
+ * 分页默认值
+ */
 export const PAGINATION = {
-  DEFAULT_PAGE_SIZE: 10,
-  MAX_PAGE_SIZE: 100
+  DEFAULT_PAGE: 1,
+  DEFAULT_SIZE: 20,
+  MAX_SIZE: 100
 }
 
-// 评分标准
-export const SCORE_STANDARDS = {
-  EXCELLENT: 90,
-  GOOD: 80,
-  PASS: 70,
-  FAIL: 60
+/**
+ * 本地存储键名
+ */
+export const STORAGE_KEYS = {
+  TOKEN: 'token',
+  USER_INFO: 'user_info',
+  SETTINGS: 'settings',
+  NOTIFICATION_SETTINGS: 'notification_settings',
+  LATE_RETURN_NOTIFICATIONS: 'late_return_notifications',
+  SYSTEM_SETTINGS: 'system_settings'
 }
 
-// 问题类型
-export const ISSUE_TYPES = {
-  BED_UNMADE: { value: 'bed_unmade', label: '床铺未整理' },
-  GARBAGE: { value: 'garbage', label: '垃圾未清理' },
-  DESK_CLUTTER: { value: 'desk_clutter', label: '桌面凌乱' },
-  ILLEGAL_APPLIANCE: { value: 'illegal_appliance', label: '违规电器' },
-  POWER_ISSUE: { value: 'power_issue', label: '私拉电线' },
-  SMOKING: { value: 'smoking', label: '吸烟痕迹' },
-  NOISE: { value: 'noise', label: '噪音扰民' },
-  OTHER: { value: 'other', label: '其他问题' }
+/**
+ * 日期时间格式
+ */
+export const DATE_FORMAT = {
+  DATE: 'YYYY-MM-DD',
+  TIME: 'HH:mm',
+  DATETIME: 'YYYY-MM-DD HH:mm',
+  FULL: 'YYYY-MM-DD HH:mm:ss'
 }
