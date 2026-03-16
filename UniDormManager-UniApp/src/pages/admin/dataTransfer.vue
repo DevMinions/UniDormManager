@@ -511,7 +511,7 @@ const getExportTypeName = (type) => {
       <view v-if="activeTab === 'history'" class="tab-content">
         <view class="history-tabs">
           <view class="history-section">
-            <view class="section-title">导入历史</text>
+            <view class="section-title">导入历史</view>
             
             <view v-if="importHistory.length === 0" class="empty-state">
               <text>暂无导入记录</text>
@@ -540,7 +540,7 @@ const getExportTypeName = (type) => {
           </view>
           
           <view class="history-section">
-            <view class="section-title">导出历史</text>
+            <view class="section-title">导出历史</view>
             
             <view v-if="exportHistory.length === 0" class="empty-state">
               <text>暂无导出记录</text>

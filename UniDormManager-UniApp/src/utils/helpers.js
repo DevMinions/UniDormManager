@@ -3,6 +3,9 @@
 // 通用工具函数
 // ============================================
 
+// 兼容性导出 - handleApiError 已移动到 errorHandler.js
+export { handleApiError, handleValidationError } from './errorHandler.js'
+
 /**
  * 格式化日期
  * @param {Date|string|number} date - 日期

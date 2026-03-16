@@ -355,8 +355,7 @@ const onTimeRangeChange = () => {
           <text class="title-text">选择报表类型</text>
         </view>
         
-        <view class="type-grid"
-003e
+        <view class="type-grid">
           <view
             v-for="type in reportTypes"
             :key="type.id"

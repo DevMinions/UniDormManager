@@ -169,8 +169,7 @@ const goBack = () => {
         </view>
         
         <!-- 楼栋编号 -->
-        <view class="form-item"
-003e
+        <view class="form-item">
           <view class="item-label required">
             <text class="label-icon">🔢</text>
             <text>楼栋编号</text>

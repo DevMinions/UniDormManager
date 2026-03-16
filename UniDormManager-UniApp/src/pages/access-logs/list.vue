@@ -285,8 +285,7 @@ const hourlyStats = computed(() => {
         <view class="filter-section">
           <text class="filter-label">进出方向</text>
           
-          <view class="filter-options"
-003e
+          <view class="filter-options">
             <view 
               class="filter-option"
               :class="{ active: selectedDirection === 'In' }"

@@ -176,6 +176,11 @@ export function isAdmin(userRoles) {
   return hasPermission(userRoles, [ROLES.SYSTEM_ADMIN, ROLES.LOGISTICS_ADMIN])
 }
 
+// 是否是系统管理员
+export function isSystemAdmin(userRoles) {
+  return hasPermission(userRoles, [ROLES.SYSTEM_ADMIN])
+}
+
 // 是否是宿管相关人员
 export function isDormStaff(userRoles) {
   return hasPermission(userRoles, [ROLES.DORM_MANAGER, ROLES.BUILDING_MANAGER])
@@ -191,5 +196,6 @@ export default {
   getRoleStats,
   hasPermission,
   isAdmin,
+  isSystemAdmin,
   isDormStaff
 }

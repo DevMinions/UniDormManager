@@ -219,15 +219,13 @@ const navigateTo = (url) => {
             <text class="chart-value">平均 91.4%</text>
           </view>
           <view class="trend-chart">
-            <view class="trend-bars"
-003e
+            <view class="trend-bars">
               <view
                 v-for="(item, index) in occupancyTrend"
                 :key="index"
                 class="trend-bar-item"
               >
-                <view class="bar-wrapper"
-003e
+                <view class="bar-wrapper">
                   <view
                     class="bar-fill"
                     :style="{ height: item.rate + '%', backgroundColor: item.rate >= 90 ? '#059669' : '#F59E0B' }"
@@ -240,10 +238,8 @@ const navigateTo = (url) => {
         </view>
         
         <!-- 报修类型分布 -->
-        <view class="chart-card"
-003e
-          <view class="chart-header"
-003e
+        <view class="chart-card">
+          <view class="chart-header">
             <text class="chart-title">🔧 报修类型分布</text>
             <text class="chart-value">共 {{ repairDistribution.reduce((a,b) => a + b.count, 0) }} 单</text>
           </view>

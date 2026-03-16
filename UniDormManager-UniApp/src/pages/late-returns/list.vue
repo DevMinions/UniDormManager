@@ -758,3 +758,4 @@ const goBack = () => {
   color: #9CA3AF;
   padding: 8rpx;
 }
+</style>

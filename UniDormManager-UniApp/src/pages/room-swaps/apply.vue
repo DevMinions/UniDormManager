@@ -120,8 +120,6 @@ const checkForm = () => {
   }
   return true
 }
-  return true
-}
 
 // 提交申请
 const submitApplication = async () => {

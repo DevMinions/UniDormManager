@@ -448,8 +448,7 @@ const getCompatibilityLabel = (score) => {
             <text class="card-title">{{ student.name }}的偏好</text>
           </view>
           
-          <view class="preference-section"
-003e
+          <view class="preference-section">
             <text class="section-label">作息习惯</text>
             <view class="tag-group">
               <view

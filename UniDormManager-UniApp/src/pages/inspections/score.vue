@@ -322,8 +322,7 @@ const goBack = () => {
             <text class="score-label">综合评分</text>
           </view>
           
-          <view class="score-breakdown"
-003e
+          <view class="score-breakdown">
             <text>{{ totalScore.total }}/{{ totalScore.maxTotal }}分</text>
           </view>
         </view>

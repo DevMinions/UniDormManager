@@ -154,8 +154,7 @@ const isInQuietHours = () => {
         </view>
         
         <view class="setting-item">
-          <view class="item-info"
-003e
+          <view class="item-info">
             <text class="item-title">启用通知</text>
             <text class="item-desc">关闭后将不再接收任何晚归告警通知</text>
           </view>
