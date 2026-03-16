@@ -1,0 +1,244 @@
+{
+  "easycom": {
+    "autoscan": true,
+    "custom": {
+      "^u--(.*)": "uview-plus/components/u-$1/u-$1.vue",
+      "^up-(.*)": "uview-plus/components/u-$1/u-$1.vue",
+      "^u-(.*)": "uview-plus/components/u-$1/u-$1.vue"
+    }
+  },
+  "pages": [
+    {
+      "path": "pages/index/index",
+      "style": {
+        "navigationBarTitleText": "宿舍管理系统",
+        "navigationStyle": "custom"
+      }
+    },
+    {
+      "path": "pages/login/login",
+      "style": {
+        "navigationBarTitleText": "登录",
+        "navigationStyle": "custom"
+      }
+    },
+    {
+      "path": "pages/rooms/list",
+      "style": {
+        "navigationBarTitleText": "房间列表",
+        "navigationStyle": "custom",
+        "enablePullDownRefresh": true
+      }
+    },
+    {
+      "path": "pages/rooms/detail",
+      "style": {
+        "navigationBarTitleText": "房间详情",
+        "navigationStyle": "custom"
+      }
+    },
+    {
+      "path": "pages/repairs/list",
+      "style": {
+        "navigationBarTitleText": "报修列表",
+        "navigationStyle": "custom",
+        "enablePullDownRefresh": true
+      }
+    },
+    {
+      "path": "pages/repairs/submit",
+      "style": {
+        "navigationBarTitleText": "提交报修",
+        "navigationStyle": "custom"
+      }
+    },
+    {
+      "path": "pages/repairs/detail",
+      "style": {
+        "navigationBarTitleText": "报修详情",
+        "navigationStyle": "custom"
+      }
+    },
+    {
+      "path": "pages/notices/list",
+      "style": {
+        "navigationBarTitleText": "公告列表",
+        "navigationStyle": "custom",
+        "enablePullDownRefresh": true
+      }
+    },
+    {
+      "path": "pages/notices/detail",
+      "style": {
+        "navigationBarTitleText": "公告详情",
+        "navigationStyle": "custom"
+      }
+    },
+    {
+      "path": "pages/profile/index",
+      "style": {
+        "navigationBarTitleText": "个人中心",
+        "navigationStyle": "custom",
+        "enablePullDownRefresh": true
+      }
+    },
+    {
+      "path": "pages/inspections/list",
+      "style": {
+        "navigationBarTitleText": "查寝记录",
+        "navigationStyle": "custom",
+        "enablePullDownRefresh": true
+      }
+    },
+    {
+      "path": "pages/checkin/index",
+      "style": {
+        "navigationBarTitleText": "入住办理",
+        "navigationStyle": "custom"
+      }
+    },
+    {
+      "path": "pages/checkout/index",
+      "style": {
+        "navigationBarTitleText": "退宿办理",
+        "navigationStyle": "custom"
+      }
+    },
+    {
+      "path": "pages/admin/dashboard",
+      "style": {
+        "navigationBarTitleText": "管理后台",
+        "navigationStyle": "custom"
+      }
+    },
+    {
+      "path": "pages/admin/users",
+      "style": {
+        "navigationBarTitleText": "用户管理",
+        "navigationStyle": "custom"
+      }
+    },
+    {
+      "path": "pages/admin/settings",
+      "style": {
+        "navigationBarTitleText": "系统配置",
+        "navigationStyle": "custom"
+      }
+    },
+    {
+      "path": "pages/buildings/list",
+      "style": {
+        "navigationBarTitleText": "楼栋管理",
+        "navigationStyle": "custom",
+        "enablePullDownRefresh": true
+      }
+    },
+    {
+      "path": "pages/buildings/detail",
+      "style": {
+        "navigationBarTitleText": "楼栋详情",
+        "navigationStyle": "custom"
+      }
+    },
+    {
+      "path": "pages/roles/list",
+      "style": {
+        "navigationBarTitleText": "角色管理",
+        "navigationStyle": "custom",
+        "enablePullDownRefresh": true
+      }
+    },
+    {
+      "path": "pages/roles/detail",
+      "style": {
+        "navigationBarTitleText": "角色详情",
+        "navigationStyle": "custom"
+      }
+    },
+    {
+      "path": "pages/inspections/rankings",
+      "style": {
+        "navigationBarTitleText": "查寝排行榜",
+        "navigationStyle": "custom"
+      }
+    },
+    {
+      "path": "pages/inspections/score",
+      "style": {
+        "navigationBarTitleText": "录入评分",
+        "navigationStyle": "custom"
+      }
+    },
+    {
+      "path": "pages/room-swaps/list",
+      "style": {
+        "navigationBarTitleText": "换寝申请",
+        "navigationStyle": "custom",
+        "enablePullDownRefresh": true
+      }
+    },
+    {
+      "path": "pages/room-swaps/apply",
+      "style": {
+        "navigationBarTitleText": "申请换寝",
+        "navigationStyle": "custom"
+      }
+    },
+    {
+      "path": "pages/room-swaps/detail",
+      "style": {
+        "navigationBarTitleText": "申请详情",
+        "navigationStyle": "custom"
+      }
+    },
+    {
+      "path": "pages/late-returns/list",
+      "style": {
+        "navigationBarTitleText": "晚归告警",
+        "navigationStyle": "custom",
+        "enablePullDownRefresh": true
+      }
+    },
+    {
+      "path": "pages/access-logs/list",
+      "style": {
+        "navigationBarTitleText": "门禁记录",
+        "navigationStyle": "custom",
+        "enablePullDownRefresh": true
+      }
+    }
+  ],
+  "globalStyle": {
+    "navigationBarTextStyle": "black",
+    "navigationBarTitleText": "宿舍管理系统",
+    "navigationBarBackgroundColor": "#faf9f7",
+    "backgroundColor": "#faf9f7",
+    "backgroundTextStyle": "dark"
+  },
+  "tabBar": {
+    "custom": true,
+    "color": "#9CA3AF",
+    "selectedColor": "#9A3412",
+    "backgroundColor": "#ffffff",
+    "borderStyle": "white",
+    "list": [
+      {
+        "pagePath": "pages/index/index",
+        "text": "首页"
+      },
+      {
+        "pagePath": "pages/rooms/list",
+        "text": "房间"
+      },
+      {
+        "pagePath": "pages/repairs/list",
+        "text": "报修"
+      },
+      {
+        "pagePath": "pages/profile/index",
+        "text": "我的"
+      }
+    ]
+  },
+  "condition": {}
+}
