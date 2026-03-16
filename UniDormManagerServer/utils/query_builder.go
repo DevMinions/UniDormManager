@@ -108,10 +108,10 @@ func (qb *QueryBuilder) BuildCountQuery() (string, []interface{}) {
 // BuildStudentQuery 构建学生分页查询
 func BuildStudentQuery(ctx context.Context, req *models.PaginatedRequest, filter *models.StudentFilter) (*QueryBuilder, *QueryBuilder) {
 	baseQuery := `
-		SELECT s.id, s.name, s.student_id, s.major, s.room_number, s.status, s.created_at, s.updated_at,
+		SELECT s.id, s.name, s.student_id, s.major, s.room_number, s.building, s.status, s.created_at, s.updated_at,
 		       r.building as building_name
 		FROM students s
-		LEFT JOIN rooms r ON s.room_number = r.number
+		LEFT JOIN rooms r ON s.room_number = r.number AND s.building = r.building
 	`
 
 	qb := NewQueryBuilder(ctx, baseQuery)

@@ -77,3 +77,45 @@ func (h *RoomSwapHandler) ApproveRoomSwap(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"message": "审批成功"})
 }
+
+// GetMyApplications 获取当前用户的换寝申请
+func (h *RoomSwapHandler) GetMyApplications(c *gin.Context) {
+	userID := c.GetString("userId")
+	apps, err := h.store.GetMyRoomSwapApplications(userID)
+	if err != nil {
+		middleware.WriteError(c, http.StatusInternalServerError, "database_error", err.Error())
+		return
+	}
+	c.JSON(http.StatusOK, apps)
+}
+
+// CancelApplication 取消换寝申请
+func (h *RoomSwapHandler) CancelApplication(c *gin.Context) {
+	id := c.Param("id")
+	if !h.store.DeleteRoomSwapApplication(id) {
+		middleware.WriteError(c, http.StatusNotFound, "not_found", "Application not found")
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "申请已取消"})
+}
+
+// GetSwapHistory 获取换寝历史记录
+func (h *RoomSwapHandler) GetSwapHistory(c *gin.Context) {
+	userID := c.GetString("userId")
+	history, err := h.store.GetRoomSwapHistory(userID)
+	if err != nil {
+		middleware.WriteError(c, http.StatusInternalServerError, "database_error", err.Error())
+		return
+	}
+	c.JSON(http.StatusOK, history)
+}
+
+// GetAvailableRooms 获取可换寝的房间列表
+func (h *RoomSwapHandler) GetAvailableRooms(c *gin.Context) {
+	rooms, err := h.store.GetAvailableRooms()
+	if err != nil {
+		middleware.WriteError(c, http.StatusInternalServerError, "database_error", err.Error())
+		return
+	}
+	c.JSON(http.StatusOK, rooms)
+}

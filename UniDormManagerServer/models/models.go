@@ -11,7 +11,8 @@ type Student struct {
 	StudentID  string `json:"studentId"`
 	Major      string `json:"major"`
 	RoomNumber string `json:"roomNumber"`
-	Status     string `json:"status"` // Active, Graduated, On Leave
+	Building   string `json:"building"` // 楼栋，如"A栋"
+	Status     string `json:"status"`   // Active, Graduated, On Leave
 }
 
 // Building 楼栋模型
@@ -253,6 +254,17 @@ type CreateRoomSwapRequest struct {
 	UrgencyLevel string `json:"urgencyLevel" binding:"required"`
 }
 
+// RoomSwapHistory 换寝申请历史记录
+type RoomSwapHistory struct {
+	ID            string `json:"id"`
+	ApplicationID string `json:"applicationId"`
+	Action        string `json:"action"`
+	ActorID       string `json:"actorId"`
+	ActorName     string `json:"actorName"`
+	Comment       string `json:"comment"`
+	CreatedAt     string `json:"createdAt"`
+}
+
 // ApproveRoomSwapRequest 换寝审批请求
 type ApproveRoomSwapRequest struct {
 	ApproverID   string `json:"approverId"`
@@ -284,6 +296,17 @@ type AccessLogFilter struct {
 	Status      string `json:"status"`
 	DateFrom    string `json:"dateFrom"`
 	DateTo      string `json:"dateTo"`
+}
+
+// CreateAccessLogRequest 创建门禁记录请求
+type CreateAccessLogRequest struct {
+	StudentID   string `json:"studentId" binding:"required"`
+	StudentName string `json:"studentName" binding:"required"`
+	RoomNumber  string `json:"roomNumber"`
+	Direction   string `json:"direction" binding:"required,oneof=In Out"`
+	GateName    string `json:"gateName" binding:"required"`
+	Timestamp   string `json:"timestamp"`
+	PhotoURL    string `json:"photoUrl,omitempty"`
 }
 
 // LateReturnAlert 晚归告警

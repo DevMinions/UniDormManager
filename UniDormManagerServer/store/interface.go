@@ -8,7 +8,6 @@ type StoreInterface interface {
 	GetAllStudents() []*models.Student
 	GetStudentsPaginated(req *models.PaginatedRequest, filter *models.StudentFilter) (*models.PaginatedResponse, error)
 	GetStudentByID(id string) (*models.Student, bool)
-	GetStudentByUserID(userID string) (*models.Student, bool) // 根据用户ID获取学生
 	CreateStudent(req *models.CreateStudentRequest) *models.Student
 	UpdateStudent(id string, req *models.UpdateStudentRequest) (*models.Student, bool)
 	DeleteStudent(id string) bool
@@ -46,17 +45,26 @@ type StoreInterface interface {
 	// Inspection methods
 	CreateInspection(req *models.CreateInspectionRequest, inspectorID string) (*models.Inspection, error)
 	GetInspectionsPaginated(req *models.PaginatedRequest, filter *models.InspectionFilter) (*models.PaginatedResponse, error)
-	GetInspectionsByRoomNumber(roomNumber string) []models.Inspection // 根据房间号获取查寝记录
+	GetInspectionByID(id string) (*models.Inspection, bool)
+	UpdateInspection(id string, req *models.CreateInspectionRequest) (*models.Inspection, bool)
+	DeleteInspection(id string) bool
 
 	// Room Swap methods
 	GetRoomSwapApplications(userID string, role string) ([]*models.RoomSwapApplication, error)
+	GetRoomSwapApplicationsPaginated(req *models.PaginatedRequest, filter *models.RoomSwapFilter) (*models.PaginatedResponse, error)
+	GetMyRoomSwapApplications(userID string) ([]*models.RoomSwapApplication, error)
 	GetPendingRoomSwapApplications() ([]*models.RoomSwapApplication, error)
+	GetRoomSwapApplicationByID(id string) (*models.RoomSwapApplication, bool)
 	CreateRoomSwapApplication(userID string, req *models.CreateRoomSwapRequest) (*models.RoomSwapApplication, error)
 	ApproveRoomSwapApplication(id string, req *models.ApproveRoomSwapRequest) error
+	DeleteRoomSwapApplication(id string) bool
+	GetRoomSwapHistory(userID string) ([]*models.RoomSwapHistory, error)
+	GetAvailableRooms() ([]*models.Room, error)
 
 	// Access Log methods
 	GetAccessLogsPaginated(req *models.PaginatedRequest, filter *models.AccessLogFilter) (*models.PaginatedResponse, error)
 	GetLiveAccessLogs() ([]*models.AccessLog, error)
+	CreateAccessLog(req *models.CreateAccessLogRequest) (*models.AccessLog, error)
 
 	// Late Return methods
 	GetLateReturnAlertsPaginated(req *models.PaginatedRequest, filter *models.LateReturnFilter) (*models.PaginatedResponse, error)
