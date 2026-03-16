@@ -228,6 +228,13 @@
         "navigationBarTitleText": "数据报表",
         "navigationStyle": "custom"
       }
+    },
+    {
+      "path": "pages/dashboard/analytics",
+      "style": {
+        "navigationBarTitleText": "数据大屏",
+        "navigationStyle": "custom"
+      }
     }
   ],
   "globalStyle": {
