@@ -70,13 +70,43 @@ export {
   DATE_FORMAT
 } from './constants.js'
 
-// 通知服务
+// 安全工具
 export {
-  notificationService,
-  localNotification,
-  messageCenter,
-  TEMPLATE_IDS
-} from './notification.js'
+  VALIDATION_RULES,
+  validateField,
+  validateForm,
+  showFirstError,
+  escapeHtml,
+  sanitizeHtml,
+  sanitizeInput,
+  validators
+} from './security.js'
+
+export {
+  encrypt,
+  decrypt,
+  md5,
+  sha256,
+  generateNonce,
+  secureStorage,
+  dataMasking,
+  maskObject,
+  maskLogData
+} from './crypto.js'
+
+export {
+  generateSignature,
+  verifySignature,
+  isTimestampValid,
+  isRequestDuplicate,
+  generateAntiReplayHeaders,
+  verifyAntiReplayRequest,
+  createSecureRequestConfig,
+  RateLimiter,
+  globalRateLimiter,
+  withRateLimit,
+  clearAntiReplayData
+} from './antiReplay.js'
 
 // 兼容性导出（保留旧版函数名）
 export { showSuccess, showError } from './common.js'
