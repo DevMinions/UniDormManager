@@ -1,8 +1,0 @@
-{
-  "navigationBarTitleText": "查寝记录",
-  "navigationStyle": "custom",
-  "enablePullDownRefresh": true,
-  "usingComponents": {
-    "app-navbar": "../../components/AppNavbar/AppNavbar"
-  }
-}

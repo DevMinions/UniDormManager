@@ -1,25 +1,78 @@
+# ============================================
+# UniDormManager 项目 .gitignore
+# ============================================
+
 # ---> Go
-# If you prefer the allow list template instead of the deny list, see community template:
-# https://github.com/github/gitignore/blob/main/community/Golang/Go.AllowList.gitignore
-#
-# Binaries for programs and plugins
 *.exe
 *.exe~
 *.dll
 *.so
 *.dylib
-
-# Test binary, built with `go test -c`
 *.test
-
-# Output of the go coverage tool, specifically when used with LiteIDE
 *.out
-
-# Dependency directories (remove the comment below to include it)
-# vendor/
-
-# Go workspace file
+vendor/
 go.work
 
-logs/
+# ---> Node.js
 node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.npm
+.yarn-integrity
+
+# ---> 构建输出
+dist/
+build/
+.unpackage/
+release/
+
+# ---> 日志文件
+logs/
+*.log
+
+# ---> 临时文件
+*.tmp
+*.temp
+*.cache
+.cache/
+*.pid
+*.seed
+*.pid.lock
+
+# ---> 编辑器/IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# ---> 测试相关
+coverage/
+.nyc_output/
+playwright-report/
+test-results/
+e2e-report/
+
+# ---> 环境配置（包含敏感信息）
+.env
+.env.local
+.env.*.local
+
+# ---> 上传文件/静态资源（应该由服务器管理或通过其他方式同步）
+uploads/
+!uploads/.gitkeep
+
+# ---> 数据库文件
+*.db
+*.sqlite
+*.sqlite3
+
+# ---> Docker
+*.env.docker
+
+# ---> 其他
+*.bak
+*.backup
+Thumbs.db

@@ -1,7 +1,0 @@
-{
-  "navigationBarTitleText": "公告详情",
-  "navigationStyle": "custom",
-  "usingComponents": {
-    "app-navbar": "../../components/AppNavbar/AppNavbar"
-  }
-}

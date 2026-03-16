@@ -1,7 +1,0 @@
-{
-  "navigationBarTitleText": "入住办理",
-  "navigationStyle": "custom",
-  "usingComponents": {
-    "app-navbar": "../../components/AppNavbar/AppNavbar"
-  }
-}
