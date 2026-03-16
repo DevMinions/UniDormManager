@@ -132,3 +132,30 @@ func (h *InspectionHandler) GetInspectionRankings(c *gin.Context) {
 
 	c.JSON(http.StatusOK, []models.InspectionRanking{})
 }
+
+// GetMyInspections 获取当前用户的查寝记录（根据学生所在房间）
+// 前端调用: /api/inspections/my
+func (h *InspectionHandler) GetMyInspections(c *gin.Context) {
+	// 从上下文获取当前用户ID
+	userID := c.GetString("userID")
+	if userID == "" {
+		middleware.WriteError(c, http.StatusUnauthorized, "unauthorized", "用户未登录")
+		return
+	}
+
+	// 获取当前学生的房间号
+	student, exists := h.store.GetStudentByUserID(userID)
+	if !exists {
+		// 如果不是学生（可能是管理员），返回空数组
+		c.JSON(http.StatusOK, []models.Inspection{})
+		return
+	}
+
+	// 根据房间号获取查寝记录
+	inspections := h.store.GetInspectionsByRoomNumber(student.RoomNumber)
+	if inspections == nil {
+		inspections = []models.Inspection{}
+	}
+
+	c.JSON(http.StatusOK, inspections)
+}

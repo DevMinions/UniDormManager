@@ -28,6 +28,7 @@ export const formatTime = (dateStr: string): string => {
 // Utility function to get status color
 export const getStatusColor = (status: string): string => {
   const colors: Record<string, string> = {
+    // 旧格式（兼容）
     Active: 'green',
     Inactive: 'gray',
     Suspended: 'red',
@@ -41,6 +42,14 @@ export const getStatusColor = (status: string): string => {
     Good: 'blue',
     Fair: 'yellow',
     Poor: 'red',
+    // 新格式（小写）
+    pending: 'yellow',
+    processing: 'blue',
+    completed: 'green',
+    good: 'blue',
+    fair: 'yellow',
+    poor: 'red',
+    excellent: 'green',
   };
   return colors[status] || 'gray';
 };
@@ -48,6 +57,7 @@ export const getStatusColor = (status: string): string => {
 // Utility function to get status text
 export const getStatusText = (status: string): string => {
   const texts: Record<string, string> = {
+    // 旧格式（兼容）
     Active: '活跃',
     Inactive: '未激活',
     Suspended: '暂停',
@@ -61,6 +71,14 @@ export const getStatusText = (status: string): string => {
     Good: '良好',
     Fair: '一般',
     Poor: '较差',
+    // 新格式（小写）
+    pending: '待处理',
+    processing: '处理中',
+    completed: '已完成',
+    good: '良好',
+    fair: '一般',
+    poor: '较差',
+    excellent: '优秀',
   };
   return texts[status] || status;
 };

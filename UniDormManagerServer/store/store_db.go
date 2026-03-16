@@ -170,6 +170,31 @@ func (s *DBStore) GetStudentByID(id string) (*models.Student, bool) {
 	return &student, true
 }
 
+// GetStudentByUserID 根据用户ID获取学生（通过关联查询）
+func (s *DBStore) GetStudentByUserID(userID string) (*models.Student, bool) {
+	ctx := context.Background()
+
+	// 从数据库查询 - 假设 students 表有 user_id 字段关联到 users 表
+	// 如果没有 user_id 字段，则需要先查询 users 表获取 student_id
+	var student models.Student
+	err := database.DB.QueryRow(ctx, `
+		SELECT s.id, s.name, s.student_id, s.major, s.room_number, s.status 
+		FROM students s
+		JOIN users u ON u.student_id = s.id
+		WHERE u.id = $1`,
+		userID).Scan(&student.ID, &student.Name, &student.StudentID,
+		&student.Major, &student.RoomNumber, &student.Status)
+
+	if err == pgx.ErrNoRows {
+		return nil, false
+	}
+	if err != nil {
+		return nil, false
+	}
+
+	return &student, true
+}
+
 // CreateStudent 创建学生
 func (s *DBStore) CreateStudent(req *models.CreateStudentRequest) *models.Student {
 	ctx := context.Background()
@@ -612,6 +637,20 @@ func (s *DBStore) DeleteRoom(id string) bool {
 
 // ========== RepairRequest Methods ==========
 
+// convertRepairStatus 将后端状态转换为前端期望的格式
+func convertRepairStatus(status string) string {
+	switch status {
+	case "Pending":
+		return "pending"
+	case "In Progress":
+		return "processing"
+	case "Completed":
+		return "completed"
+	default:
+		return "pending"
+	}
+}
+
 // GetAllRepairRequests 获取所有报修请求
 func (s *DBStore) GetAllRepairRequests() []*models.RepairRequest {
 	ctx := context.Background()
@@ -639,6 +678,7 @@ func (s *DBStore) GetAllRepairRequests() []*models.RepairRequest {
 		if err := rows.Scan(&repair.ID, &repair.Title, &repair.Description,
 			&repair.Status, &date, &repair.RoomNumber, &repair.Priority); err == nil {
 			repair.Date = date.Format("2006-01-02")
+			repair.Status = convertRepairStatus(repair.Status) // 转换状态值
 			repairs = append(repairs, &repair)
 		}
 	}
@@ -673,6 +713,7 @@ func (s *DBStore) GetRepairRequestByID(id string) (*models.RepairRequest, bool) 
 		&repair.Status, &date, &repair.RoomNumber, &repair.Priority)
 	if err == nil {
 		repair.Date = date.Format("2006-01-02")
+		repair.Status = convertRepairStatus(repair.Status) // 转换状态值
 	}
 
 	if err == pgx.ErrNoRows {
@@ -993,6 +1034,39 @@ func (s *DBStore) CreateInspection(req *models.CreateInspectionRequest, inspecto
 	}
 
 	return inspection, nil
+}
+
+// GetInspectionsByRoomNumber 根据房间号获取查寝记录
+func (s *DBStore) GetInspectionsByRoomNumber(roomNumber string) []models.Inspection {
+	ctx := context.Background()
+
+	rows, err := database.DB.Query(ctx,
+		`SELECT id, room_number, building, inspector, check_date, overall_score, status, comment, created_at 
+		 FROM inspections 
+		 WHERE room_number = $1 
+		 ORDER BY check_date DESC`,
+		roomNumber)
+	if err != nil {
+		return []models.Inspection{}
+	}
+	defer rows.Close()
+
+	inspections := []models.Inspection{}
+	for rows.Next() {
+		var inspection models.Inspection
+		var detailsJSON []byte
+		err := rows.Scan(
+			&inspection.ID, &inspection.RoomNumber, &inspection.Building, &inspection.Inspector,
+			&inspection.CheckDate, &inspection.OverallScore, &inspection.Status, &inspection.Comment, &inspection.CreatedAt,
+		)
+		if err == nil {
+			// Details 字段需要从 JSON 解析，这里简化处理
+			_ = detailsJSON
+			inspections = append(inspections, inspection)
+		}
+	}
+
+	return inspections
 }
 
 // ========== Room Swap Methods ==========

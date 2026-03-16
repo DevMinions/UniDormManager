@@ -8,6 +8,7 @@ type StoreInterface interface {
 	GetAllStudents() []*models.Student
 	GetStudentsPaginated(req *models.PaginatedRequest, filter *models.StudentFilter) (*models.PaginatedResponse, error)
 	GetStudentByID(id string) (*models.Student, bool)
+	GetStudentByUserID(userID string) (*models.Student, bool) // 根据用户ID获取学生
 	CreateStudent(req *models.CreateStudentRequest) *models.Student
 	UpdateStudent(id string, req *models.UpdateStudentRequest) (*models.Student, bool)
 	DeleteStudent(id string) bool
@@ -45,6 +46,7 @@ type StoreInterface interface {
 	// Inspection methods
 	CreateInspection(req *models.CreateInspectionRequest, inspectorID string) (*models.Inspection, error)
 	GetInspectionsPaginated(req *models.PaginatedRequest, filter *models.InspectionFilter) (*models.PaginatedResponse, error)
+	GetInspectionsByRoomNumber(roomNumber string) []models.Inspection // 根据房间号获取查寝记录
 
 	// Room Swap methods
 	GetRoomSwapApplications(userID string, role string) ([]*models.RoomSwapApplication, error)

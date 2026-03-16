@@ -4,9 +4,6 @@ FROM golang:1.23-alpine AS builder
 # 设置工作目录
 WORKDIR /app
 
-# 安装必要的构建工具
-RUN apk add --no-cache git
-
 # 复制 go mod 文件
 COPY go.mod go.sum* ./
 
@@ -19,11 +16,8 @@ COPY . .
 # 构建应用
 RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o server main.go
 
-# 运行阶段
-FROM alpine:latest
-
-# 安装 ca-certificates 用于 HTTPS 请求
-RUN apk --no-cache add ca-certificates tzdata
+# 运行阶段 - 使用与构建阶段相同的基础镜像，避免拉取新镜像
+FROM golang:1.23-alpine
 
 # 设置时区
 ENV TZ=Asia/Shanghai

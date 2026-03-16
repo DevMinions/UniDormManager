@@ -211,6 +211,7 @@ func main() {
 		inspections := api.Group("/inspections")
 		{
 			inspections.GET("", middleware.RequirePermission("inspections:read"), inspectionHandler.GetInspections)
+			inspections.GET("/my", middleware.RequirePermission("inspections:read"), inspectionHandler.GetMyInspections)
 			inspections.POST("", middleware.RequirePermission("inspections:create"), inspectionHandler.CreateInspection)
 			inspections.GET("/rooms", middleware.RequirePermission("inspections:read"), inspectionHandler.GetInspectionRooms)
 			inspections.GET("/rankings", middleware.RequirePermission("inspections:read"), inspectionHandler.GetInspectionRankings)

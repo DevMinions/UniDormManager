@@ -269,7 +269,7 @@
     
     <view class="modal-body">
       <view class="password-tips">
-        <text>正在为 <text class="highlight">{{currentUser?.realName}}</text> 重置密码</text>
+        <text>正在为 <text class="highlight">{{currentUser.realName}}</text> 重置密码</text>
       </view>
       
       <view class="form-item">
