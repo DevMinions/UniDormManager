@@ -235,6 +235,13 @@
         "navigationBarTitleText": "数据大屏",
         "navigationStyle": "custom"
       }
+    },
+    {
+      "path": "pages/admin/allocation",
+      "style": {
+        "navigationBarTitleText": "智能宿舍分配",
+        "navigationStyle": "custom"
+      }
     }
   ],
   "globalStyle": {
