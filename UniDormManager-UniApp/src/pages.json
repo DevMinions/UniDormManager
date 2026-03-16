@@ -221,6 +221,13 @@
         "navigationStyle": "custom",
         "enablePullDownRefresh": true
       }
+    },
+    {
+      "path": "pages/reports/export",
+      "style": {
+        "navigationBarTitleText": "数据报表",
+        "navigationStyle": "custom"
+      }
     }
   ],
   "globalStyle": {

@@ -38,7 +38,7 @@ const quickActions = [
   { icon: '🏠', label: '房间管理', desc: '查看房间分配情况', path: '/pages/rooms/list', color: '#f5e5d5' },
   { icon: '🔧', label: '报修管理', desc: '处理待办维修工单', path: '/pages/repairs/list', color: '#fce7f3' },
   { icon: '📋', label: '公告管理', desc: '发布宿舍公告通知', path: '/pages/notices/list', color: '#d1fae5' },
-  { icon: '📊', label: '数据统计', desc: '查看详细统计数据', path: '/pages/admin/statistics', color: '#fee2e2' }
+  { icon: '📊', label: '数据报表', desc: '导出统计分析报表', path: '/pages/reports/export', color: '#fee2e2' }
 ]
 
 // 计算报修总数
