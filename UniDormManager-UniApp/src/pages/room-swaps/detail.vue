@@ -4,7 +4,7 @@ import { onLoad } from '@dcloudio/uni-app'
 import { useUserStore } from '@/store/modules/user'
 import { roomSwapApi } from '@/api/roomSwap.js'
 import { isDormStaff } from '@/config/roles.js'
-import { handleApiError, showSuccess } from '@/utils/helpers.js'
+import { handleApiError, showSuccess } from '@/utils/index.js'
 import AppNavbar from '@/components/AppNavbar/AppNavbar.vue'
 
 const userStore = useUserStore()
