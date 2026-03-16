@@ -213,6 +213,14 @@
         "navigationStyle": "custom",
         "enablePullDownRefresh": true
       }
+    },
+    {
+      "path": "pages/messages/list",
+      "style": {
+        "navigationBarTitleText": "消息中心",
+        "navigationStyle": "custom",
+        "enablePullDownRefresh": true
+      }
     }
   ],
   "globalStyle": {

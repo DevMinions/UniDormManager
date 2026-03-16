@@ -1,8 +1,11 @@
 <script setup>
-import { computed } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useUserStore } from '@/store/modules/user'
+import { messageApi } from '@/api/message.js'
 
 const userStore = useUserStore()
+const unreadCount = ref(0)
+let unreadTimer = null
 
 // 根据角色获取 TabBar 配置
 const tabBarList = computed(() => {
@@ -13,10 +16,10 @@ const tabBarList = computed(() => {
     { pagePath: 'pages/index/index', text: '首页', icon: '🏠' },
     { pagePath: 'pages/rooms/list', text: '房间', icon: '🚪' },
     { pagePath: 'pages/repairs/list', text: '报修', icon: '🔧' },
+    { pagePath: 'pages/messages/list', text: '消息', icon: '💬', showBadge: true },
     { pagePath: 'pages/profile/index', text: '我的', icon: '👤' }
   ]
   
-  // 根据角色调整（如果需要）
   return baseTabs
 })
 
@@ -24,6 +27,41 @@ const currentPath = computed(() => {
   const pages = getCurrentPages()
   const currentPage = pages[pages.length - 1]
   return currentPage ? currentPage.route : ''
+})
+
+// 加载未读数
+const loadUnreadCount = async () => {
+  if (!userStore.isLoggedIn) return
+  try {
+    const res = await messageApi.getUnreadCount()
+    unreadCount.value = res?.count || 0
+  } catch (error) {
+    console.error('获取未读消息数失败', error)
+  }
+}
+
+// 启动定时刷新
+const startUnreadTimer = () => {
+  loadUnreadCount()
+  unreadTimer = setInterval(loadUnreadCount, 30000) // 每30秒刷新
+}
+
+// 停止定时刷新
+const stopUnreadTimer = () => {
+  if (unreadTimer) {
+    clearInterval(unreadTimer)
+    unreadTimer = null
+  }
+}
+
+onMounted(() => {
+  if (userStore.isLoggedIn) {
+    startUnreadTimer()
+  }
+})
+
+onUnmounted(() => {
+  stopUnreadTimer()
 })
 
 const switchTab = (item) => {
@@ -41,8 +79,15 @@ const switchTab = (item) => {
       :class="{ active: currentPath === item.pagePath }"
       @click="switchTab(item)"
     >
-      <view class="tab-icon">{{ item.icon }}</view>
-      
+      <view class="tab-icon-wrapper">
+        <view class="tab-icon">{{ item.icon }}</view>
+        <view 
+          v-if="item.showBadge && unreadCount > 0"
+          class="tab-badge"
+        >
+          <text class="badge-text">{{ unreadCount > 99 ? '99+' : unreadCount }}</text>
+        </view>
+      </view>
       <view class="tab-text">{{ item.text }}</view>
     </view>
   </view>
@@ -83,6 +128,31 @@ const switchTab = (item) => {
   background: #F8F2F0;
   border-color: #E8D4CD;
   transform: scale(1.1);
+}
+
+.tab-icon-wrapper {
+  position: relative;
+}
+
+.tab-badge {
+  position: absolute;
+  top: -8rpx;
+  right: -8rpx;
+  background: #DC2626;
+  border-radius: 20rpx;
+  min-width: 36rpx;
+  height: 36rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 8rpx;
+  box-shadow: 0 4rpx 8rpx rgba(220, 38, 38, 0.3);
+  
+  .badge-text {
+    font-size: 20rpx;
+    font-weight: 600;
+    color: #FFFFFF;
+  }
 }
 
 .tab-icon {
