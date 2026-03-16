@@ -17,7 +17,10 @@
   "dependencies": {
     "vue": "^3.3.0",
     "pinia": "^2.1.0",
-    "@dcloudio/uni-app": "^3.0.0",
+    "@dcloudio/uni-app": "3.0.0-alpha-4010520240409001",
+    "@dcloudio/uni-components": "3.0.0-alpha-4010520240409001",
+    "@dcloudio/uni-h5": "3.0.0-alpha-4010520240409001",
+    "@dcloudio/uni-mp-weixin": "3.0.0-alpha-4010520240409001",
     "crypto-js": "^4.1.1"
   },
   "devDependencies": {
