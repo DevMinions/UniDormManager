@@ -83,11 +83,11 @@ jobs:
           echo "Installing dependencies..."
           npm ci
 
-          # 确保 node 路径正确（miniprogram-ci 需要）
-          mkdir -p /usr/bin
-          ln -sf $(which node) /usr/bin/node 2>/dev/null || true
-
           echo "Building mp-weixin..."
+          # 设置 UniApp 构建环境变量
+          export UNI_PLATFORM=mp-weixin
+          export NODE_ENV=production
+          npx vite build --mode mp-weixin
           # 设置 UniApp 构建环境变量
           export UNI_PLATFORM=mp-weixin
           export NODE_ENV=production
@@ -110,6 +110,10 @@ jobs:
 
           # ═══ 上传小程序 ═══
           echo "Uploading miniprogram..."
+          
+          # 设置 PATH 确保 miniprogram-ci 能找到 node
+          export PATH="$(dirname $(which node)):$PATH"
+          
           mkdir -p /tmp/miniprogram
           printf '%s\n' "${{ secrets.WECHAT_PRIVATE_KEY }}" > /tmp/miniprogram/private.key
 
