@@ -1,0 +1,102 @@
+name: Build and Deploy
+
+on:
+  push:
+    branches: [main, master, dev]
+
+jobs:
+  # ═══════════════════════════════════════════════════════════════
+  # Job 1: 检测变更的文件路径
+  # ═══════════════════════════════════════════════════════════════
+  detect-changes:
+    runs-on: ubuntu-latest
+    container:
+      image: adamyu/ci-golang-builder:1.23
+    outputs:
+      uniapp_changed: ${{ steps.check.outputs.uniapp_changed }}
+    steps:
+      - name: Check changed files
+        id: check
+        run: |
+          # 获取变更的文件列表（Gitea Action 代码已挂载到当前目录）
+          PREV_SHA=$(git rev-parse HEAD~1)
+          HEAD_SHA=$(git rev-parse HEAD)
+          CHANGED_FILES=$(git diff --name-only $PREV_SHA $HEAD_SHA)
+
+          echo "Changed files:"
+          echo "$CHANGED_FILES"
+
+          # 检测 UniApp 是否变更
+          if echo "$CHANGED_FILES" | grep -q "^UniDormManager-UniApp/"; then
+            echo "uniapp_changed=true" >> $GITHUB_OUTPUT
+            echo "✅ UniApp changed"
+          else
+            echo "uniapp_changed=false" >> $GITHUB_OUTPUT
+            echo "⏭️ UniApp unchanged"
+          fi
+
+  # ═══════════════════════════════════════════════════════════════
+  # Job 2: 构建并上传小程序（仅当 UniApp 代码变更时执行）
+  # ═══════════════════════════════════════════════════════════════
+  build-miniprogram:
+    needs: detect-changes
+    if: ${{ needs.detect-changes.outputs.uniapp_changed == 'true' }}
+    runs-on: ubuntu-latest
+    container:
+      image: adamyu/ci-golang-builder:1.23
+    steps:
+      - name: Build and upload miniprogram
+        run: |
+          set -e
+
+          # 版本信息（代码已挂载在当前目录）
+          VER=$(git describe --tags --always 2>/dev/null || echo "dev")
+          SHA=$(git rev-parse --short HEAD)
+          COMMIT_MSG=$(git log -1 --pretty=%B | head -1)
+
+          echo "Building UniApp Miniprogram: $VER ($SHA)"
+
+          cd UniDormManager-UniApp
+
+          # ═══ 替换前端配置 ═══
+          echo "Replacing API config..."
+          # 替换 production 环境的 baseURL
+          sed -i 's|baseURL:.*https://api.yourdomain.com|baseURL: '"'"'https://udm.adamyu.top:20443'"'"'|' src/utils/request.js
+          echo "API baseURL updated to: https://udm.adamyu.top:20443"
+
+          # ═══ 安装依赖并构建 ═══
+          echo "Installing dependencies..."
+          npm ci
+
+          echo "Building mp-weixin..."
+          npm run build:mp-weixin
+
+          echo "Build completed. Output:"
+          ls -la dist/build/mp-weixin/
+
+          # ═══ 上传小程序 ═══
+          echo "Uploading miniprogram..."
+
+          # 创建私钥文件
+          mkdir -p /tmp/miniprogram
+          printf '%s\n' "${{ secrets.WECHAT_PRIVATE_KEY }}" > /tmp/miniprogram/private.key
+
+          # 使用 npx 运行 miniprogram-ci
+          npx miniprogram-ci upload \
+            --pp ./dist/build/mp-weixin \
+            --pkp /tmp/miniprogram/private.key \
+            --appid ${{ secrets.WECHAT_APPID }} \
+            --uv 4.0.0 \
+            --ud "$COMMIT_MSG" 2>&1
+          UPLOAD_EXIT=$?
+
+          # 清理私钥
+          rm -f /tmp/miniprogram/private.key
+
+          if [ $UPLOAD_EXIT -eq 0 ]; then
+            echo "✅ 小程序上传完成"
+          else
+            echo "⚠️ 小程序上传失败"
+            exit 1
+          fi
+        shell: sh
