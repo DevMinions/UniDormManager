@@ -87,6 +87,11 @@ jobs:
             exit 1
           fi
           echo "✅ 构建输出: $MP_WEIXIN_DIR"
+          
+          # 替换构建输出中的 appid
+          sed -i 's|"appid": "wxXXXXXXXXXXXXXXXX"|"appid": "${{ secrets.WECHAT_APPID }}"|g' "$MP_WEIXIN_DIR/project.config.json"
+          echo "已更新 project.config.json 中的 appid"
+          grep '"appid"' "$MP_WEIXIN_DIR/project.config.json"
 
           # 准备私钥
           mkdir -p /tmp/miniprogram
