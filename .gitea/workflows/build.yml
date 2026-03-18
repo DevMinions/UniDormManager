@@ -130,12 +130,14 @@ jobs:
           # 尝试上传，最多重试3次
           for i in 1 2 3; do
             echo "尝试上传第 $i 次..."
+            # 使用 --no-es6 参数避免 ES6 转换问题
             if npx miniprogram-ci upload \
               --pp "$MP_WEIXIN_DIR" \
               --pkp /tmp/miniprogram/private.key \
               --appid ${{ secrets.WECHAT_APPID }} \
               --uv 4.0.0 \
-              --ud "$COMMIT_MSG" 2>&1; then
+              --ud "$COMMIT_MSG" \
+              --no-es6 2>&1; then
               echo "✅ 上传成功"
               break
             else
