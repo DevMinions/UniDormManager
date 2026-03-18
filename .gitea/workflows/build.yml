@@ -18,9 +18,9 @@ jobs:
       - name: Clone repository
         run: |
           git config --global credential.helper store
-          echo "https://openclaw:${{ secrets.GIT_PASSWORD }}@git.adamyu.top:20443" > ~/.git-credentials
+          echo "http://openclaw:${{ secrets.GIT_PASSWORD }}@192.168.1.10:8418" > ~/.git-credentials
           cd /tmp
-          git clone "https://git.adamyu.top:20443/adamyu/UniDormManager.git" repo
+          git clone "http://192.168.1.10:8418/adamyu/UniDormManager.git" repo
           cd repo
           echo "HEAD_SHA=$(git rev-parse HEAD)" >> $GITHUB_ENV
           echo "PREV_SHA=$(git rev-parse HEAD~1)" >> $GITHUB_ENV
@@ -55,11 +55,11 @@ jobs:
       - name: Clone and build
         run: |
           set -e
-          # 配置 git 凭证并克隆
+          # 配置 git 凭证并克隆（使用内网地址）
           git config --global credential.helper store
-          echo "https://openclaw:${{ secrets.GIT_PASSWORD }}@git.adamyu.top:20443" > ~/.git-credentials
+          echo "http://openclaw:${{ secrets.GIT_PASSWORD }}@192.168.1.10:8418" > ~/.git-credentials
           cd /tmp
-          git clone "https://git.adamyu.top:20443/adamyu/UniDormManager.git" repo
+          git clone "http://192.168.1.10:8418/adamyu/UniDormManager.git" repo
           cd repo
 
           # 版本信息
@@ -86,8 +86,12 @@ jobs:
           echo "Building mp-weixin..."
           npm run build:mp-weixin
 
-          echo "Build completed."
-          ls -la dist/build/mp-weixin/
+          echo "Build completed. Checking output..."
+          # 查找所有可能的输出目录
+          find . -type d -name "mp-weixin" 2>/dev/null | head -5
+          ls -la dist/ 2>/dev/null || echo "No dist/"
+          ls -la dist/build/ 2>/dev/null || echo "No dist/build/"
+          ls -la dist/build/mp-weixin/ 2>/dev/null || echo "No dist/build/mp-weixin/"
 
           # ═══ 上传小程序 ═══
           echo "Uploading miniprogram..."
@@ -95,7 +99,7 @@ jobs:
           printf '%s\n' "${{ secrets.WECHAT_PRIVATE_KEY }}" > /tmp/miniprogram/private.key
 
           npx miniprogram-ci upload \
-            --pp ./dist/build/mp-weixin \
+            --pp /tmp/repo/UniDormManager-UniApp/dist/build/mp-weixin \
             --pkp /tmp/miniprogram/private.key \
             --appid ${{ secrets.WECHAT_APPID }} \
             --uv 4.0.0 \
