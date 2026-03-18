@@ -282,3 +282,4 @@ MIT
 // Test 18: --no-es6 - Wed Mar 18 12:34:06 PM UTC 2026
 // CI Test 18: build-only mode - Wed Mar 18 01:17:26 PM UTC 2026
 // CI Test 19: push to branch - Wed Mar 18 01:20:18 PM UTC 2026
+// CI Test 20: trigger rebuild - Wed Mar 18 01:21:36 PM UTC 2026
