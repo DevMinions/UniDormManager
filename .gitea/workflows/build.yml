@@ -92,30 +92,61 @@ jobs:
             echo "已更新 project.config.json 中的 appid"
           fi
 
-          # 打包构建产物
-          OUTPUT_NAME="miniprogram-${VER}-${SHA}.zip"
-          cd "$MP_WEIXIN_DIR"
-          zip -r "/tmp/$OUTPUT_NAME" .
-          cd -
+          # 推送到构建分支
+          BUILD_BRANCH="build/mp-weixin"
+          cd /tmp/repo
+          
+          # 配置 git
+          git config user.email "ci@gitea.local"
+          git config user.name "Gitea CI"
+          
+          # 创建并切换到构建分支（或强制重置）
+          git checkout -B "$BUILD_BRANCH"
+          
+          # 清空分支内容
+          git rm -rf . > /dev/null 2>&1 || true
+          
+          # 复制构建产物到根目录
+          cp -r "$MP_WEIXIN_DIR"/* .
+          
+          # 创建说明文件
+          cat > README.md << EOF
+# UniDormManager Mini Program Build
+
+- **版本**: $VER
+- **Commit**: $SHA
+- **构建时间**: $(date -u '+%Y-%m-%d %H:%M:%S UTC')
+- **提交信息**: $COMMIT_MSG
+
+## 手动上传步骤
+
+1. 下载本分支代码（Download ZIP）
+2. 解压到本地目录
+3. 使用微信开发者工具打开
+4. 修改 project.config.json 中的 appid 为你自己的小程序
+5. 点击"上传"按钮
+
+EOF
+          
+          # 提交并推送
+          git add -A
+          git commit -m "Build: $VER ($SHA) - $COMMIT_MSG" || echo "No changes to commit"
+          git push -f origin "$BUILD_BRANCH"
           
           echo ""
           echo "=========================================="
-          echo "✅ 构建完成！"
+          echo "✅ 构建完成并已推送！"
           echo "=========================================="
           echo "版本: $VER ($SHA)"
           echo "提交信息: $COMMIT_MSG"
-          echo "输出文件: /tmp/$OUTPUT_NAME"
-          echo "文件大小: $(du -h /tmp/$OUTPUT_NAME | cut -f1)"
+          echo "分支: $BUILD_BRANCH"
           echo ""
           echo "📦 手动上传步骤："
-          echo "1. 下载构建产物压缩包"
-          echo "2. 解压到本地目录"
-          echo "3. 使用微信开发者工具打开"
-          echo "4. 点击'上传'按钮"
+          echo "1. 访问: https://git.adamyu.top:20443/adamyu/UniDormManager/src/branch/$BUILD_BRANCH"
+          echo "2. 点击 'Download ZIP' 下载代码"
+          echo "3. 解压到本地目录"
+          echo "4. 使用微信开发者工具打开"
+          echo "5. 修改 project.config.json 中的 appid"
+          echo "6. 点击'上传'按钮"
           echo "=========================================="
-          
-          # 列出目录内容供确认
-          ls -la "$MP_WEIXIN_DIR" | head -15
-          echo ""
-          echo "文件总数: $(find "$MP_WEIXIN_DIR" -type f | wc -l)"
         shell: sh
