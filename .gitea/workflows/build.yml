@@ -108,6 +108,15 @@ jobs:
 
           # 上传
           export PATH="$(dirname $(which node)):$PATH"
+          
+          # 检查 miniprogram-ci 版本
+          echo "=== miniprogram-ci 版本 ==="
+          npx miniprogram-ci --version
+          
+          # 设置私钥文件权限
+          chmod 600 /tmp/miniprogram/private.key
+          
+          echo "=== 开始上传 ==="
           npx miniprogram-ci upload \
             --pp "$MP_WEIXIN_DIR" \
             --pkp /tmp/miniprogram/private.key \
