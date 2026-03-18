@@ -15,14 +15,21 @@ jobs:
     outputs:
       uniapp_changed: ${{ steps.check.outputs.uniapp_changed }}
     steps:
+      - name: Clone repository
+        run: |
+          git config --global credential.helper store
+          echo "https://adamyu:${{ secrets.GIT_PASSWORD }}@git.adamyu.top:20443" > ~/.git-credentials
+          cd /tmp
+          git clone "https://git.adamyu.top:20443/adamyu/UniDormManager.git" repo
+          cd repo
+          echo "HEAD_SHA=$(git rev-parse HEAD)" >> $GITHUB_ENV
+          echo "PREV_SHA=$(git rev-parse HEAD~1)" >> $GITHUB_ENV
+
       - name: Check changed files
         id: check
         run: |
-          # 获取变更的文件列表（Gitea Action 代码已挂载到当前目录）
-          PREV_SHA=$(git rev-parse HEAD~1)
-          HEAD_SHA=$(git rev-parse HEAD)
-          CHANGED_FILES=$(git diff --name-only $PREV_SHA $HEAD_SHA)
-
+          cd /tmp/repo
+          CHANGED_FILES=$(git diff --name-only ${{ env.PREV_SHA }} ${{ env.HEAD_SHA }})
           echo "Changed files:"
           echo "$CHANGED_FILES"
 
@@ -45,11 +52,17 @@ jobs:
     container:
       image: adamyu/ci-golang-builder:1.23
     steps:
-      - name: Build and upload miniprogram
+      - name: Clone and build
         run: |
           set -e
+          # 配置 git 凭证并克隆
+          git config --global credential.helper store
+          echo "https://adamyu:${{ secrets.GIT_PASSWORD }}@git.adamyu.top:20443" > ~/.git-credentials
+          cd /tmp
+          git clone "https://git.adamyu.top:20443/adamyu/UniDormManager.git" repo
+          cd repo
 
-          # 版本信息（代码已挂载在当前目录）
+          # 版本信息
           VER=$(git describe --tags --always 2>/dev/null || echo "dev")
           SHA=$(git rev-parse --short HEAD)
           COMMIT_MSG=$(git log -1 --pretty=%B | head -1)
@@ -60,7 +73,6 @@ jobs:
 
           # ═══ 替换前端配置 ═══
           echo "Replacing API config..."
-          # 替换 production 环境的 baseURL
           sed -i 's|baseURL:.*https://api.yourdomain.com|baseURL: '"'"'https://udm.adamyu.top:20443'"'"'|' src/utils/request.js
           echo "API baseURL updated to: https://udm.adamyu.top:20443"
 
@@ -71,17 +83,14 @@ jobs:
           echo "Building mp-weixin..."
           npm run build:mp-weixin
 
-          echo "Build completed. Output:"
+          echo "Build completed."
           ls -la dist/build/mp-weixin/
 
           # ═══ 上传小程序 ═══
           echo "Uploading miniprogram..."
-
-          # 创建私钥文件
           mkdir -p /tmp/miniprogram
           printf '%s\n' "${{ secrets.WECHAT_PRIVATE_KEY }}" > /tmp/miniprogram/private.key
 
-          # 使用 npx 运行 miniprogram-ci
           npx miniprogram-ci upload \
             --pp ./dist/build/mp-weixin \
             --pkp /tmp/miniprogram/private.key \
@@ -90,7 +99,6 @@ jobs:
             --ud "$COMMIT_MSG" 2>&1
           UPLOAD_EXIT=$?
 
-          # 清理私钥
           rm -f /tmp/miniprogram/private.key
 
           if [ $UPLOAD_EXIT -eq 0 ]; then
