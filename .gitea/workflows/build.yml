@@ -33,7 +33,6 @@ jobs:
           echo "Changed files:"
           echo "$CHANGED_FILES"
 
-          # 检测 UniApp 是否变更
           if echo "$CHANGED_FILES" | grep -q "^UniDormManager-UniApp/"; then
             echo "uniapp_changed=true" >> $GITHUB_OUTPUT
             echo "✅ UniApp changed"
@@ -43,7 +42,7 @@ jobs:
           fi
 
   # ═══════════════════════════════════════════════════════════════
-  # Job 2: 构建并上传小程序（仅当 UniApp 代码变更时执行）
+  # Job 2: 构建并上传小程序
   # ═══════════════════════════════════════════════════════════════
   build-miniprogram:
     needs: detect-changes
@@ -52,95 +51,66 @@ jobs:
     container:
       image: adamyu/ci-golang-builder:1.23
     steps:
-      - name: Clone and build
+      - name: Build and upload
         run: |
           set -e
-          # 配置 git 凭证并克隆（使用内网地址）
           git config --global credential.helper store
           echo "http://openclaw:${{ secrets.GIT_PASSWORD }}@192.168.1.10:8418" > ~/.git-credentials
           cd /tmp
           git clone "http://192.168.1.10:8418/adamyu/UniDormManager.git" repo
           cd repo
 
-          # 版本信息
           VER=$(git describe --tags --always 2>/dev/null || echo "dev")
           SHA=$(git rev-parse --short HEAD)
           COMMIT_MSG=$(git log -1 --pretty=%B | head -1)
-
-          echo "Building UniApp Miniprogram: $VER ($SHA)"
+          echo "Building: $VER ($SHA)"
 
           cd UniDormManager-UniApp
 
-          # ═══ 替换前端配置 ═══
-          echo "Replacing API config..."
+          # 替换 API 配置
           sed -i "s|baseURL: 'https://api.yourdomain.com'|baseURL: 'https://udm.adamyu.top:20443'|g" src/utils/request.js
-          echo "API baseURL updated to: https://udm.adamyu.top:20443"
           grep -A2 "production:" src/utils/request.js
 
-          # ═══ 安装依赖并构建 ═══
-          echo "Installing dependencies..."
+          # 构建
           npm ci
+          export UNI_PLATFORM=mp-weixin
+          npx uni build --platform mp-weixin
 
-          echo "Building mp-weixin..."
-          # 尝试使用 npx uni 命令构建
-          if npx uni build --platform mp-weixin 2>&1; then
-            echo "✅ uni build succeeded"
-          else
-            echo "⚠️ uni build failed, trying vite directly..."
-            UNI_PLATFORM=mp-weixin NODE_ENV=production npx vite build --mode mp-weixin
-          fi
-          
-          echo "Build completed."
-          echo "Current dir: $(pwd)"
-          ls -la dist/ 2>/dev/null || echo "No dist/"
-          find dist -type d -name "*weixin*" 2>/dev/null | head -5
-
-          # 确保输出目录存在
-          if [ ! -d "dist/build/mp-weixin" ]; then
-            echo "❌ 构建失败：未找到 dist/build/mp-weixin 目录"
-            find dist -type d 2>/dev/null | head -20
+          # 查找构建输出
+          echo "=== 查找构建输出 ==="
+          find dist -type d 2>/dev/null | head -20
+          MP_WEIXIN_DIR=$(find dist -type d -name "mp-weixin" 2>/dev/null | head -1)
+          if [ -z "$MP_WEIXIN_DIR" ]; then
+            echo "❌ 未找到 mp-weixin 目录"
             exit 1
           fi
-          
-          echo "✅ 构建输出确认:"
-          ls -la dist/build/mp-weixin/
+          echo "✅ 构建输出: $MP_WEIXIN_DIR"
 
-          # ═══ 上传小程序 ═══
-          echo "Uploading miniprogram..."
-          export PATH="$(dirname $(which node)):$PATH"
-          
-          # 创建私钥文件 - 参考 engine 项目写法
+          # 准备私钥
           mkdir -p /tmp/miniprogram
           printf '%s\n' "${{ secrets.WECHAT_PRIVATE_KEY }}" > /tmp/miniprogram/private.key
           
-          echo "=== 私钥文件检查 ==="
-          echo "文件大小: $(wc -c < /tmp/miniprogram/private.key) bytes"
-          echo "文件行数: $(wc -l < /tmp/miniprogram/private.key) lines"
-          head -3 /tmp/miniprogram/private.key
-          
-          # 如果私钥看起来是 base64 编码的（单行且以 LS0t 开头），解码它
-          if [ "$(wc -l < /tmp/miniprogram/private.key)" -eq 1 ] && head -1 /tmp/miniprogram/private.key | grep -q "^LS0t"; then
-            echo "检测到 base64 编码的私钥，正在解码..."
+          # 解码 base64 私钥
+          if [ "$(wc -l < /tmp/miniprogram/private.key)" -eq 1 ] && grep -q "^LS0t" /tmp/miniprogram/private.key; then
+            echo "解码 base64 私钥..."
             base64 -d /tmp/miniprogram/private.key > /tmp/miniprogram/private.key.decoded
             mv /tmp/miniprogram/private.key.decoded /tmp/miniprogram/private.key
-            echo "解码后文件大小: $(wc -c < /tmp/miniprogram/private.key) bytes"
-            echo "解码后文件行数: $(wc -l < /tmp/miniprogram/private.key) lines"
           fi
+          
+          echo "私钥行数: $(wc -l < /tmp/miniprogram/private.key)"
 
+          # 上传
+          export PATH="$(dirname $(which node)):$PATH"
           npx miniprogram-ci upload \
-            --pp /tmp/repo/UniDormManager-UniApp/dist/build/mp-weixin \
+            --pp "$MP_WEIXIN_DIR" \
             --pkp /tmp/miniprogram/private.key \
             --appid ${{ secrets.WECHAT_APPID }} \
             --uv 4.0.0 \
-            --ud "$COMMIT_MSG" 2>&1
-          UPLOAD_EXIT=$?
+            --ud "$COMMIT_MSG" 2>&1 || {
+              echo "⚠️ 上传失败，检查 IP 白名单和 AppID 配置"
+              exit 1
+            }
 
           rm -f /tmp/miniprogram/private.key
-
-          if [ $UPLOAD_EXIT -eq 0 ]; then
-            echo "✅ 小程序上传完成"
-          else
-            echo "⚠️ 小程序上传失败"
-            exit 1
-          fi
+          echo "✅ 小程序上传完成"
         shell: sh
