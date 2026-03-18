@@ -18,7 +18,7 @@ jobs:
       - name: Clone repository
         run: |
           git config --global credential.helper store
-          echo "https://adamyu:${{ secrets.GIT_PASSWORD }}@git.adamyu.top:20443" > ~/.git-credentials
+          echo "https://openclaw:${{ secrets.GIT_PASSWORD }}@git.adamyu.top:20443" > ~/.git-credentials
           cd /tmp
           git clone "https://git.adamyu.top:20443/adamyu/UniDormManager.git" repo
           cd repo
@@ -57,7 +57,7 @@ jobs:
           set -e
           # 配置 git 凭证并克隆
           git config --global credential.helper store
-          echo "https://adamyu:${{ secrets.GIT_PASSWORD }}@git.adamyu.top:20443" > ~/.git-credentials
+          echo "https://openclaw:${{ secrets.GIT_PASSWORD }}@git.adamyu.top:20443" > ~/.git-credentials
           cd /tmp
           git clone "https://git.adamyu.top:20443/adamyu/UniDormManager.git" repo
           cd repo
