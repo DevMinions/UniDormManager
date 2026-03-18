@@ -279,3 +279,4 @@ MIT
 // Test 15: retry - Wed Mar 18 12:22:30 PM UTC 2026
 // Test 16: fix manifest appid - Wed Mar 18 12:28:55 PM UTC 2026
 // Test 17: fix project.config.json appid - Wed Mar 18 12:31:30 PM UTC 2026
+// Test 18: --no-es6 - Wed Mar 18 12:34:06 PM UTC 2026
