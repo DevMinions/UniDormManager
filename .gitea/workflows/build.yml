@@ -1,4 +1,4 @@
-name: Build and Deploy
+name: Build Miniprogram
 
 on:
   push:
@@ -42,7 +42,7 @@ jobs:
           fi
 
   # ═══════════════════════════════════════════════════════════════
-  # Job 2: 构建并上传小程序
+  # Job 2: 构建小程序（输出压缩包供手动下载）
   # ═══════════════════════════════════════════════════════════════
   build-miniprogram:
     needs: detect-changes
@@ -51,7 +51,7 @@ jobs:
     container:
       image: adamyu/ci-golang-builder:1.23
     steps:
-      - name: Build and upload
+      - name: Build miniprogram
         run: |
           set -e
           git config --global credential.helper store
@@ -67,11 +67,9 @@ jobs:
 
           cd UniDormManager-UniApp
 
-          # 替换 API 配置和 AppID
+          # 替换 API 配置
           sed -i "s|baseURL: 'https://api.yourdomain.com'|baseURL: 'https://udm.adamyu.top:20443'|g" src/utils/request.js
-          sed -i 's|"appid": "wxXXXXXXXXXXXXXXXX"|"appid": "${{ secrets.WECHAT_APPID }}"|g' src/manifest.json
           echo "API baseURL updated to: https://udm.adamyu.top:20443"
-          echo "AppID set to: ${{ secrets.WECHAT_APPID }}"
 
           # 构建
           npm ci
@@ -87,65 +85,37 @@ jobs:
             exit 1
           fi
           echo "✅ 构建输出: $MP_WEIXIN_DIR"
-          
-          # 替换构建输出中的 appid
-          sed -i 's|"appid": "wxXXXXXXXXXXXXXXXX"|"appid": "${{ secrets.WECHAT_APPID }}"|g' "$MP_WEIXIN_DIR/project.config.json"
-          echo "已更新 project.config.json 中的 appid"
-          grep '"appid"' "$MP_WEIXIN_DIR/project.config.json"
 
-          # 准备私钥
-          mkdir -p /tmp/miniprogram
-          printf '%s\n' "${{ secrets.WECHAT_PRIVATE_KEY }}" > /tmp/miniprogram/private.key
-          
-          # 解码 base64 私钥
-          if [ "$(wc -l < /tmp/miniprogram/private.key)" -eq 1 ] && grep -q "^LS0t" /tmp/miniprogram/private.key; then
-            echo "解码 base64 私钥..."
-            base64 -d /tmp/miniprogram/private.key > /tmp/miniprogram/private.key.decoded
-            mv /tmp/miniprogram/private.key.decoded /tmp/miniprogram/private.key
+          # 替换 appid（如果需要）
+          if [ -n "${{ secrets.WECHAT_APPID }}" ]; then
+            sed -i "s|\"appid\": \"wxXXXXXXXXXXXXXXXX\"|\"appid\": \"${{ secrets.WECHAT_APPID }}\"|g" "$MP_WEIXIN_DIR/project.config.json"
+            echo "已更新 project.config.json 中的 appid"
           fi
-          
-          echo "私钥行数: $(wc -l < /tmp/miniprogram/private.key)"
-          echo "AppID: ${{ secrets.WECHAT_APPID }}"
-          
-          # 验证私钥格式
-          echo "=== 私钥前3行 ==="
-          head -3 /tmp/miniprogram/private.key
-          echo "=== 私钥后1行 ==="
-          tail -1 /tmp/miniprogram/private.key
 
-          # 上传
-          export PATH="$(dirname $(which node)):$PATH"
+          # 打包构建产物
+          OUTPUT_NAME="miniprogram-${VER}-${SHA}.zip"
+          cd "$MP_WEIXIN_DIR"
+          zip -r "/tmp/$OUTPUT_NAME" .
+          cd -
           
-          # 检查 miniprogram-ci 版本
-          echo "=== miniprogram-ci 版本 ==="
-          npx miniprogram-ci --version
+          echo ""
+          echo "=========================================="
+          echo "✅ 构建完成！"
+          echo "=========================================="
+          echo "版本: $VER ($SHA)"
+          echo "提交信息: $COMMIT_MSG"
+          echo "输出文件: /tmp/$OUTPUT_NAME"
+          echo "文件大小: $(du -h /tmp/$OUTPUT_NAME | cut -f1)"
+          echo ""
+          echo "📦 手动上传步骤："
+          echo "1. 下载构建产物压缩包"
+          echo "2. 解压到本地目录"
+          echo "3. 使用微信开发者工具打开"
+          echo "4. 点击'上传'按钮"
+          echo "=========================================="
           
-          # 设置私钥文件权限
-          chmod 600 /tmp/miniprogram/private.key
-          
-          echo "=== 开始上传 ==="
-          # 设置超时和重试
-          export NODE_OPTIONS="--dns-result-order=ipv4first"
-          
-          # 尝试上传，最多重试3次
-          for i in 1 2 3; do
-            echo "尝试上传第 $i 次..."
-            # 使用 --no-es6 参数避免 ES6 转换问题
-            if npx miniprogram-ci upload \
-              --pp "$MP_WEIXIN_DIR" \
-              --pkp /tmp/miniprogram/private.key \
-              --appid ${{ secrets.WECHAT_APPID }} \
-              --uv 4.0.0 \
-              --ud "$COMMIT_MSG" \
-              --no-es6 2>&1; then
-              echo "✅ 上传成功"
-              break
-            else
-              echo "⚠️ 上传失败，等待重试..."
-              sleep 10
-            fi
-          done
-
-          rm -f /tmp/miniprogram/private.key
-          echo "✅ 小程序上传完成"
+          # 列出目录内容供确认
+          ls -la "$MP_WEIXIN_DIR" | head -15
+          echo ""
+          echo "文件总数: $(find "$MP_WEIXIN_DIR" -type f | wc -l)"
         shell: sh
