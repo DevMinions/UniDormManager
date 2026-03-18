@@ -32,8 +32,10 @@ jobs:
           CHANGED_FILES=$(git diff --name-only ${{ env.PREV_SHA }} ${{ env.HEAD_SHA }})
           echo "Changed files:"
           echo "$CHANGED_FILES"
+          echo ""
 
-          if echo "$CHANGED_FILES" | grep -q "^UniDormManager-UniApp/"; then
+          # 检测 UniApp 是否变更（包括 src 目录下的任何文件）
+          if echo "$CHANGED_FILES" | grep -qE "^UniDormManager-UniApp/|^UniDormManager-UniApp$"; then
             echo "uniapp_changed=true" >> $GITHUB_OUTPUT
             echo "✅ UniApp changed"
           else
@@ -42,11 +44,9 @@ jobs:
           fi
 
   # ═══════════════════════════════════════════════════════════════
-  # Job 2: 构建小程序（输出压缩包供手动下载）
+  # Job 2: 构建小程序（推送到 build/mp-weixin 分支）
   # ═══════════════════════════════════════════════════════════════
   build-miniprogram:
-    needs: detect-changes
-    if: ${{ needs.detect-changes.outputs.uniapp_changed == 'true' }}
     runs-on: ubuntu-latest
     container:
       image: adamyu/ci-golang-builder:1.23
