@@ -110,7 +110,24 @@ jobs:
           export PATH="$(dirname $(which node)):$PATH"
           
           mkdir -p /tmp/miniprogram
-          printf '%s\n' "${{ secrets.WECHAT_PRIVATE_KEY }}" > /tmp/miniprogram/private.key
+          
+          # 写入私钥 - 从 Secret 读取并确保格式正确
+          echo "${{ secrets.WECHAT_PRIVATE_KEY }}" > /tmp/miniprogram/private.key
+          
+          # 如果私钥是 base64 编码的，解码它
+          if head -1 /tmp/miniprogram/private.key | grep -q "^LS0tLS1"; then
+            echo "检测到 base64 编码的私钥，正在解码..."
+            base64 -d /tmp/miniprogram/private.key > /tmp/miniprogram/private.key.decoded
+            mv /tmp/miniprogram/private.key.decoded /tmp/miniprogram/private.key
+          fi
+
+          # 验证私钥格式
+          echo "=== 私钥文件检查 ==="
+          echo "文件大小: $(wc -c < /tmp/miniprogram/private.key) bytes"
+          echo "文件行数: $(wc -l < /tmp/miniprogram/private.key) lines"
+          head -2 /tmp/miniprogram/private.key
+          echo "..."
+          tail -1 /tmp/miniprogram/private.key
 
           npx miniprogram-ci upload \
             --pp /tmp/repo/UniDormManager-UniApp/dist/build/mp-weixin \
