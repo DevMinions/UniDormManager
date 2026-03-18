@@ -67,9 +67,11 @@ jobs:
 
           cd UniDormManager-UniApp
 
-          # 替换 API 配置
+          # 替换 API 配置和 AppID
           sed -i "s|baseURL: 'https://api.yourdomain.com'|baseURL: 'https://udm.adamyu.top:20443'|g" src/utils/request.js
-          grep -A2 "production:" src/utils/request.js
+          sed -i 's|"appid": "wxXXXXXXXXXXXXXXXX"|"appid": "${{ secrets.WECHAT_APPID }}"|g' src/manifest.json
+          echo "API baseURL updated to: https://udm.adamyu.top:20443"
+          echo "AppID set to: ${{ secrets.WECHAT_APPID }}"
 
           # 构建
           npm ci
