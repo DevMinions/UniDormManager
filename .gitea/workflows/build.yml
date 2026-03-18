@@ -2,20 +2,60 @@ name: Build Miniprogram
 
 on:
   push:
-    branches: [dev, main, master]
+    branches: [main, master, dev]
 
 jobs:
-  build:
+  # ═══════════════════════════════════════════════════════════════
+  # Job 1: 检测变更的文件路径
+  # ═══════════════════════════════════════════════════════════════
+  detect-changes:
+    runs-on: ubuntu-latest
+    container:
+      image: adamyu/ci-golang-builder:1.23
+    outputs:
+      uniapp_changed: ${{ steps.check.outputs.uniapp_changed }}
+    steps:
+      - name: Clone repository
+        run: |
+          git config --global credential.helper store
+          echo "http://openclaw:${{ secrets.GIT_PASSWORD }}@192.168.1.10:8418" > ~/.git-credentials
+          cd /tmp
+          git clone "http://192.168.1.10:8418/adamyu/UniDormManager.git" repo
+          cd repo
+          echo "HEAD_SHA=$(git rev-parse HEAD)" >> $GITHUB_ENV
+          echo "PREV_SHA=$(git rev-parse HEAD~1)" >> $GITHUB_ENV
+
+      - name: Check changed files
+        id: check
+        run: |
+          cd /tmp/repo
+          CHANGED_FILES=$(git diff --name-only ${{ env.PREV_SHA }} ${{ env.HEAD_SHA }})
+          echo "Changed files:"
+          echo "$CHANGED_FILES"
+
+          if echo "$CHANGED_FILES" | grep -q "^UniDormManager-UniApp/"; then
+            echo "uniapp_changed=true" >> $GITHUB_OUTPUT
+            echo "✅ UniApp changed"
+          else
+            echo "uniapp_changed=false" >> $GITHUB_OUTPUT
+            echo "⏭️ UniApp unchanged"
+          fi
+
+  # ═══════════════════════════════════════════════════════════════
+  # Job 2: 构建小程序（输出压缩包供手动下载）
+  # ═══════════════════════════════════════════════════════════════
+  build-miniprogram:
+    needs: detect-changes
+    if: ${{ needs.detect-changes.outputs.uniapp_changed == 'true' }}
     runs-on: ubuntu-latest
     container:
       image: adamyu/ci-golang-builder:1.23
     steps:
-      - name: Build and push
+      - name: Build miniprogram
         run: |
           set -e
           git config --global credential.helper store
           echo "http://openclaw:${{ secrets.GIT_PASSWORD }}@192.168.1.10:8418" > ~/.git-credentials
-          
           cd /tmp
           git clone "http://192.168.1.10:8418/adamyu/UniDormManager.git" repo
           cd repo
@@ -29,6 +69,7 @@ jobs:
 
           # 替换 API 配置
           sed -i "s|baseURL: 'https://api.yourdomain.com'|baseURL: 'https://udm.adamyu.top:20443'|g" src/utils/request.js
+          echo "API baseURL updated to: https://udm.adamyu.top:20443"
 
           # 构建
           npm ci
@@ -36,29 +77,58 @@ jobs:
           npx uni build --platform mp-weixin
 
           # 查找构建输出
+          echo "=== 查找构建输出 ==="
+          find dist -type d 2>/dev/null | head -20
           MP_WEIXIN_DIR=$(find dist -type d -name "mp-weixin" 2>/dev/null | head -1)
-          echo "Build output: $MP_WEIXIN_DIR"
+          if [ -z "$MP_WEIXIN_DIR" ]; then
+            echo "❌ 未找到 mp-weixin 目录"
+            exit 1
+          fi
+          echo "✅ 构建输出: $MP_WEIXIN_DIR"
+
+          # 替换 appid（如果需要）
+          if [ -n "${{ secrets.WECHAT_APPID }}" ]; then
+            sed -i "s|\"appid\": \"wxXXXXXXXXXXXXXXXX\"|\"appid\": \"${{ secrets.WECHAT_APPID }}\"|g" "$MP_WEIXIN_DIR/project.config.json"
+            echo "已更新 project.config.json 中的 appid"
+          fi
 
           # 推送到构建分支
+          BUILD_BRANCH="build/mp-weixin"
           cd /tmp/repo
+          
+          # 配置 git
           git config user.email "ci@gitea.local"
           git config user.name "Gitea CI"
           
-          git checkout -B build/mp-weixin
+          # 创建并切换到构建分支
+          git checkout -B "$BUILD_BRANCH"
+          
+          # 清空分支内容
           git rm -rf . > /dev/null 2>&1 || true
+          
+          # 复制构建产物到根目录
           cp -r "$MP_WEIXIN_DIR"/* .
           
-          cat > README.md << EOF
-# Build $VER ($SHA)
-- Commit: $COMMIT_MSG
-- Time: $(date)
-
-Download ZIP and upload with WeChat DevTools.
-EOF
+          # 创建说明文件
+          echo "# UniDormManager Build" > README.md
+          echo "" >> README.md
+          echo "- Version: $VER" >> README.md
+          echo "- Commit: $SHA" >> README.md
+          echo "- Message: $COMMIT_MSG" >> README.md
+          echo "- Time: $(date)" >> README.md
+          echo "" >> README.md
+          echo "Download ZIP and upload with WeChat DevTools" >> README.md
           
+          # 提交并推送
           git add -A
-          git commit -m "Build: $VER" || echo "No changes"
-          git push -f origin build/mp-weixin
+          git commit -m "Build: $VER ($SHA)" || echo "No changes"
+          git push -f origin "$BUILD_BRANCH"
           
-          echo "✅ Done: https://git.adamyu.top:20443/adamyu/UniDormManager/src/branch/build/mp-weixin"
+          echo ""
+          echo "=========================================="
+          echo "✅ 构建完成并已推送！"
+          echo "=========================================="
+          echo "分支: $BUILD_BRANCH"
+          echo "链接: https://git.adamyu.top:20443/adamyu/UniDormManager/src/branch/$BUILD_BRANCH"
+          echo "=========================================="
         shell: sh
