@@ -98,6 +98,13 @@ jobs:
           fi
           
           echo "私钥行数: $(wc -l < /tmp/miniprogram/private.key)"
+          echo "AppID: ${{ secrets.WECHAT_APPID }}"
+          
+          # 验证私钥格式
+          echo "=== 私钥前3行 ==="
+          head -3 /tmp/miniprogram/private.key
+          echo "=== 私钥后1行 ==="
+          tail -1 /tmp/miniprogram/private.key
 
           # 上传
           export PATH="$(dirname $(which node)):$PATH"
