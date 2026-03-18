@@ -16,3 +16,4 @@ export function createApp() {
     pinia,
   }
 }
+// CI Trigger
