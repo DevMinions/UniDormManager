@@ -7,6 +7,79 @@
 
 ---
 
+## [0.2.0] - 2026-05-28
+
+第二个 GitHub 开源发布。本版集中补齐对外可观察性与工程能力。
+
+### ✨ 新增
+
+- **文件上传** `POST /api/upload` — multipart,5MiB 限制,MIME 嗅探,image+pdf 白名单;`/uploads/<date>/<uuid>.<ext>` + 静态 serve
+- **审计日志** `audit_logs` 表 + middleware 自动记录所有写操作 + `GET /api/audit-logs` 分页查询
+- **SSE 实时流** `GET /api/audit-logs/stream` — 内置 broker,fetch+ReadableStream 消费,断开自动 unsubscribe
+- **周期任务** robfig/cron/v3 + `cleanup-expired-tokens`(每日 03:00) + `scan-late-returns`(每日 02:00) + `GET /api/scheduler/jobs` 查注册任务
+- **时序统计** `GET /api/statistics/repairs-by-day?days=N` — PostgreSQL `generate_series` 补 N 天连续无 gap
+- **Web Dashboard 报修趋势** LineChart 三色(新增/已完成/待处理)
+- **Web Dashboard 实时审计流** 面板,实时显示最近 10 条写操作
+- **Prometheus 业务指标** `audit_events_total{method,status_class}` / `scheduler_job_runs_total{name,result}` / `sse_subscribers`
+- **Render Blueprint** `render.yaml` — 一键 deploy PostgreSQL + 后端 + 前端
+- **英文 README** `README.en.md` + 顶部语言切换
+- **测试 harness** `tests/audit_uniapp.js` + `tests/upload_smoke.py`(主仓库 audit_api 从 36 → 38 项)
+
+### 🔧 改进
+
+- `PaginatedRequest` 删 `binding:"min=1"`,前端不传分页参数也走默认 1/10(不再 400)
+- Web bundle code-split:react / recharts / lucide / gemini 各自 chunk,最大 386KB < 500KB
+- `hooks/usePaginatedData.ts` 改静态 import api,消除 rollup dynamic-import 警告
+- CI `deploy-staging/production` 占位 job → `deploy-render`(workflow_dispatch 手动触发 + Render hook)
+- `actions/checkout@v6` · `setup-go@v6` · `codecov@v6` · `build-push-action@v7` · `codeql-action@v4` 升级
+
+### 🗑️ 移除
+
+- `UniDormManagerMini` / `UniDormManager-UniApp` 客户端 → 拆到 [DevMinions/UniDormManager-Mobile](https://github.com/DevMinions/UniDormManager-Mobile)
+- `pages/RoomManagement_original.tsx` / `Students_original.tsx`(死代码备份)
+- `docs/` 16 个内部诊断/重复/过时文档(API_DEBUG_GUIDE, FIX_STATUS_REPORT, TEST_REPORT, MIGRATION_GUIDE, ...)
+- `models/ggml-base.bin` 141MB 历史 blob(用 git-filter-repo 从历史彻底清除)
+- 全部 `admin123` 硬编码、私服 IP / Gitea URL / moltbot 本机路径
+
+### 🐛 修复
+
+- **B1** `rooms.floor` 列缺失(schema 与代码不符)
+- **B2** `students.building` 列缺失
+- **B3** `inspections` 表未由自动建表创建
+- **B4** store 吞 DB 错误返空切片(GetAll* 签名加 error)
+- **B5** RBAC 缺 6 个 permissions(access_logs/late_returns/room_swaps)
+- **B6** `BuildInspectionQuery` 6 个 filter 分支重复 append 参数
+- **B6b** `BuildRoomQuery` 同源 capacity filter 重复 append
+- Mobile UniApp:删 messages 模块 + 修 late-returns filter + notices computed import
+- Web ENV: `VITE_API_URL` 拼接 / Docker 镜像 lowercase / Dockerfile 路径
+- CI 链上一段时间内的 Docker tag 大小写 / Go 版本不匹配 / publish job buildx 等
+
+### 🔐 安全
+
+- 默认 admin 密码硬编码 `admin123` 移除;首启 `crypto/rand` 16 字符随机密码 + 一次性日志输出(可 `ADMIN_INITIAL_PASSWORD` 预设)
+- `cmd/init_admin` CLI 强制 `>= 8 字符 password` 参数,无默认
+- GitHub Private Vulnerability Reporting 启用
+- `main` 分支 ruleset:防 force push + 防 deletion(允许直推,适合单人维护)
+- `SECURITY.md` / `CODE_OF_CONDUCT.md` / Issue & PR templates / dependabot.yml 加入
+
+---
+
+## [0.1.0] - 2026-05-28
+
+首次 GitHub 开源。从 in-progress 内部分支整理成可对外发布的 v0.1.0。
+
+### ✨ 新增
+
+- Go 后端(Gin + pgx + PostgreSQL 16 + 可选 Redis)+ React 19 Web 管理端 + Docker Compose
+- 11 个业务域,~60 API:auth / users / roles / permissions / students / buildings / rooms / repairs / notices / dashboard / inspections / room-swaps / access-logs / late-returns
+- RBAC 权限管理(系统管理员通配所有权限)
+- 审计回归 harness:`tests/audit_api.py` (36 项) + `tests/audit_web.js` (17 项)
+- 主仓库 OSS 标准:LICENSE (MIT) / SECURITY / CODE_OF_CONDUCT / dependabot.yml / Issue & PR Templates / CI/CD Pipeline
+
+详见 GitHub release: https://github.com/DevMinions/UniDormManager/releases/tag/v0.1.0
+
+---
+
 ## [1.1.0] - 2024-03-16
 
 ### 🚀 二期更新
