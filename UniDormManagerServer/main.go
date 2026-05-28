@@ -90,6 +90,7 @@ func main() {
 	roomSwapHandler := handlers.NewRoomSwapHandler(s)
 	accessLogHandler := handlers.NewAccessLogHandler(s)
 	lateReturnHandler := handlers.NewLateReturnHandler(s)
+	uploadHandler := handlers.NewUploadHandler()
 
 	// 创建 Gin 路由引擎
 	r := gin.New()
@@ -112,6 +113,9 @@ func main() {
 	api := r.Group("/api")
 	api.Use(middleware.AuthMiddleware()) // 所有 API 都需要认证
 	{
+		// 通用文件上传（任意登录用户）
+		api.POST("/upload", uploadHandler.UploadFile)
+
 		// 用户管理路由（需要管理员权限）
 		users := api.Group("/users")
 		users.Use(middleware.RequirePermission("users:read"))
@@ -262,6 +266,9 @@ func main() {
 
 	// 添加监控端点 (Prometheus metrics)
 	r.GET("/metrics", gin.WrapH(promhttp.Handler()))
+
+	// 静态文件服务（上传产物）
+	r.Static("/uploads", "./uploads")
 
 	// 启动后台任务：定期更新系统指标
 	go func() {
