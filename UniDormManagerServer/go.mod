@@ -1,6 +1,6 @@
 module unidorm-manager-server
 
-go 1.23.0
+go 1.25.0
 
 require (
 	github.com/gin-gonic/gin v1.10.1
@@ -11,7 +11,7 @@ require (
 	github.com/redis/go-redis/v9 v9.17.2
 	github.com/sirupsen/logrus v1.9.3
 	github.com/stretchr/testify v1.11.1
-	golang.org/x/crypto v0.40.0
+	golang.org/x/crypto v0.52.0
 	gopkg.in/natefinch/lumberjack.v2 v2.2.1
 )
 
@@ -50,10 +50,10 @@ require (
 	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect
 	github.com/ugorji/go/codec v1.3.0 // indirect
 	golang.org/x/arch v0.20.0 // indirect
-	golang.org/x/net v0.42.0 // indirect
-	golang.org/x/sync v0.16.0 // indirect
-	golang.org/x/sys v0.35.0 // indirect
-	golang.org/x/text v0.27.0 // indirect
+	golang.org/x/net v0.54.0 // indirect
+	golang.org/x/sync v0.20.0 // indirect
+	golang.org/x/sys v0.45.0 // indirect
+	golang.org/x/text v0.37.0 // indirect
 	google.golang.org/protobuf v1.36.9 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
