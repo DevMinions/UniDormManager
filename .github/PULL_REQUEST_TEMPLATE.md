@@ -23,10 +23,8 @@
 
 <!-- 列出运行过的检查；越具体越好 -->
 
-- [ ] `cd UniDormManagerServer && go test ./...` 全绿
-- [ ] `cd UniDormManagerWeb && npm run test:run` 全绿
-- [ ] `python3 tests/audit_api.py` 不退化（35+/36）
-- [ ] `node tests/audit_web.js` 不退化（17/17）
+- [ ] `make test` 全绿(go test + vitest)
+- [ ] `make audit` 全绿(105 项 E2E baseline:audit_api 38/38 · audit_web 17/17 · audit_web_crud 14/14 · audit_web_crud_students 10/10 · audit_web_crud_rooms 13/13 · audit_web_workflow_repairs 13/13)
 - [ ] 手动验证关键路径:
 
 ## Checklist

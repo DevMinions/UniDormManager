@@ -2,9 +2,9 @@
 
 ## Supported Versions / 受支持版本
 
-Only the latest commit on the default branch receives security updates.
+Only the latest commit on the default branch (`main`) receives security updates.
 
-只有默认分支（`dev` / `master`）的最新 commit 会接收安全更新。
+只有默认分支（`main`）的最新 commit 会接收安全更新。
 
 ## Reporting a Vulnerability / 报告漏洞
 
