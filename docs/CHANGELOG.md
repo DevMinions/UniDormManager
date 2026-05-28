@@ -7,6 +7,24 @@
 
 ---
 
+## [0.2.6] - 2026-05-28
+
+仅文档,无代码 / schema 变更。可直接覆盖 v0.2.5 部署。
+
+### 📚 文档
+
+- **DEVELOPMENT_GUIDE.md 重写** 567 → 99 行(-83%)。原文档是 UniApp 时代(Vue 3)残留:22 处 Vue / 0 处 React 引用,vue eslint config / `Vue.volar` 等会误导贡献者。新版聚焦项目专属约定(Backend 三层 / 错误处理 / Schema IF NOT EXISTS / RBAC 同步 / 审计自动捕获 / Frontend services 唯一入口 / Status 大写约定 / Test 必须项表格 / E2E 4 个踩坑)
+- **DEPLOYMENT.md 重写** 581 → 220 行(-62%)。原文档 v0.0.x 时代:18 处 MySQL / 0 处 PostgreSQL / 含 `npm run build:h5`(UniApp H5 模式,已不存在)— 按它部署的人会装 MySQL 完全跑不通。新版三条实际路径(Docker Compose / Render Blueprint / Self-host systemd+Nginx)+ env vars 表格 + 升级流程 + 备份恢复 + 故障排查
+- **删 3 个 Mini app 时代孤儿文档**(共 1244 行):
+  - `DESIGN_SYSTEM_v3.md` — '宿舍管理小程序 / 温暖陶土色 / 有机生物亲和',跟当前 Web Tailwind indigo/slate 风格完全不符
+  - `ROLE_BASED_DESIGN.md` — '角色化首页设计',文件结构示例是 `pages/index/index.vue`(UniApp)
+  - `USER_MANUAL.md` — 用户手册第一句 '打开微信小程序,搜索宿舍管理系统'
+- 同步删 README / DEVELOPMENT_GUIDE / ARCHITECTURE 对上述 3 个文件的 5 处引用
+
+docs/ 从 10 → 7,全部内容跟当前实现一致,无 v0.1.0 前的小程序时代残留。
+
+---
+
 ## [0.2.5] - 2026-05-28
 
 仅文档(无代码 / schema 变更),可直接覆盖 v0.2.4 部署。
