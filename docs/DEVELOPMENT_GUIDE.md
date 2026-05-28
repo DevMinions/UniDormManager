@@ -96,4 +96,3 @@ React `<input value={state} onChange={...}>` 是 controlled component。e2e 自�
 - [Architecture](ARCHITECTURE.md) — C4 + 关键流程
 - [API reference](API.md)
 - [Database init](DATABASE_INIT.md) — 自动建表 / 种子数据
-- [RBAC design](ROLE_BASED_DESIGN.md)

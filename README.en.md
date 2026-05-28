@@ -97,7 +97,7 @@ Render Free tier sleeps after 15min idle (~30s cold start); the PostgreSQL trial
 - [Architecture](docs/ARCHITECTURE.md) — C4 container view, backend layering, key flow Mermaid diagrams
 - [API reference](docs/API.md) — every endpoint with request/response examples
 - [Deployment](docs/DEPLOYMENT.md) · [Docker guide](docs/DOCKER.md) · [Database init](docs/DATABASE_INIT.md)
-- [Development guidelines](docs/DEVELOPMENT_GUIDE.md) · [User manual](docs/USER_MANUAL.md) · [RBAC design](docs/ROLE_BASED_DESIGN.md)
+- [Development guidelines](docs/DEVELOPMENT_GUIDE.md) — Backend / frontend conventions + E2E pitfalls
 - [Changelog](docs/CHANGELOG.md) · [Security policy](SECURITY.md) · [Contributing](CONTRIBUTING.md)
 
 ## Development

@@ -198,7 +198,7 @@ sequenceDiagram
     end
 ```
 
-权限模型详见 [RBAC design](ROLE_BASED_DESIGN.md)。
+权限模型在数据库 `permissions` / `role_permissions` / `roles` 三表 + `init_auth_data.go` 种子数据;`role-system-admin` 通过 wildcard `INSERT ... SELECT FROM permissions` 自动包含所有 permission。新加 `RequirePermission("foo:bar")` 时必须同步加 `perm-foo-bar` 行。
 
 ---
 
@@ -253,4 +253,3 @@ flowchart LR
 - [API 接口文档](API.md) — 含 v0.2.0 新增接口
 - [部署](DEPLOYMENT.md)
 - [开发规范](DEVELOPMENT_GUIDE.md)
-- [角色权限设计](ROLE_BASED_DESIGN.md)
