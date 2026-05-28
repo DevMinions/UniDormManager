@@ -127,4 +127,4 @@ Commit messages use conventional commits in Chinese or English: `feat:`, `fix:`,
 
 - The repository was open-sourced from a private monorepo that also contained a WeChat Mini Program and a UniApp client; both were removed before publication because they were incomplete. Git history retains them if you need to reference past work.
 - The audit report at `docs/AUDIT_REPORT_2026-05-28.md` and the harnesses at `tests/audit_api.py` / `tests/audit_web.js` are the source of truth for "what works"; keep them green when changing handlers or schemas.
-- Go code should follow the conventions in `.cursor/rules/golang.mdc` (if present): use standard library patterns, proper error handling, and input validation.
+- Go code: use standard library patterns where they fit, proper error handling (return `error`, don't swallow), and input validation via `c.ShouldBindJSON` / validator tags.
