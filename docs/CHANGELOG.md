@@ -7,6 +7,19 @@
 
 ---
 
+## [0.2.5] - 2026-05-28
+
+仅文档(无代码 / schema 变更),可直接覆盖 v0.2.4 部署。
+
+### 📚 文档
+
+- **README.md / README.en.md 重写** 按 GitHub 主流极简标准(参考 Tailwind / Prisma / Next.js):246/267 → 151/151 行(-39% / -44%)。顶部 hero(单图)+ 6 个无 emoji feature bullet 体现 RBAC / 审计 SSE / Grafana / 105 项 baseline / 一键部署。Tech Stack 表格、Quick Start 单 path、截图收成 `<details>` 折叠。删 "提交规范"(已在 CONTRIBUTING)/ "反馈" / "最后更新" 过时元数据
+- **CONTRIBUTING.md 重写** 170 → 97 行(-43%)。之前描述的 `feature/* → dev → master` 工作流跟实际仓库不符(只有 `main`,历史全是 PR-to-main)。新版按 GitHub 主流(类似 React / Vue):Code of Conduct 链 / Issue 报告三入口 / Submitting Changes 4 步(fork → dev+test → commit → PR) / 强约束 `make test` + `make audit` 双绿 / Conventional Commits / Style / License
+- **SECURITY.md** 默认分支从过时的 `dev / master` 改为实际 `main`
+- **PULL_REQUEST_TEMPLATE.md** 验证清单同步当前 baseline:`make test` + `make audit`(105 项明细),替换过时的 `audit_api.py 35+/36`
+
+---
+
 ## [0.2.4] - 2026-05-28
 
 ### 🛠 工程
