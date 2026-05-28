@@ -76,3 +76,7 @@ uploads/
 *.bak
 *.backup
 Thumbs.db
+
+# ---> 工具状态文件（非项目代码）
+.openclaw/
+.claude/settings.local.json

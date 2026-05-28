@@ -6,17 +6,18 @@
 import { useUserStore } from '@/store/modules/user'
 import { useAppStore } from '@/store/modules/app'
 
-// 环境配置
+// 环境配置（baseURL 优先取构建时注入的 VITE_API_URL，缺省回退本机 8080）
+// 部署/开发请在 .env 中设置 VITE_API_URL，例如：VITE_API_URL=http://localhost:8080
 const ENV = {
   development: {
-    baseURL: 'http://192.168.1.36:8080'
+    baseURL: import.meta.env?.VITE_API_URL || 'http://localhost:8080'
   },
   production: {
-    baseURL: 'https://api.yourdomain.com'
+    baseURL: import.meta.env?.VITE_API_URL || 'http://localhost:8080'
   }
 }
 
-const CURRENT_ENV = 'development'
+const CURRENT_ENV = import.meta.env?.MODE === 'production' ? 'production' : 'development'
 const BASE_URL = ENV[CURRENT_ENV].baseURL
 const TIMEOUT = 30000
 

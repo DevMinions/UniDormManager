@@ -2,8 +2,11 @@ package database
 
 import (
 	"context"
+	"crypto/rand"
+	"encoding/base64"
 	"fmt"
 	"log"
+	"os"
 
 	"unidorm-manager-server/auth"
 	"unidorm-manager-server/config"
@@ -293,16 +296,26 @@ func initDefaultAdmin(ctx context.Context) error {
 		return nil
 	}
 
-	// 生成密码哈希（admin123）
-	passwordHash, err := auth.HashPassword("admin123")
+	// 决定首启密码：优先用环境变量 ADMIN_INITIAL_PASSWORD；否则用 crypto/rand 生成 16 字符随机串。
+	// 随机串只在首启时打印一次到日志，请立刻记下并尽快通过 API/控制台修改。
+	password := os.Getenv("ADMIN_INITIAL_PASSWORD")
+	if password == "" {
+		buf := make([]byte, 12)
+		if _, err := rand.Read(buf); err != nil {
+			return fmt.Errorf("failed to generate random admin password: %w", err)
+		}
+		password = base64.RawURLEncoding.EncodeToString(buf) // 16 chars URL-safe
+	}
+
+	passwordHash, err := auth.HashPassword(password)
 	if err != nil {
 		return fmt.Errorf("failed to hash password: %w", err)
 	}
 
-	// 插入默认管理员用户，如果已存在则更新密码
+	// 仅首次创建：count==0 才走到这里。ON CONFLICT 仅作并发兜底，不覆盖现有密码。
 	adminUserSQL := `INSERT INTO users (id, username, password_hash, email, real_name, status) VALUES
 		('user-admin-1', 'admin', $1, 'admin@unidorm.edu', '系统管理员', 'Active')
-		ON CONFLICT (id) DO UPDATE SET password_hash = EXCLUDED.password_hash`
+		ON CONFLICT (id) DO NOTHING`
 
 	if _, err := DB.Exec(ctx, adminUserSQL, passwordHash); err != nil {
 		return fmt.Errorf("failed to insert admin user: %w", err)
@@ -316,7 +329,11 @@ func initDefaultAdmin(ctx context.Context) error {
 		log.Printf("Warning: Failed to assign admin role: %v", err)
 	}
 
-	log.Println("Default admin user initialized (username: admin, password: admin123)")
+	log.Println("================================================================")
+	log.Printf("  Default admin user created (username: admin)")
+	log.Printf("  INITIAL PASSWORD: %s", password)
+	log.Println("  ⚠ This password is shown ONLY ONCE. Save it and change ASAP.")
+	log.Println("================================================================")
 	return nil
 }
 

@@ -22,10 +22,16 @@ func main() {
 	}
 	defer database.CloseDatabase()
 
-	// 生成管理员密码哈希
-	password := "admin123"
-	if len(os.Args) > 1 {
-		password = os.Args[1]
+	// 必须显式传入密码作为参数。不再使用默认 admin123，避免误用。
+	if len(os.Args) < 2 || os.Args[1] == "" {
+		fmt.Fprintln(os.Stderr, "Usage: init_admin <password>")
+		fmt.Fprintln(os.Stderr, "  Sets or resets the admin user's password.")
+		fmt.Fprintln(os.Stderr, "  Password must be at least 8 characters long.")
+		os.Exit(2)
+	}
+	password := os.Args[1]
+	if len(password) < 8 {
+		log.Fatalf("Password too short (got %d chars, need >= 8)", len(password))
 	}
 
 	passwordHash, err := auth.HashPassword(password)
@@ -77,4 +83,3 @@ func main() {
 	fmt.Printf("Password: %s\n", password)
 	fmt.Println("\nPlease change the password after first login!")
 }
-
