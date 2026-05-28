@@ -75,6 +75,7 @@ GET_TESTS = [
     ("repairs", "/api/repairs/all"), ("repairs", "/api/repairs?page=1&pageSize=10"),
     ("notices", "/api/notices"),
     ("dashboard", "/api/dashboard/stats"),
+    ("statistics", "/api/statistics/repairs-by-day?days=7"),
     ("inspections", "/api/inspections?page=1&pageSize=10"), ("inspections", "/api/inspections/my?page=1&pageSize=10"),
     ("inspections", "/api/inspections/rooms"), ("inspections", "/api/inspections/rankings"),
     ("room_swaps", "/api/room-swaps"), ("room_swaps", "/api/room-swaps/my-applications"),

@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import { api } from '../services/api';
 import { PaginatedResponse, Student, Room, RepairRequest, Inspection, AccessLog, LateReturnAlert, RoomSwapApplication } from '../types';
 
 export interface UsePaginatedDataOptions {
@@ -138,7 +139,6 @@ export function usePaginatedData<T = any>({
 
 // 专用于学生数据的API函数
 const defaultGetStudents = async (params: any): Promise<PaginatedResponse<Student>> => {
-  const { api } = await import('../services/api');
   return api.getStudentsPaginated(params);
 };
 
@@ -155,7 +155,6 @@ export function useStudents(options?: Partial<UsePaginatedDataOptions>) {
 
 // 专用于房间数据的API函数
 const defaultGetRooms = async (params: any): Promise<PaginatedResponse<Room>> => {
-  const { api } = await import('../services/api');
   return api.getRoomsPaginated(params);
 };
 
@@ -172,7 +171,6 @@ export function useRooms(options?: Partial<UsePaginatedDataOptions>) {
 
 // 专用于维修申请数据的API函数
 const defaultGetRepairRequests = async (params: any): Promise<PaginatedResponse<RepairRequest>> => {
-  const { api } = await import('../services/api');
   return api.getRepairRequestsPaginated(params);
 };
 
@@ -189,7 +187,6 @@ export function useRepairRequests(options?: Partial<UsePaginatedDataOptions>) {
 
 // 专用于查寝评分数据的API函数
 const defaultGetInspections = async (params: any): Promise<PaginatedResponse<Inspection>> => {
-  const { api } = await import('../services/api');
   return api.getInspectionsPaginated(params);
 };
 
@@ -206,7 +203,6 @@ export function useInspections(options?: Partial<UsePaginatedDataOptions>) {
 
 // 专用于门禁记录数据的API函数
 const defaultGetAccessLogs = async (params: any): Promise<PaginatedResponse<AccessLog>> => {
-  const { api } = await import('../services/api');
   return api.getAccessLogsPaginated(params);
 };
 
@@ -223,7 +219,6 @@ export function useAccessLogs(options?: Partial<UsePaginatedDataOptions>) {
 
 // 专用于晚归告警数据的API函数
 const defaultGetLateReturnAlerts = async (params: any): Promise<PaginatedResponse<LateReturnAlert>> => {
-  const { api } = await import('../services/api');
   return api.getLateReturnAlertsPaginated(params);
 };
 
@@ -240,7 +235,6 @@ export function useLateReturnAlerts(options?: Partial<UsePaginatedDataOptions>) 
 
 // 专用于换寝申请数据的API函数
 const defaultGetRoomSwapApplications = async (params: any): Promise<PaginatedResponse<RoomSwapApplication>> => {
-  const { api } = await import('../services/api');
   return api.getRoomSwapApplicationsPaginated(params);
 };
 
