@@ -43,7 +43,13 @@ func InitAuthData(ctx context.Context) error {
 		('perm-roles-update', 'roles:update', '更新角色', 'roles', 'update', '更新角色信息'),
 		('perm-roles-delete', 'roles:delete', '删除角色', 'roles', 'delete', '删除角色'),
 		('perm-inspections-read', 'inspections:read', '查看查寝', 'inspections', 'read', '查看查寝记录'),
-		('perm-inspections-create', 'inspections:create', '创建查寝', 'inspections', 'create', '创建与提交查寝评分')
+		('perm-inspections-create', 'inspections:create', '创建查寝', 'inspections', 'create', '创建与提交查寝评分'),
+		('perm-access-logs-read', 'access_logs:read', '查看门禁记录', 'access_logs', 'read', '查看门禁出入记录'),
+		('perm-access-logs-create', 'access_logs:create', '创建门禁记录', 'access_logs', 'create', '录入门禁记录'),
+		('perm-late-returns-read', 'late_returns:read', '查看晚归', 'late_returns', 'read', '查看晚归告警'),
+		('perm-late-returns-handle', 'late_returns:handle', '处理晚归', 'late_returns', 'handle', '处理晚归告警'),
+		('perm-room-swaps-read', 'room_swaps:read', '查看调宿', 'room_swaps', 'read', '查看调宿申请'),
+		('perm-room-swaps-approve', 'room_swaps:approve', '审批调宿', 'room_swaps', 'approve', '审批调宿申请')
 		ON CONFLICT (id) DO NOTHING`,
 	}
 

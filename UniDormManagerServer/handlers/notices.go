@@ -22,7 +22,11 @@ func NewNoticeHandler(s store.StoreInterface) *NoticeHandler {
 
 // GetAllNotices 获取所有公告
 func (h *NoticeHandler) GetAllNotices(c *gin.Context) {
-	notices := h.store.GetAllNotices()
+	notices, err := h.store.GetAllNotices()
+	if err != nil {
+		middleware.WriteError(c, http.StatusInternalServerError, "internal_error", "查询公告失败")
+		return
+	}
 	// 确保返回的不是 nil，而是空数组
 	if notices == nil {
 		notices = []*models.Notice{}

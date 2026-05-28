@@ -9,13 +9,30 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
-	
+
+	"unidorm-manager-server/auth"
 	"unidorm-manager-server/models"
 )
 
+// mockAuthMiddleware simulates auth middleware for tests
+func mockAuthMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		auth.SetUserID(c, "test-user-id")
+		auth.SetRoles(c, []string{"system_admin"})
+		auth.SetClaims(c, &auth.Claims{
+			UserID:      "test-user-id",
+			Username:    "testuser",
+			Roles:       []string{"system_admin"},
+			Permissions: []string{},
+			BuildingIDs: []string{},
+		})
+		c.Next()
+	}
+}
+
 func TestStudentHandler_GetStudentsAll(t *testing.T) {
 	gin.SetMode(gin.TestMode)
-	
+
 	tests := []struct {
 		name           string
 		mockStudents   []*models.Student
@@ -44,26 +61,27 @@ func TestStudentHandler_GetStudentsAll(t *testing.T) {
 			expectedCount:  0,
 		},
 	}
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			mockStore := new(MockStore)
 			handler := NewStudentHandler(mockStore)
-			
-			mockStore.On("GetAllStudents").Return(tt.mockStudents)
-			
+
+			mockStore.On("GetAllStudents").Return(tt.mockStudents, nil)
+
 			router := setupTestRouter()
+			router.Use(mockAuthMiddleware())
 			router.GET("/students", handler.GetStudentsAll)
-			
+
 			w := makeRequest(t, router, "GET", "/students", nil)
-			
+
 			assert.Equal(t, tt.expectedStatus, w.Code)
-			
+
 			var response []*models.Student
 			err := json.Unmarshal(w.Body.Bytes(), &response)
 			assert.NoError(t, err)
 			assert.Len(t, response, tt.expectedCount)
-			
+
 			mockStore.AssertExpectations(t)
 		})
 	}
@@ -71,7 +89,7 @@ func TestStudentHandler_GetStudentsAll(t *testing.T) {
 
 func TestStudentHandler_GetStudentsPaginated(t *testing.T) {
 	gin.SetMode(gin.TestMode)
-	
+
 	tests := []struct {
 		name           string
 		queryParams    string
@@ -111,30 +129,31 @@ func TestStudentHandler_GetStudentsPaginated(t *testing.T) {
 			expectedStatus: http.StatusInternalServerError,
 		},
 	}
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			mockStore := new(MockStore)
 			handler := NewStudentHandler(mockStore)
-			
+
 			if tt.mockResponse != nil || tt.mockError != nil {
 				mockStore.On("GetStudentsPaginated", mock.Anything, mock.Anything).Return(tt.mockResponse, tt.mockError)
 			}
-			
+
 			router := setupTestRouter()
+			router.Use(mockAuthMiddleware())
 			router.GET("/students", handler.GetStudentsPaginated)
-			
+
 			w := makeRequest(t, router, "GET", "/students"+tt.queryParams, nil)
-			
+
 			assert.Equal(t, tt.expectedStatus, w.Code)
-			
+
 			if tt.expectedStatus == http.StatusOK && tt.mockResponse != nil {
 				var response models.PaginatedResponse
 				err := json.Unmarshal(w.Body.Bytes(), &response)
 				assert.NoError(t, err)
 				assert.Equal(t, tt.mockResponse.Total, response.Total)
 			}
-			
+
 			mockStore.AssertExpectations(t)
 		})
 	}
@@ -142,7 +161,7 @@ func TestStudentHandler_GetStudentsPaginated(t *testing.T) {
 
 func TestStudentHandler_GetStudentByID(t *testing.T) {
 	gin.SetMode(gin.TestMode)
-	
+
 	tests := []struct {
 		name           string
 		studentID      string
@@ -165,28 +184,28 @@ func TestStudentHandler_GetStudentByID(t *testing.T) {
 			expectedStatus: http.StatusNotFound,
 		},
 	}
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			mockStore := new(MockStore)
 			handler := NewStudentHandler(mockStore)
-			
+
 			mockStore.On("GetStudentByID", tt.studentID).Return(tt.mockStudent, tt.mockExists)
-			
+
 			router := setupTestRouter()
 			router.GET("/students/:id", handler.GetStudentByID)
-			
+
 			w := makeRequest(t, router, "GET", "/students/"+tt.studentID, nil)
-			
+
 			assert.Equal(t, tt.expectedStatus, w.Code)
-			
+
 			if tt.expectedStatus == http.StatusOK {
 				var response models.Student
 				err := json.Unmarshal(w.Body.Bytes(), &response)
 				assert.NoError(t, err)
 				assert.Equal(t, tt.mockStudent.Name, response.Name)
 			}
-			
+
 			mockStore.AssertExpectations(t)
 		})
 	}
@@ -194,7 +213,7 @@ func TestStudentHandler_GetStudentByID(t *testing.T) {
 
 func TestStudentHandler_CreateStudent(t *testing.T) {
 	gin.SetMode(gin.TestMode)
-	
+
 	tests := []struct {
 		name           string
 		requestBody    models.CreateStudentRequest
@@ -225,30 +244,30 @@ func TestStudentHandler_CreateStudent(t *testing.T) {
 			expectedStatus: http.StatusBadRequest,
 		},
 	}
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			mockStore := new(MockStore)
 			handler := NewStudentHandler(mockStore)
-			
+
 			if tt.mockStudent != nil {
 				mockStore.On("CreateStudent", mock.Anything).Return(tt.mockStudent)
 			}
-			
+
 			router := setupTestRouter()
 			router.POST("/students", handler.CreateStudent)
-			
+
 			w := makeRequest(t, router, "POST", "/students", tt.requestBody)
-			
+
 			assert.Equal(t, tt.expectedStatus, w.Code)
-			
+
 			if tt.expectedStatus == http.StatusCreated {
 				var response models.Student
 				err := json.Unmarshal(w.Body.Bytes(), &response)
 				assert.NoError(t, err)
 				assert.Equal(t, tt.mockStudent.Name, response.Name)
 			}
-			
+
 			mockStore.AssertExpectations(t)
 		})
 	}
@@ -256,7 +275,7 @@ func TestStudentHandler_CreateStudent(t *testing.T) {
 
 func TestStudentHandler_UpdateStudent(t *testing.T) {
 	gin.SetMode(gin.TestMode)
-	
+
 	tests := []struct {
 		name           string
 		studentID      string
@@ -294,28 +313,28 @@ func TestStudentHandler_UpdateStudent(t *testing.T) {
 			expectedStatus: http.StatusNotFound,
 		},
 	}
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			mockStore := new(MockStore)
 			handler := NewStudentHandler(mockStore)
-			
+
 			mockStore.On("UpdateStudent", tt.studentID, mock.Anything).Return(tt.mockStudent, tt.mockUpdated)
-			
+
 			router := setupTestRouter()
 			router.PUT("/students/:id", handler.UpdateStudent)
-			
+
 			w := makeRequest(t, router, "PUT", "/students/"+tt.studentID, tt.requestBody)
-			
+
 			assert.Equal(t, tt.expectedStatus, w.Code)
-			
+
 			if tt.expectedStatus == http.StatusOK {
 				var response models.Student
 				err := json.Unmarshal(w.Body.Bytes(), &response)
 				assert.NoError(t, err)
 				assert.Equal(t, tt.mockStudent.Name, response.Name)
 			}
-			
+
 			mockStore.AssertExpectations(t)
 		})
 	}
@@ -323,7 +342,7 @@ func TestStudentHandler_UpdateStudent(t *testing.T) {
 
 func TestStudentHandler_DeleteStudent(t *testing.T) {
 	gin.SetMode(gin.TestMode)
-	
+
 	tests := []struct {
 		name           string
 		studentID      string
@@ -343,21 +362,21 @@ func TestStudentHandler_DeleteStudent(t *testing.T) {
 			expectedStatus: http.StatusNotFound,
 		},
 	}
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			mockStore := new(MockStore)
 			handler := NewStudentHandler(mockStore)
-			
+
 			mockStore.On("DeleteStudent", tt.studentID).Return(tt.mockDeleted)
-			
+
 			router := setupTestRouter()
 			router.DELETE("/students/:id", handler.DeleteStudent)
-			
+
 			w := makeRequest(t, router, "DELETE", "/students/"+tt.studentID, nil)
-			
+
 			assert.Equal(t, tt.expectedStatus, w.Code)
-			
+
 			mockStore.AssertExpectations(t)
 		})
 	}

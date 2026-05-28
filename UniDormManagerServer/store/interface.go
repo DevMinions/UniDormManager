@@ -5,7 +5,7 @@ import "unidorm-manager-server/models"
 // StoreInterface 存储接口，定义数据库存储的通用方法
 type StoreInterface interface {
 	// Student methods
-	GetAllStudents() []*models.Student
+	GetAllStudents() ([]*models.Student, error)
 	GetStudentsPaginated(req *models.PaginatedRequest, filter *models.StudentFilter) (*models.PaginatedResponse, error)
 	GetStudentByID(id string) (*models.Student, bool)
 	CreateStudent(req *models.CreateStudentRequest) *models.Student
@@ -13,14 +13,14 @@ type StoreInterface interface {
 	DeleteStudent(id string) bool
 
 	// Building methods
-	GetAllBuildings() []*models.Building
+	GetAllBuildings() ([]*models.Building, error)
 	GetBuildingByID(id string) (*models.Building, bool)
 	CreateBuilding(req *models.CreateBuildingRequest) *models.Building
 	UpdateBuilding(id string, req *models.UpdateBuildingRequest) (*models.Building, bool)
 	DeleteBuilding(id string) bool
 
 	// Room methods
-	GetAllRooms() []*models.Room
+	GetAllRooms() ([]*models.Room, error)
 	GetRoomsPaginated(req *models.PaginatedRequest, filter *models.RoomFilter) (*models.PaginatedResponse, error)
 	GetRoomByID(id string) (*models.Room, bool)
 	CreateRoom(req *models.CreateRoomRequest) *models.Room
@@ -28,7 +28,7 @@ type StoreInterface interface {
 	DeleteRoom(id string) bool
 
 	// RepairRequest methods
-	GetAllRepairRequests() []*models.RepairRequest
+	GetAllRepairRequests() ([]*models.RepairRequest, error)
 	GetRepairRequestsPaginated(req *models.PaginatedRequest, filter *models.RepairFilter) (*models.PaginatedResponse, error)
 	GetRepairRequestByID(id string) (*models.RepairRequest, bool)
 	CreateRepairRequest(req *models.CreateRepairRequest) *models.RepairRequest
@@ -36,7 +36,7 @@ type StoreInterface interface {
 	DeleteRepairRequest(id string) bool
 
 	// Notice methods
-	GetAllNotices() []*models.Notice
+	GetAllNotices() ([]*models.Notice, error)
 	GetNoticeByID(id string) (*models.Notice, bool)
 	CreateNotice(req *models.CreateNoticeRequest) *models.Notice
 	UpdateNotice(id string, req *models.UpdateNoticeRequest) (*models.Notice, bool)

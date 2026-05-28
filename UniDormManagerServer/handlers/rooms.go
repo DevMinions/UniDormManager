@@ -67,7 +67,11 @@ func (h *RoomHandler) GetRoomsPaginated(c *gin.Context) {
 
 // GetRoomsAll 获取所有房间（传统方式，保持兼容性）
 func (h *RoomHandler) GetRoomsAll(c *gin.Context) {
-	rooms := h.store.GetAllRooms()
+	rooms, err := h.store.GetAllRooms()
+	if err != nil {
+		middleware.WriteError(c, http.StatusInternalServerError, "internal_error", "查询房间失败")
+		return
+	}
 	// 确保返回的不是 nil，而是空数组
 	if rooms == nil {
 		rooms = []*models.Room{}
@@ -78,7 +82,11 @@ func (h *RoomHandler) GetRoomsAll(c *gin.Context) {
 // GetAllRooms 获取所有房间
 func (h *RoomHandler) GetAllRooms(c *gin.Context) {
 
-	rooms := h.store.GetAllRooms()
+	rooms, err := h.store.GetAllRooms()
+	if err != nil {
+		middleware.WriteError(c, http.StatusInternalServerError, "internal_error", "查询房间失败")
+		return
+	}
 	// 确保返回的不是 nil，而是空数组
 	if rooms == nil {
 		rooms = []*models.Room{}
@@ -135,7 +143,11 @@ func (h *RoomHandler) CreateRoom(c *gin.Context) {
 		return
 	}
 
-	// 验证入住人数不能超过容量
+	// 验证入住人数
+	if req.Occupied < 0 {
+		middleware.WriteError(c, http.StatusBadRequest, "bad_request", "Occupied cannot be negative")
+		return
+	}
 	if req.Occupied > req.Capacity {
 		middleware.WriteError(c, http.StatusBadRequest, "bad_request", "Occupied cannot exceed capacity")
 		return
@@ -171,15 +183,42 @@ func (h *RoomHandler) UpdateRoom(c *gin.Context) {
 		return
 	}
 
-	room, exists := h.store.UpdateRoom(id, &req)
+	// 验证容量
+	if req.Capacity < 0 {
+		middleware.WriteError(c, http.StatusBadRequest, "bad_request", "Capacity cannot be negative")
+		return
+	}
+
+	// 验证入住人数
+	if req.Occupied < 0 {
+		middleware.WriteError(c, http.StatusBadRequest, "bad_request", "Occupied cannot be negative")
+		return
+	}
+
+	// 预检查：获取当前房间数据验证约束
+	currentRoom, exists := h.store.GetRoomByID(id)
 	if !exists {
 		middleware.WriteError(c, http.StatusNotFound, "not_found", "Room not found")
 		return
 	}
 
-	// 再次验证入住人数不能超过容量
-	if req.Occupied > 0 && req.Occupied > room.Capacity {
+	// 计算更新后的容量和入住数
+	newCapacity := currentRoom.Capacity
+	if req.Capacity > 0 {
+		newCapacity = req.Capacity
+	}
+	newOccupied := currentRoom.Occupied
+	if req.Occupied > 0 {
+		newOccupied = req.Occupied
+	}
+	if newOccupied > newCapacity {
 		middleware.WriteError(c, http.StatusBadRequest, "bad_request", "Occupied cannot exceed capacity")
+		return
+	}
+
+	room, exists := h.store.UpdateRoom(id, &req)
+	if !exists {
+		middleware.WriteError(c, http.StatusNotFound, "not_found", "Room not found")
 		return
 	}
 

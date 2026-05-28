@@ -2,8 +2,8 @@ package store
 
 import (
 	"context"
-	"log"
 	"fmt"
+	"log"
 	"time"
 
 	"unidorm-manager-server/cache"
@@ -30,14 +30,14 @@ func NewDBStore(cacheEnabled bool) *DBStore {
 // ========== Student Methods ==========
 
 // GetAllStudents 获取所有学生（已弃用，请使用GetStudentsPaginated）
-func (s *DBStore) GetAllStudents() []*models.Student {
+func (s *DBStore) GetAllStudents() ([]*models.Student, error) {
 	ctx := context.Background()
 
 	// 尝试从缓存获取
 	if s.cacheEnabled {
 		cached := []*models.Student{}
 		if err := cache.Get(cache.CacheKeyStudents, &cached); err == nil {
-			return cached
+			return cached, nil
 		}
 	}
 
@@ -45,7 +45,7 @@ func (s *DBStore) GetAllStudents() []*models.Student {
 	rows, err := database.DB.Query(ctx,
 		"SELECT id, name, student_id, major, room_number, building, status FROM students ORDER BY created_at DESC")
 	if err != nil {
-		return []*models.Student{}
+		return nil, fmt.Errorf("查询学生失败: %w", err)
 	}
 	defer rows.Close()
 
@@ -53,9 +53,10 @@ func (s *DBStore) GetAllStudents() []*models.Student {
 	for rows.Next() {
 		var student models.Student
 		if err := rows.Scan(&student.ID, &student.Name, &student.StudentID,
-			&student.Major, &student.RoomNumber, &student.Building, &student.Status); err == nil {
-			students = append(students, &student)
+			&student.Major, &student.RoomNumber, &student.Building, &student.Status); err != nil {
+			return nil, fmt.Errorf("扫描学生记录失败: %w", err)
 		}
+		students = append(students, &student)
 	}
 
 	// 写入缓存
@@ -63,7 +64,7 @@ func (s *DBStore) GetAllStudents() []*models.Student {
 		cache.Set(cache.CacheKeyStudents, students, cache.CacheExpirationMedium)
 	}
 
-	return students
+	return students, nil
 }
 
 // GetStudentsPaginated 分页获取学生
@@ -154,7 +155,7 @@ func (s *DBStore) GetStudentByID(id string) (*models.Student, bool) {
 
 	// 从数据库查询
 	var student models.Student
-	err := database.DB.QueryRow(ctx, 
+	err := database.DB.QueryRow(ctx,
 		"SELECT id, name, student_id, major, room_number, building, status FROM students WHERE id = $1",
 		id).Scan(&student.ID, &student.Name, &student.StudentID,
 		&student.Major, &student.RoomNumber, &student.Building, &student.Status)
@@ -244,8 +245,9 @@ func (s *DBStore) UpdateStudent(id string, req *models.UpdateStudentRequest) (*m
 
 	// 如果涉及房间变更，需要验证
 	if req.RoomNumber != "" && req.RoomNumber != student.RoomNumber {
-		// 1. 检查目标房间是否存在
-		targetRoom, roomExists := s.GetRoomByNumber(req.Building, req.RoomNumber)
+		// 1. 检查目标房间是否存在（使用学生当前楼栋查找）
+		building := student.Building
+		targetRoom, roomExists := s.GetRoomByNumber(building, req.RoomNumber)
 		if !roomExists {
 			return nil, false // 房间不存在
 		}
@@ -315,16 +317,28 @@ func (s *DBStore) updateRoomOccupied(building string, roomNumber string, delta i
 func (s *DBStore) DeleteStudent(id string) bool {
 	ctx := context.Background()
 
+	// 先获取学生信息，以便更新房间入住数
+	student, exists := s.GetStudentByID(id)
+	if !exists {
+		return false
+	}
+
 	// 删除数据库记录
 	_, err := database.DB.Exec(ctx, "DELETE FROM students WHERE id = $1", id)
 	if err != nil {
 		return false
 	}
 
+	// 更新原房间入住人数
+	if student.RoomNumber != "-" && student.RoomNumber != "" {
+		s.updateRoomOccupied(student.Building, student.RoomNumber, -1)
+	}
+
 	// 清除相关缓存
 	if s.cacheEnabled {
 		cache.Delete(cache.CacheKeyStudents)
 		cache.Delete(cache.CacheKeyStudent + id)
+		cache.Delete(cache.CacheKeyDashboard)
 	}
 
 	return true
@@ -333,14 +347,14 @@ func (s *DBStore) DeleteStudent(id string) bool {
 // ========== Building Methods ==========
 
 // GetAllBuildings 获取所有楼栋
-func (s *DBStore) GetAllBuildings() []*models.Building {
+func (s *DBStore) GetAllBuildings() ([]*models.Building, error) {
 	ctx := context.Background()
 
 	// 尝试从缓存获取
 	if s.cacheEnabled {
 		cached := []*models.Building{}
 		if err := cache.Get(cache.CacheKeyBuildings, &cached); err == nil {
-			return cached
+			return cached, nil
 		}
 	}
 
@@ -348,7 +362,7 @@ func (s *DBStore) GetAllBuildings() []*models.Building {
 	rows, err := database.DB.Query(ctx,
 		"SELECT id, name, type, floors, manager, description FROM buildings ORDER BY created_at DESC")
 	if err != nil {
-		return []*models.Building{}
+		return nil, fmt.Errorf("查询楼栋失败: %w", err)
 	}
 	defer rows.Close()
 
@@ -356,9 +370,10 @@ func (s *DBStore) GetAllBuildings() []*models.Building {
 	for rows.Next() {
 		var building models.Building
 		if err := rows.Scan(&building.ID, &building.Name, &building.Type,
-			&building.Floors, &building.Manager, &building.Description); err == nil {
-			buildings = append(buildings, &building)
+			&building.Floors, &building.Manager, &building.Description); err != nil {
+			return nil, fmt.Errorf("扫描楼栋记录失败: %w", err)
 		}
+		buildings = append(buildings, &building)
 	}
 
 	// 写入缓存
@@ -366,7 +381,7 @@ func (s *DBStore) GetAllBuildings() []*models.Building {
 		cache.Set(cache.CacheKeyBuildings, buildings, cache.CacheExpirationLong)
 	}
 
-	return buildings
+	return buildings, nil
 }
 
 // GetBuildingByID 根据ID获取楼栋
@@ -501,14 +516,14 @@ func (s *DBStore) DeleteBuilding(id string) bool {
 // ========== Room Methods ==========
 
 // GetAllRooms 获取所有房间
-func (s *DBStore) GetAllRooms() []*models.Room {
+func (s *DBStore) GetAllRooms() ([]*models.Room, error) {
 	ctx := context.Background()
 
 	// 尝试从缓存获取
 	if s.cacheEnabled {
 		cached := []*models.Room{}
 		if err := cache.Get(cache.CacheKeyRooms, &cached); err == nil {
-			return cached
+			return cached, nil
 		}
 	}
 
@@ -516,7 +531,7 @@ func (s *DBStore) GetAllRooms() []*models.Room {
 	rows, err := database.DB.Query(ctx,
 		"SELECT id, number, building, floor, capacity, occupied, type, status FROM rooms ORDER BY building, number")
 	if err != nil {
-		return []*models.Room{}
+		return nil, fmt.Errorf("查询房间失败: %w", err)
 	}
 	defer rows.Close()
 
@@ -524,9 +539,10 @@ func (s *DBStore) GetAllRooms() []*models.Room {
 	for rows.Next() {
 		var room models.Room
 		if err := rows.Scan(&room.ID, &room.Number, &room.Building, &room.Floor,
-			&room.Capacity, &room.Occupied, &room.Type, &room.Status); err == nil {
-			rooms = append(rooms, &room)
+			&room.Capacity, &room.Occupied, &room.Type, &room.Status); err != nil {
+			return nil, fmt.Errorf("扫描房间记录失败: %w", err)
 		}
+		rooms = append(rooms, &room)
 	}
 
 	// 写入缓存
@@ -534,7 +550,7 @@ func (s *DBStore) GetAllRooms() []*models.Room {
 		cache.Set(cache.CacheKeyRooms, rooms, cache.CacheExpirationShort)
 	}
 
-	return rooms
+	return rooms, nil
 }
 
 // GetRoomByID 根据ID获取房间
@@ -690,14 +706,14 @@ func convertRepairStatus(status string) string {
 }
 
 // GetAllRepairRequests 获取所有报修请求
-func (s *DBStore) GetAllRepairRequests() []*models.RepairRequest {
+func (s *DBStore) GetAllRepairRequests() ([]*models.RepairRequest, error) {
 	ctx := context.Background()
 
 	// 尝试从缓存获取
 	if s.cacheEnabled {
 		cached := []*models.RepairRequest{}
 		if err := cache.Get(cache.CacheKeyRepairs, &cached); err == nil {
-			return cached
+			return cached, nil
 		}
 	}
 
@@ -705,7 +721,7 @@ func (s *DBStore) GetAllRepairRequests() []*models.RepairRequest {
 	rows, err := database.DB.Query(ctx,
 		"SELECT id, title, description, status, date, room_number, priority FROM repair_requests ORDER BY created_at DESC")
 	if err != nil {
-		return []*models.RepairRequest{}
+		return nil, fmt.Errorf("查询报修失败: %w", err)
 	}
 	defer rows.Close()
 
@@ -714,11 +730,12 @@ func (s *DBStore) GetAllRepairRequests() []*models.RepairRequest {
 		var repair models.RepairRequest
 		var date time.Time
 		if err := rows.Scan(&repair.ID, &repair.Title, &repair.Description,
-			&repair.Status, &date, &repair.RoomNumber, &repair.Priority); err == nil {
-			repair.Date = date.Format("2006-01-02")
-			repair.Status = convertRepairStatus(repair.Status) // 转换状态值
-			repairs = append(repairs, &repair)
+			&repair.Status, &date, &repair.RoomNumber, &repair.Priority); err != nil {
+			return nil, fmt.Errorf("扫描报修记录失败: %w", err)
 		}
+		repair.Date = date.Format("2006-01-02")
+		repair.Status = convertRepairStatus(repair.Status) // 转换状态值
+		repairs = append(repairs, &repair)
 	}
 
 	// 写入缓存
@@ -726,7 +743,7 @@ func (s *DBStore) GetAllRepairRequests() []*models.RepairRequest {
 		cache.Set(cache.CacheKeyRepairs, repairs, cache.CacheExpirationShort)
 	}
 
-	return repairs
+	return repairs, nil
 }
 
 // GetRepairRequestByID 根据ID获取报修请求
@@ -870,14 +887,14 @@ func (s *DBStore) DeleteRepairRequest(id string) bool {
 // ========== Notice Methods ==========
 
 // GetAllNotices 获取所有公告
-func (s *DBStore) GetAllNotices() []*models.Notice {
+func (s *DBStore) GetAllNotices() ([]*models.Notice, error) {
 	ctx := context.Background()
 
 	// 尝试从缓存获取
 	if s.cacheEnabled {
 		cached := []*models.Notice{}
 		if err := cache.Get(cache.CacheKeyNotices, &cached); err == nil {
-			return cached
+			return cached, nil
 		}
 	}
 
@@ -885,7 +902,7 @@ func (s *DBStore) GetAllNotices() []*models.Notice {
 	rows, err := database.DB.Query(ctx,
 		"SELECT id, title, content, date, author FROM notices ORDER BY created_at DESC")
 	if err != nil {
-		return []*models.Notice{}
+		return nil, fmt.Errorf("查询公告失败: %w", err)
 	}
 	defer rows.Close()
 
@@ -894,10 +911,11 @@ func (s *DBStore) GetAllNotices() []*models.Notice {
 		var notice models.Notice
 		var date time.Time
 		if err := rows.Scan(&notice.ID, &notice.Title, &notice.Content,
-			&date, &notice.Author); err == nil {
-			notice.Date = date.Format("2006-01-02")
-			notices = append(notices, &notice)
+			&date, &notice.Author); err != nil {
+			return nil, fmt.Errorf("扫描公告记录失败: %w", err)
 		}
+		notice.Date = date.Format("2006-01-02")
+		notices = append(notices, &notice)
 	}
 
 	// 写入缓存
@@ -905,7 +923,7 @@ func (s *DBStore) GetAllNotices() []*models.Notice {
 		cache.Set(cache.CacheKeyNotices, notices, cache.CacheExpirationMedium)
 	}
 
-	return notices
+	return notices, nil
 }
 
 // GetNoticeByID 根据ID获取公告
@@ -1293,12 +1311,9 @@ func (s *DBStore) GetAccessLogsPaginated(req *models.PaginatedRequest, filter *m
 		return nil, err
 	}
 
-	return &models.PaginatedResponse{
-		Data:     logs,
-		Total:    total,
-		Page:     req.Page,
-		PageSize: req.PageSize,
-	}, nil
+	resp := models.CalculatePagination(req.Page, req.PageSize, total)
+	resp.Data = logs
+	return &resp, nil
 }
 
 // GetLiveAccessLogs 获取实时门禁记录 (返回最近 50 条)
@@ -1341,9 +1356,9 @@ func (s *DBStore) CreateAccessLog(req *models.CreateAccessLogRequest) (*models.A
 		}
 	}
 
-	// 判断是否为晚归 (23:00后进入)
+	// 判断是否为晚归 (23:00-05:00进入视为晚归)
 	isLateReturn := false
-	if req.Direction == "In" && timestamp.Hour() >= 23 {
+	if req.Direction == "In" && (timestamp.Hour() >= 23 || timestamp.Hour() < 5) {
 		isLateReturn = true
 	}
 
@@ -1468,12 +1483,9 @@ func (s *DBStore) GetLateReturnAlertsPaginated(req *models.PaginatedRequest, fil
 		return nil, err
 	}
 
-	return &models.PaginatedResponse{
-		Data:     alerts,
-		Total:    total,
-		Page:     req.Page,
-		PageSize: req.PageSize,
-	}, nil
+	resp := models.CalculatePagination(req.Page, req.PageSize, total)
+	resp.Data = alerts
+	return &resp, nil
 }
 
 // GetPendingLateReturns 获取所有处理中的晚归告警
@@ -1618,19 +1630,29 @@ func (s *DBStore) DeleteInspection(id string) bool {
 
 // GetRoomSwapApplicationsPaginated 分页获取换寝申请
 func (s *DBStore) GetRoomSwapApplicationsPaginated(req *models.PaginatedRequest, filter *models.RoomSwapFilter) (*models.PaginatedResponse, error) {
-	// 简化实现，直接返回所有数据
+	req.ValidateAndSetDefaults()
+
 	applications, err := s.GetRoomSwapApplications("", "")
 	if err != nil {
 		return nil, err
 	}
 
 	total := int64(len(applications))
-	return &models.PaginatedResponse{
-		Data:     applications,
-		Total:    total,
-		Page:     req.Page,
-		PageSize: req.PageSize,
-	}, nil
+
+	// 应用分页
+	start := (req.Page - 1) * req.PageSize
+	end := start + req.PageSize
+	if start > len(applications) {
+		start = len(applications)
+	}
+	if end > len(applications) {
+		end = len(applications)
+	}
+	paged := applications[start:end]
+
+	resp := models.CalculatePagination(req.Page, req.PageSize, total)
+	resp.Data = paged
+	return &resp, nil
 }
 
 // GetMyRoomSwapApplications 获取当前用户的换寝申请
@@ -1715,19 +1737,18 @@ func (s *DBStore) GetAvailableRooms() ([]*models.Room, error) {
 	return rooms, nil
 }
 
-
 // GetRoomByNumber 根据楼栋和房间号获取房间
 func (s *DBStore) GetRoomByNumber(building string, number string) (*models.Room, bool) {
 	ctx := context.Background()
-	
+
 	var room models.Room
 	err := database.DB.QueryRow(ctx,
 		"SELECT id, number, building, capacity, occupied, type, status FROM rooms WHERE building = $1 AND number = $2",
 		building, number).Scan(&room.ID, &room.Number, &room.Building, &room.Capacity, &room.Occupied, &room.Type, &room.Status)
-	
+
 	if err != nil {
 		return nil, false
 	}
-	
+
 	return &room, true
 }

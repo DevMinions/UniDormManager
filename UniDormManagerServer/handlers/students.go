@@ -6,6 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"unidorm-manager-server/auth"
+	"unidorm-manager-server/middleware"
 	"unidorm-manager-server/models"
 	"unidorm-manager-server/store"
 )
@@ -37,11 +38,7 @@ func (h *StudentHandler) GetStudentsPaginated(c *gin.Context) {
 	// 解析分页参数
 	var req models.PaginatedRequest
 	if err := c.ShouldBindQuery(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"error":   "invalid_request",
-			"message": "无效的分页参数",
-			"details": err.Error(),
-		})
+		middleware.WriteError(c, http.StatusBadRequest, "invalid_request", "无效的分页参数")
 		return
 	}
 
@@ -54,10 +51,7 @@ func (h *StudentHandler) GetStudentsPaginated(c *gin.Context) {
 	// 根据权限范围过滤数据
 	claims := auth.GetClaims(c)
 	if claims == nil {
-		c.JSON(http.StatusUnauthorized, gin.H{
-			"error":   "unauthorized",
-			"message": "用户未认证",
-		})
+		middleware.WriteError(c, http.StatusUnauthorized, "unauthorized", "用户未认证")
 		return
 	}
 
@@ -80,11 +74,7 @@ func (h *StudentHandler) GetStudentsPaginated(c *gin.Context) {
 	// 调用分页查询
 	response, err := h.store.GetStudentsPaginated(&req, &filter)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error":   "internal_error",
-			"message": "查询学生数据失败",
-			"details": err.Error(),
-		})
+		middleware.WriteError(c, http.StatusInternalServerError, "internal_error", "查询学生数据失败")
 		return
 	}
 
@@ -93,7 +83,11 @@ func (h *StudentHandler) GetStudentsPaginated(c *gin.Context) {
 
 // GetStudentsAll 获取所有学生（传统方式）
 func (h *StudentHandler) GetStudentsAll(c *gin.Context) {
-	allStudents := h.store.GetAllStudents()
+	allStudents, err := h.store.GetAllStudents()
+	if err != nil {
+		middleware.WriteError(c, http.StatusInternalServerError, "internal_error", "查询学生失败")
+		return
+	}
 
 	// 确保 allStudents 不是 nil
 	if allStudents == nil {
@@ -103,10 +97,7 @@ func (h *StudentHandler) GetStudentsAll(c *gin.Context) {
 	// 根据权限范围过滤数据
 	claims := auth.GetClaims(c)
 	if claims == nil {
-		c.JSON(http.StatusUnauthorized, gin.H{
-			"error":   "unauthorized",
-			"message": "用户未认证",
-		})
+		middleware.WriteError(c, http.StatusUnauthorized, "unauthorized", "用户未认证")
 		return
 	}
 
@@ -126,7 +117,11 @@ func (h *StudentHandler) GetStudentsAll(c *gin.Context) {
 		filteredStudents = allStudents
 	} else if len(claims.BuildingIDs) > 0 {
 		// 楼栋管理员：只返回管理楼栋的学生
-		allRooms := h.store.GetAllRooms()
+		allRooms, err := h.store.GetAllRooms()
+		if err != nil {
+			middleware.WriteError(c, http.StatusInternalServerError, "internal_error", "查询房间失败")
+			return
+		}
 		buildingRoomMap := make(map[string]bool)
 		for _, room := range allRooms {
 			for _, buildingID := range claims.BuildingIDs {
@@ -149,13 +144,14 @@ func (h *StudentHandler) GetStudentsAll(c *gin.Context) {
 // GetStudentByID 根据ID获取学生
 func (h *StudentHandler) GetStudentByID(c *gin.Context) {
 	id := c.Param("id")
+	if id == "" {
+		middleware.WriteError(c, http.StatusBadRequest, "bad_request", "Student ID is required")
+		return
+	}
 
 	student, exists := h.store.GetStudentByID(id)
 	if !exists {
-		c.JSON(http.StatusNotFound, gin.H{
-			"error":   "not_found",
-			"message": "学生不存在",
-		})
+		middleware.WriteError(c, http.StatusNotFound, "not_found", "学生不存在")
 		return
 	}
 
@@ -166,38 +162,53 @@ func (h *StudentHandler) GetStudentByID(c *gin.Context) {
 func (h *StudentHandler) CreateStudent(c *gin.Context) {
 	var req models.CreateStudentRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"error":   "invalid_request",
-			"message": "无效的学生信息",
-			"details": err.Error(),
-		})
+		middleware.WriteError(c, http.StatusBadRequest, "invalid_request", "无效的学生信息")
+		return
+	}
+
+	// 验证必填字段
+	if req.Name == "" || req.StudentID == "" {
+		middleware.WriteError(c, http.StatusBadRequest, "bad_request", "Name and StudentID are required")
+		return
+	}
+
+	// 验证状态值
+	if req.Status != "" && req.Status != "Active" && req.Status != "Graduated" && req.Status != "On Leave" {
+		middleware.WriteError(c, http.StatusBadRequest, "bad_request", "Invalid status value")
 		return
 	}
 
 	student := h.store.CreateStudent(&req)
+	if student == nil {
+		middleware.WriteError(c, http.StatusInternalServerError, "internal_error", "创建学生失败")
+		return
+	}
 	c.JSON(http.StatusCreated, student)
 }
 
 // UpdateStudent 更新学生
 func (h *StudentHandler) UpdateStudent(c *gin.Context) {
 	id := c.Param("id")
+	if id == "" {
+		middleware.WriteError(c, http.StatusBadRequest, "bad_request", "Student ID is required")
+		return
+	}
 
 	var req models.UpdateStudentRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"error":   "invalid_request",
-			"message": "无效的学生信息",
-			"details": err.Error(),
-		})
+		middleware.WriteError(c, http.StatusBadRequest, "invalid_request", "无效的学生信息")
+		return
+	}
+
+	// 验证状态值
+	if req.Status != "" && req.Status != "Active" && req.Status != "Graduated" && req.Status != "On Leave" {
+		middleware.WriteError(c, http.StatusBadRequest, "bad_request", "Invalid status value")
 		return
 	}
 
 	student, updated := h.store.UpdateStudent(id, &req)
 	if !updated {
-		c.JSON(http.StatusNotFound, gin.H{
-			"error":   "not_found",
-			"message": "学生不存在",
-		})
+		middleware.WriteError(c, http.StatusNotFound, "not_found", "学生不存在")
 		return
 	}
 
@@ -207,15 +218,16 @@ func (h *StudentHandler) UpdateStudent(c *gin.Context) {
 // DeleteStudent 删除学生
 func (h *StudentHandler) DeleteStudent(c *gin.Context) {
 	id := c.Param("id")
+	if id == "" {
+		middleware.WriteError(c, http.StatusBadRequest, "bad_request", "Student ID is required")
+		return
+	}
 
 	if h.store.DeleteStudent(id) {
 		c.JSON(http.StatusOK, gin.H{
 			"message": "学生删除成功",
 		})
 	} else {
-		c.JSON(http.StatusNotFound, gin.H{
-			"error":   "not_found",
-			"message": "学生不存在",
-		})
+		middleware.WriteError(c, http.StatusNotFound, "not_found", "学生不存在")
 	}
 }

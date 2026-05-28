@@ -67,7 +67,11 @@ func (h *RepairHandler) GetRepairRequestsPaginated(c *gin.Context) {
 
 // GetRepairRequestsAll 获取所有维修申请（传统方式，保持兼容性）
 func (h *RepairHandler) GetRepairRequestsAll(c *gin.Context) {
-	requests := h.store.GetAllRepairRequests()
+	requests, err := h.store.GetAllRepairRequests()
+	if err != nil {
+		middleware.WriteError(c, http.StatusInternalServerError, "internal_error", "查询报修失败")
+		return
+	}
 	// 确保返回的不是 nil，而是空数组
 	if requests == nil {
 		requests = []*models.RepairRequest{}
@@ -78,7 +82,11 @@ func (h *RepairHandler) GetRepairRequestsAll(c *gin.Context) {
 // GetAllRepairRequests 获取所有报修请求
 func (h *RepairHandler) GetAllRepairRequests(c *gin.Context) {
 
-	requests := h.store.GetAllRepairRequests()
+	requests, err := h.store.GetAllRepairRequests()
+	if err != nil {
+		middleware.WriteError(c, http.StatusInternalServerError, "internal_error", "查询报修失败")
+		return
+	}
 	// 确保返回的不是 nil，而是空数组
 	if requests == nil {
 		requests = []*models.RepairRequest{}

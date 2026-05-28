@@ -19,9 +19,9 @@ type MockStore struct {
 	mock.Mock
 }
 
-func (m *MockStore) GetAllStudents() []*models.Student {
+func (m *MockStore) GetAllStudents() ([]*models.Student, error) {
 	args := m.Called()
-	return args.Get(0).([]*models.Student)
+	return args.Get(0).([]*models.Student), args.Error(1)
 }
 
 func (m *MockStore) GetStudentsPaginated(req *models.PaginatedRequest, filter *models.StudentFilter) (*models.PaginatedResponse, error) {
@@ -49,9 +49,9 @@ func (m *MockStore) DeleteStudent(id string) bool {
 	return args.Bool(0)
 }
 
-func (m *MockStore) GetAllBuildings() []*models.Building {
+func (m *MockStore) GetAllBuildings() ([]*models.Building, error) {
 	args := m.Called()
-	return args.Get(0).([]*models.Building)
+	return args.Get(0).([]*models.Building), args.Error(1)
 }
 
 func (m *MockStore) GetBuildingByID(id string) (*models.Building, bool) {
@@ -74,9 +74,9 @@ func (m *MockStore) DeleteBuilding(id string) bool {
 	return args.Bool(0)
 }
 
-func (m *MockStore) GetAllRooms() []*models.Room {
+func (m *MockStore) GetAllRooms() ([]*models.Room, error) {
 	args := m.Called()
-	return args.Get(0).([]*models.Room)
+	return args.Get(0).([]*models.Room), args.Error(1)
 }
 
 func (m *MockStore) GetRoomsPaginated(req *models.PaginatedRequest, filter *models.RoomFilter) (*models.PaginatedResponse, error) {
@@ -104,9 +104,9 @@ func (m *MockStore) DeleteRoom(id string) bool {
 	return args.Bool(0)
 }
 
-func (m *MockStore) GetAllRepairRequests() []*models.RepairRequest {
+func (m *MockStore) GetAllRepairRequests() ([]*models.RepairRequest, error) {
 	args := m.Called()
-	return args.Get(0).([]*models.RepairRequest)
+	return args.Get(0).([]*models.RepairRequest), args.Error(1)
 }
 
 func (m *MockStore) GetRepairRequestsPaginated(req *models.PaginatedRequest, filter *models.RepairFilter) (*models.PaginatedResponse, error) {
@@ -134,9 +134,9 @@ func (m *MockStore) DeleteRepairRequest(id string) bool {
 	return args.Bool(0)
 }
 
-func (m *MockStore) GetAllNotices() []*models.Notice {
+func (m *MockStore) GetAllNotices() ([]*models.Notice, error) {
 	args := m.Called()
-	return args.Get(0).([]*models.Notice)
+	return args.Get(0).([]*models.Notice), args.Error(1)
 }
 
 func (m *MockStore) GetNoticeByID(id string) (*models.Notice, bool) {
@@ -233,27 +233,6 @@ func (m *MockStore) GetAvailableRooms() ([]*models.Room, error) {
 	args := m.Called()
 	return args.Get(0).([]*models.Room), args.Error(1)
 }
-}
-
-func (m *MockStore) ApproveRoomSwapApplication(id string, req *models.ApproveRoomSwapRequest) error {
-	args := m.Called(id, req)
-	return args.Error(0)
-}
-
-func (m *MockStore) DeleteRoomSwapApplication(id string) bool {
-	args := m.Called(id)
-	return args.Bool(0)
-}
-
-func (m *MockStore) GetRoomSwapHistory(userID string) ([]*models.RoomSwapHistory, error) {
-	args := m.Called(userID)
-	return args.Get(0).([]*models.RoomSwapHistory), args.Error(1)
-}
-
-func (m *MockStore) GetAvailableRooms() ([]*models.Room, error) {
-	args := m.Called()
-	return args.Get(0).([]*models.Room), args.Error(1)
-}
 
 func (m *MockStore) GetAccessLogsPaginated(req *models.PaginatedRequest, filter *models.AccessLogFilter) (*models.PaginatedResponse, error) {
 	args := m.Called(req, filter)
@@ -305,7 +284,7 @@ func setupAccessLogTest() (*gin.Engine, *MockStore) {
 }
 
 func TestCreateAccessLog_NormalEntry(t *testing.T) {
-	router, mockStore := setupAccessLogTest()
+	_, mockStore := setupAccessLogTest()
 
 	req := models.CreateAccessLogRequest{
 		StudentID:   "student-001",
@@ -339,7 +318,7 @@ func TestCreateAccessLog_NormalEntry(t *testing.T) {
 	handler.CreateAccessLog(c)
 
 	assert.Equal(t, http.StatusCreated, w.Code)
-	
+
 	var response models.AccessLog
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
@@ -350,7 +329,7 @@ func TestCreateAccessLog_NormalEntry(t *testing.T) {
 }
 
 func TestCreateAccessLog_LateEntry(t *testing.T) {
-	router, mockStore := setupAccessLogTest()
+	_, mockStore := setupAccessLogTest()
 
 	// 模拟23:30的晚归记录
 	lateTime := time.Now()
@@ -388,7 +367,7 @@ func TestCreateAccessLog_LateEntry(t *testing.T) {
 	handler.CreateAccessLog(c)
 
 	assert.Equal(t, http.StatusCreated, w.Code)
-	
+
 	var response models.AccessLog
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
@@ -398,7 +377,7 @@ func TestCreateAccessLog_LateEntry(t *testing.T) {
 }
 
 func TestCreateAccessLog_InvalidRequest(t *testing.T) {
-	router, mockStore := setupAccessLogTest()
+	_, mockStore := setupAccessLogTest()
 
 	// 缺少必填字段的请求
 	req := map[string]string{
@@ -447,7 +426,7 @@ func TestGetAccessLogs(t *testing.T) {
 	var response models.PaginatedResponse
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
-	assert.Equal(t, float64(1), response.Total)
+	assert.Equal(t, int64(1), response.Total)
 
 	mockStore.AssertExpectations(t)
 }

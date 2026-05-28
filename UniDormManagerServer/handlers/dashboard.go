@@ -6,6 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"unidorm-manager-server/cache"
+	"unidorm-manager-server/middleware"
 	"unidorm-manager-server/models"
 	"unidorm-manager-server/store"
 )
@@ -31,13 +32,25 @@ func (h *DashboardHandler) GetDashboardStats(c *gin.Context) {
 		}
 	}
 
-	students := h.store.GetAllStudents()
-	rooms := h.store.GetAllRooms()
-	repairs := h.store.GetAllRepairRequests()
+	students, err := h.store.GetAllStudents()
+	if err != nil {
+		middleware.WriteError(c, http.StatusInternalServerError, "internal_error", "查询学生失败")
+		return
+	}
+	rooms, err := h.store.GetAllRooms()
+	if err != nil {
+		middleware.WriteError(c, http.StatusInternalServerError, "internal_error", "查询房间失败")
+		return
+	}
+	repairs, err := h.store.GetAllRepairRequests()
+	if err != nil {
+		middleware.WriteError(c, http.StatusInternalServerError, "internal_error", "查询报修失败")
+		return
+	}
 
 	// 计算统计数据
 	totalStudents := len(students)
-	
+
 	// 计算入住率
 	totalCapacity := 0
 	totalOccupied := 0

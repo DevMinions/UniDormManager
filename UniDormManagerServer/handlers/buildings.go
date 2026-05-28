@@ -23,13 +23,17 @@ func NewBuildingHandler(s store.StoreInterface) *BuildingHandler {
 
 // GetAllBuildings 获取所有楼栋
 func (h *BuildingHandler) GetAllBuildings(c *gin.Context) {
-	allBuildings := h.store.GetAllBuildings()
-	
+	allBuildings, err := h.store.GetAllBuildings()
+	if err != nil {
+		middleware.WriteError(c, http.StatusInternalServerError, "internal_error", "查询楼栋失败")
+		return
+	}
+
 	// 确保 allBuildings 不是 nil
 	if allBuildings == nil {
 		allBuildings = []*models.Building{}
 	}
-	
+
 	// 根据权限范围过滤数据
 	claims := auth.GetClaims(c)
 	if claims == nil {
@@ -57,7 +61,7 @@ func (h *BuildingHandler) GetAllBuildings(c *gin.Context) {
 		for _, buildingID := range claims.BuildingIDs {
 			buildingMap[buildingID] = true
 		}
-		
+
 		for _, building := range allBuildings {
 			if buildingMap[building.ID] {
 				filteredBuildings = append(filteredBuildings, building)
@@ -111,7 +115,7 @@ func (h *BuildingHandler) GetBuildingByID(c *gin.Context) {
 				break
 			}
 		}
-		
+
 		if !hasAccess {
 			middleware.WriteError(c, http.StatusForbidden, "forbidden", "Access denied")
 			return

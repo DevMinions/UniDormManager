@@ -50,6 +50,7 @@ func createTables(ctx context.Context) error {
 			student_id VARCHAR(50) UNIQUE NOT NULL,
 			major VARCHAR(100),
 			room_number VARCHAR(20) DEFAULT '-',
+			building VARCHAR(50) DEFAULT '',
 			status VARCHAR(20) DEFAULT 'Active',
 			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 			updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -68,6 +69,7 @@ func createTables(ctx context.Context) error {
 			id VARCHAR(36) PRIMARY KEY,
 			number VARCHAR(20) NOT NULL,
 			building VARCHAR(50) NOT NULL,
+			floor INTEGER DEFAULT 1,
 			capacity INTEGER NOT NULL,
 			occupied INTEGER DEFAULT 0,
 			type VARCHAR(20) NOT NULL,
@@ -199,6 +201,29 @@ func createTables(ctx context.Context) error {
 			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 			updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 		)`,
+		`CREATE TABLE IF NOT EXISTS inspections (
+			id VARCHAR(36) PRIMARY KEY,
+			room_number VARCHAR(20) NOT NULL,
+			building VARCHAR(50) NOT NULL,
+			inspector VARCHAR(100) NOT NULL,
+			check_date TIMESTAMP NOT NULL,
+			overall_score INTEGER,
+			status VARCHAR(20),
+			comment TEXT,
+			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+			updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+		)`,
+		`CREATE TABLE IF NOT EXISTS inspection_details (
+			id VARCHAR(36) PRIMARY KEY,
+			inspection_id VARCHAR(36) NOT NULL,
+			category VARCHAR(50) NOT NULL,
+			item VARCHAR(100) NOT NULL,
+			score INTEGER NOT NULL,
+			max_score INTEGER NOT NULL DEFAULT 25,
+			comment TEXT,
+			photo_url VARCHAR(500),
+			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+		)`,
 		// 创建索引
 		`CREATE INDEX IF NOT EXISTS idx_students_student_id ON students(student_id)`,
 		`CREATE INDEX IF NOT EXISTS idx_students_room_number ON students(room_number)`,
@@ -211,6 +236,9 @@ func createTables(ctx context.Context) error {
 		`CREATE INDEX IF NOT EXISTS idx_user_roles_role_id ON user_roles(role_id)`,
 		`CREATE INDEX IF NOT EXISTS idx_role_permissions_role_id ON role_permissions(role_id)`,
 		`CREATE INDEX IF NOT EXISTS idx_token_blacklist_expires_at ON token_blacklist(expires_at)`,
+		// 补列：CREATE TABLE IF NOT EXISTS 对已存在的表不会加列，需用 ALTER 单独补
+		`ALTER TABLE rooms ADD COLUMN IF NOT EXISTS floor INTEGER DEFAULT 1`,
+		`ALTER TABLE students ADD COLUMN IF NOT EXISTS building VARCHAR(50) DEFAULT ''`,
 	}
 
 	for _, table := range tables {

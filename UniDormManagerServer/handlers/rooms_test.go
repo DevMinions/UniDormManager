@@ -9,13 +9,13 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
-	
+
 	"unidorm-manager-server/models"
 )
 
 func TestRoomHandler_GetRoomsAll(t *testing.T) {
 	gin.SetMode(gin.TestMode)
-	
+
 	tests := []struct {
 		name           string
 		mockRooms      []*models.Room
@@ -45,26 +45,26 @@ func TestRoomHandler_GetRoomsAll(t *testing.T) {
 			expectedCount:  0,
 		},
 	}
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			mockStore := new(MockStore)
 			handler := NewRoomHandler(mockStore)
-			
-			mockStore.On("GetAllRooms").Return(tt.mockRooms)
-			
+
+			mockStore.On("GetAllRooms").Return(tt.mockRooms, nil)
+
 			router := setupTestRouter()
 			router.GET("/rooms", handler.GetRoomsAll)
-			
+
 			w := makeRequest(t, router, "GET", "/rooms", nil)
-			
+
 			assert.Equal(t, tt.expectedStatus, w.Code)
-			
+
 			var response []*models.Room
 			err := json.Unmarshal(w.Body.Bytes(), &response)
 			assert.NoError(t, err)
 			assert.Len(t, response, tt.expectedCount)
-			
+
 			mockStore.AssertExpectations(t)
 		})
 	}
@@ -72,7 +72,7 @@ func TestRoomHandler_GetRoomsAll(t *testing.T) {
 
 func TestRoomHandler_GetRoomsPaginated(t *testing.T) {
 	gin.SetMode(gin.TestMode)
-	
+
 	tests := []struct {
 		name           string
 		queryParams    string
@@ -116,28 +116,28 @@ func TestRoomHandler_GetRoomsPaginated(t *testing.T) {
 			expectedStatus: http.StatusInternalServerError,
 		},
 	}
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			mockStore := new(MockStore)
 			handler := NewRoomHandler(mockStore)
-			
+
 			mockStore.On("GetRoomsPaginated", mock.Anything, mock.Anything).Return(tt.mockResponse, tt.mockError)
-			
+
 			router := setupTestRouter()
 			router.GET("/rooms", handler.GetRoomsPaginated)
-			
+
 			w := makeRequest(t, router, "GET", "/rooms"+tt.queryParams, nil)
-			
+
 			assert.Equal(t, tt.expectedStatus, w.Code)
-			
+
 			if tt.expectedStatus == http.StatusOK && tt.mockResponse != nil {
 				var response models.PaginatedResponse
 				err := json.Unmarshal(w.Body.Bytes(), &response)
 				assert.NoError(t, err)
 				assert.Equal(t, tt.mockResponse.Total, response.Total)
 			}
-			
+
 			mockStore.AssertExpectations(t)
 		})
 	}
@@ -145,7 +145,7 @@ func TestRoomHandler_GetRoomsPaginated(t *testing.T) {
 
 func TestRoomHandler_GetRoomByID(t *testing.T) {
 	gin.SetMode(gin.TestMode)
-	
+
 	tests := []struct {
 		name           string
 		roomID         string
@@ -175,34 +175,34 @@ func TestRoomHandler_GetRoomByID(t *testing.T) {
 			expectedStatus: http.StatusNotFound,
 		},
 	}
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			mockStore := new(MockStore)
 			handler := NewRoomHandler(mockStore)
-			
+
 			if tt.roomID != "" {
 				mockStore.On("GetRoomByID", tt.roomID).Return(tt.mockRoom, tt.mockExists)
 			}
-			
+
 			router := setupTestRouter()
 			router.GET("/rooms/:id", handler.GetRoomByID)
-			
+
 			path := "/rooms/" + tt.roomID
 			if tt.roomID == "" {
 				path = "/rooms/"
 			}
 			w := makeRequest(t, router, "GET", path, nil)
-			
+
 			assert.Equal(t, tt.expectedStatus, w.Code)
-			
+
 			if tt.expectedStatus == http.StatusOK {
 				var response models.Room
 				err := json.Unmarshal(w.Body.Bytes(), &response)
 				assert.NoError(t, err)
 				assert.Equal(t, tt.mockRoom.Number, response.Number)
 			}
-			
+
 			if tt.roomID != "" {
 				mockStore.AssertExpectations(t)
 			}
@@ -212,7 +212,7 @@ func TestRoomHandler_GetRoomByID(t *testing.T) {
 
 func TestRoomHandler_CreateRoom(t *testing.T) {
 	gin.SetMode(gin.TestMode)
-	
+
 	tests := []struct {
 		name           string
 		requestBody    models.CreateRoomRequest
@@ -304,23 +304,23 @@ func TestRoomHandler_CreateRoom(t *testing.T) {
 			expectedStatus: http.StatusBadRequest,
 		},
 	}
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			mockStore := new(MockStore)
 			handler := NewRoomHandler(mockStore)
-			
+
 			if tt.mockRoom != nil {
 				mockStore.On("CreateRoom", mock.Anything).Return(tt.mockRoom)
 			}
-			
+
 			router := setupTestRouter()
 			router.POST("/rooms", handler.CreateRoom)
-			
+
 			w := makeRequest(t, router, "POST", "/rooms", tt.requestBody)
-			
+
 			assert.Equal(t, tt.expectedStatus, w.Code)
-			
+
 			if tt.expectedStatus == http.StatusCreated {
 				var response models.Room
 				err := json.Unmarshal(w.Body.Bytes(), &response)
@@ -328,7 +328,7 @@ func TestRoomHandler_CreateRoom(t *testing.T) {
 				assert.Equal(t, tt.mockRoom.Number, response.Number)
 				assert.Equal(t, tt.mockRoom.Building, response.Building)
 			}
-			
+
 			mockStore.AssertExpectations(t)
 		})
 	}
@@ -336,7 +336,7 @@ func TestRoomHandler_CreateRoom(t *testing.T) {
 
 func TestRoomHandler_UpdateRoom(t *testing.T) {
 	gin.SetMode(gin.TestMode)
-	
+
 	tests := []struct {
 		name           string
 		roomID         string
@@ -364,17 +364,17 @@ func TestRoomHandler_UpdateRoom(t *testing.T) {
 			expectedStatus: http.StatusOK,
 		},
 		{
-			name:      "房间不存在",
-			roomID:    "999",
-			requestBody: models.UpdateRoomRequest{Number: "A101"},
+			name:           "房间不存在",
+			roomID:         "999",
+			requestBody:    models.UpdateRoomRequest{Number: "A101"},
 			mockRoom:       nil,
 			mockExists:     false,
 			expectedStatus: http.StatusNotFound,
 		},
 		{
-			name:      "房间ID为空",
-			roomID:    "",
-			requestBody: models.UpdateRoomRequest{Number: "A101"},
+			name:           "房间ID为空",
+			roomID:         "",
+			requestBody:    models.UpdateRoomRequest{Number: "A101"},
 			mockRoom:       nil,
 			mockExists:     false,
 			expectedStatus: http.StatusNotFound,
@@ -400,36 +400,44 @@ func TestRoomHandler_UpdateRoom(t *testing.T) {
 			expectedStatus: http.StatusBadRequest,
 		},
 	}
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			mockStore := new(MockStore)
 			handler := NewRoomHandler(mockStore)
-			
-			if tt.roomID != "" && (tt.requestBody.Type == "" || tt.requestBody.Type == "Male" || tt.requestBody.Type == "Female" || tt.requestBody.Type == "Co-ed") {
-				if tt.requestBody.Status == "" || tt.requestBody.Status == "Available" || tt.requestBody.Status == "Full" || tt.requestBody.Status == "Maintenance" {
+
+			validType := tt.requestBody.Type == "" || tt.requestBody.Type == "Male" || tt.requestBody.Type == "Female" || tt.requestBody.Type == "Co-ed"
+			validStatus := tt.requestBody.Status == "" || tt.requestBody.Status == "Available" || tt.requestBody.Status == "Full" || tt.requestBody.Status == "Maintenance"
+			if tt.roomID != "" && validType && validStatus {
+				// Pre-validation calls GetRoomByID before UpdateRoom
+				if tt.mockRoom != nil {
+					mockStore.On("GetRoomByID", tt.roomID).Return(tt.mockRoom, tt.mockExists)
+				} else {
+					mockStore.On("GetRoomByID", tt.roomID).Return((*models.Room)(nil), tt.mockExists)
+				}
+				if tt.mockExists {
 					mockStore.On("UpdateRoom", tt.roomID, mock.Anything).Return(tt.mockRoom, tt.mockExists)
 				}
 			}
-			
+
 			router := setupTestRouter()
 			router.PUT("/rooms/:id", handler.UpdateRoom)
-			
+
 			path := "/rooms/" + tt.roomID
 			if tt.roomID == "" {
 				path = "/rooms/"
 			}
 			w := makeRequest(t, router, "PUT", path, tt.requestBody)
-			
+
 			assert.Equal(t, tt.expectedStatus, w.Code)
-			
+
 			if tt.expectedStatus == http.StatusOK {
 				var response models.Room
 				err := json.Unmarshal(w.Body.Bytes(), &response)
 				assert.NoError(t, err)
 				assert.Equal(t, tt.mockRoom.Number, response.Number)
 			}
-			
+
 			if tt.roomID != "" {
 				mockStore.AssertExpectations(t)
 			}
@@ -439,7 +447,7 @@ func TestRoomHandler_UpdateRoom(t *testing.T) {
 
 func TestRoomHandler_DeleteRoom(t *testing.T) {
 	gin.SetMode(gin.TestMode)
-	
+
 	tests := []struct {
 		name           string
 		roomID         string
@@ -465,27 +473,27 @@ func TestRoomHandler_DeleteRoom(t *testing.T) {
 			expectedStatus: http.StatusNotFound,
 		},
 	}
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			mockStore := new(MockStore)
 			handler := NewRoomHandler(mockStore)
-			
+
 			if tt.roomID != "" {
 				mockStore.On("DeleteRoom", tt.roomID).Return(tt.mockDeleted)
 			}
-			
+
 			router := setupTestRouter()
 			router.DELETE("/rooms/:id", handler.DeleteRoom)
-			
+
 			path := "/rooms/" + tt.roomID
 			if tt.roomID == "" {
 				path = "/rooms/"
 			}
 			w := makeRequest(t, router, "DELETE", path, nil)
-			
+
 			assert.Equal(t, tt.expectedStatus, w.Code)
-			
+
 			if tt.roomID != "" {
 				mockStore.AssertExpectations(t)
 			}
