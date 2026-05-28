@@ -8,6 +8,8 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/DevMinions/UniDormManager)
 
+📖 **Languages**: **简体中文** · [English](README.en.md)
+
 ---
 
 ## ✨ 项目简介
