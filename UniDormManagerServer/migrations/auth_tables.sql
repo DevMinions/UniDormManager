@@ -210,12 +210,14 @@ SELECT 'role-system-admin', id, 'all'
 FROM permissions
 ON CONFLICT (role_id, permission_id) DO NOTHING;
 
--- 创建默认系统管理员账户（密码：admin123，生产环境请修改）
--- 密码哈希：$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewY5GyYqJqZqZqZq
--- 实际使用时应该使用 auth.HashPassword("admin123") 生成
-INSERT INTO users (id, username, password_hash, email, real_name, status) VALUES
-('user-admin-1', 'admin', '$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewY5GyYqJqZqZqZq', 'admin@unidorm.edu', '系统管理员', 'Active')
-ON CONFLICT (id) DO NOTHING;
+-- [DEPRECATED] 默认系统管理员账户的种子已下移到 Go 代码（database/database.go:initDefaultAdmin）。
+-- 该函数在后端首启时若 admin 不存在则随机生成 16 字符密码并日志打印一次；
+-- 也支持 ADMIN_INITIAL_PASSWORD 环境变量预设。
+-- 下面这段 INSERT 仅作为参考保留；它的哈希是无效占位符，不要在生产中执行。
+-- 如需手动重置密码，使用：cd UniDormManagerServer && go run cmd/init_admin/main.go <new-password>
+-- INSERT INTO users (id, username, password_hash, email, real_name, status) VALUES
+-- ('user-admin-1', 'admin', '<bcrypt-hash-here>', 'admin@unidorm.edu', '系统管理员', 'Active')
+-- ON CONFLICT (id) DO NOTHING;
 
 -- 为系统管理员分配角色
 INSERT INTO user_roles (user_id, role_id) VALUES

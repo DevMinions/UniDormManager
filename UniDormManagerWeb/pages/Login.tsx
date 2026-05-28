@@ -147,7 +147,7 @@ const Login: React.FC = () => {
 
           <div className="mt-8 pt-6 border-t border-slate-100 text-center">
              <p className="text-xs text-slate-400">
-                默认账号: admin / admin123
+                首次部署后查看后端启动日志获取初始密码
              </p>
           </div>
         </div>

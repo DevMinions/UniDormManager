@@ -108,10 +108,10 @@ curl http://localhost:8080/api/students \
 
 ```bash
 cd UniDormManagerServer
-go run cmd/init_admin/main.go [password]
+go run cmd/init_admin/main.go <new-password>
 ```
 
-默认密码：`admin123`
+`<new-password>` 必须显式提供（至少 8 字符），不再有内置默认密码。后端首次启动时若未通过 `ADMIN_INITIAL_PASSWORD` 环境变量预设，会随机生成一次并打印到日志。
 
 ### 方法 2：手动创建
 

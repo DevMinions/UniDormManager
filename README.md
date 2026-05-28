@@ -73,9 +73,9 @@ docker compose exec -T postgres psql -U postgres -d unidorm < scripts/seed_test_
 ### 默认账号
 
 - **用户名**: `admin`
-- **密码**: `admin123`
+- **密码**: 首次启动后端时会在日志中打印一次（搜索 `INITIAL PASSWORD`），或通过 `ADMIN_INITIAL_PASSWORD` 环境变量预设
 
-⚠️ 生产环境请立即修改默认密码！
+⚠️ 首启完成请立即登录并修改 admin 密码。
 
 ---
 

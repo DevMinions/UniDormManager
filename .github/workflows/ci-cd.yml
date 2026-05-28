@@ -150,7 +150,7 @@ jobs:
     - name: Build and push frontend
       uses: docker/build-push-action@v5
       with:
-        context: ./UniDormManager-UniApp
+        context: ./UniDormManagerWeb
         push: true
         tags: |
           ${{ env.REGISTRY }}/${{ env.FRONTEND_IMAGE }}:${{ github.sha }}
