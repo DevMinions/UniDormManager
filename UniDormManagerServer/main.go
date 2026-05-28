@@ -92,6 +92,7 @@ func main() {
 	accessLogHandler := handlers.NewAccessLogHandler(s)
 	lateReturnHandler := handlers.NewLateReturnHandler(s)
 	uploadHandler := handlers.NewUploadHandler()
+	statisticsHandler := handlers.NewStatisticsHandler()
 
 	// 创建 Gin 路由引擎
 	r := gin.New()
@@ -121,6 +122,13 @@ func main() {
 		api.GET("/scheduler/jobs", middleware.RequirePermission("users:read"), func(c *gin.Context) {
 			c.JSON(200, gin.H{"jobs": scheduler.Jobs()})
 		})
+
+		// 时序统计（dashboard 趋势图用）
+		statistics := api.Group("/statistics")
+		statistics.Use(middleware.RequirePermission("dashboard:read"))
+		{
+			statistics.GET("/repairs-by-day", statisticsHandler.GetRepairsByDay)
+		}
 
 		// 用户管理路由（需要管理员权限）
 		users := api.Group("/users")

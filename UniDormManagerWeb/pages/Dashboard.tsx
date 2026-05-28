@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, 
-  PieChart, Pie, Cell, Legend 
+import {
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+  PieChart, Pie, Cell, Legend,
+  LineChart, Line,
 } from 'recharts';
 import { Users, Building, AlertTriangle, CheckCircle, Loader2 } from 'lucide-react';
 import { api } from '../services/api';
@@ -17,14 +18,20 @@ const Dashboard: React.FC = () => {
     occupancyData: [] as Array<{ name: string; occupied: number; capacity: number }>,
     requestStatus: [] as Array<{ name: string; value: number; color: string }>,
   });
+  const [repairsTrend, setRepairsTrend] = useState<Array<{ day: string; total: number; completed: number; pending: number }>>([]);
 
   useEffect(() => {
     const fetchStats = async () => {
       try {
         setLoading(true);
         setError(null);
-        const data = await api.getDashboardStats();
+        // 主 stats 与时序趋势并行拉，互不阻塞
+        const [data, trend] = await Promise.all([
+          api.getDashboardStats(),
+          api.getRepairsByDay(30).catch(() => ({ days: 30, data: [] })),
+        ]);
         setStats(data);
+        setRepairsTrend(trend.data || []);
       } catch (err: any) {
         console.error('Failed to load dashboard stats:', err);
         setError(err.message || '加载数据失败');
@@ -171,6 +178,47 @@ const Dashboard: React.FC = () => {
               </div>
             )}
           </div>
+        </div>
+      </div>
+
+      {/* Repairs Trend - 时序折线图 */}
+      <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-lg font-semibold">报修趋势（近 30 天）</h2>
+          <p className="text-xs text-slate-400">每日新增 / 已完成 / 待处理</p>
+        </div>
+        <div className="h-64">
+          {repairsTrend.length > 0 ? (
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={repairsTrend}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                <XAxis
+                  dataKey="day"
+                  axisLine={false}
+                  tickLine={false}
+                  tickFormatter={(d: string) => d.slice(5)} // MM-DD
+                  interval="preserveStartEnd"
+                  minTickGap={20}
+                />
+                <YAxis axisLine={false} tickLine={false} allowDecimals={false} />
+                <Tooltip
+                  contentStyle={{
+                    borderRadius: '12px',
+                    border: 'none',
+                    boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
+                  }}
+                />
+                <Legend />
+                <Line type="monotone" dataKey="total" name="新增" stroke="#6366f1" strokeWidth={2} dot={false} />
+                <Line type="monotone" dataKey="completed" name="已完成" stroke="#10b981" strokeWidth={2} dot={false} />
+                <Line type="monotone" dataKey="pending" name="待处理" stroke="#f59e0b" strokeWidth={2} dot={false} />
+              </LineChart>
+            </ResponsiveContainer>
+          ) : (
+            <div className="flex items-center justify-center h-full text-slate-400">
+              <p>暂无趋势数据</p>
+            </div>
+          )}
         </div>
       </div>
 

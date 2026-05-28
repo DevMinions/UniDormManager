@@ -666,4 +666,12 @@ export const api = {
       requestStatus: Array<{ name: string; value: number; color: string }>;
     }>('/dashboard/stats');
   },
+
+  // --- Statistics (时序) ---
+  getRepairsByDay: async (days = 30) => {
+    return request<{
+      days: number;
+      data: Array<{ day: string; total: number; completed: number; pending: number }>;
+    }>(`/statistics/repairs-by-day?days=${days}`);
+  },
 };
