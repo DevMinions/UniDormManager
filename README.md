@@ -81,10 +81,10 @@ docker compose exec -T postgres psql -U postgres -d unidorm < scripts/seed_test_
 
 ## 📚 文档
 
-- [快速开始指南](QUICK_START.md)
-- [数据库初始化](DATABASE_INIT.md)
-- [Docker部署指南](DOCKER.md)
-- [开发备忘录](DEVELOPMENT_MEMO.md)
+- [快速开始指南](docs/QUICK_START.md)
+- [数据库初始化](docs/DATABASE_INIT.md)
+- [Docker部署指南](docs/DOCKER.md)
+- [开发备忘录](docs/DEVELOPMENT_MEMO.md)
 - [贡献指南](CONTRIBUTING.md)
 
 ---

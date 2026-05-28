@@ -11,7 +11,7 @@
 ### 方法 1：自动修复（推荐）
 
 ```bash
-./setup-docker.sh
+./scripts/setup-docker.sh
 ```
 
 然后**重新登录**或运行：
@@ -35,7 +35,7 @@ newgrp docker
 ### 1. 修复权限后，测试配置
 
 ```bash
-./test-docker.sh
+./scripts/test-docker.sh
 ```
 
 ### 2. 启动所有服务
@@ -109,11 +109,11 @@ docker compose restart
 
 ## ❓ 遇到问题？
 
-1. **权限问题**: 运行 `./setup-docker.sh` 并重新登录
+1. **权限问题**: 运行 `./scripts/setup-docker.sh` 并重新登录
 2. **端口占用**: 修改 `docker-compose.yml` 中的端口
 3. **查看详细文档**: [SETUP_DOCKER.md](./SETUP_DOCKER.md)
 
 ---
 
-**下一步**: 运行 `./setup-docker.sh` 修复权限！
+**下一步**: 运行 `./scripts/setup-docker.sh` 修复权限！
 

@@ -5,7 +5,7 @@
 如果这是第一次使用 Docker，请先修复权限：
 
 ```bash
-./setup-docker.sh
+./scripts/setup-docker.sh
 ```
 
 然后**重新登录**或运行：
@@ -16,7 +16,7 @@ newgrp docker
 ## 第二步：测试配置
 
 ```bash
-./test-docker.sh
+./scripts/test-docker.sh
 ```
 
 ## 第三步：启动项目
@@ -32,11 +32,11 @@ newgrp docker
 cd /home/adamyu/CursorPorjects/UniDormManager
 
 # 2. 设置 Docker 权限（首次运行）
-./setup-docker.sh
+./scripts/setup-docker.sh
 # 然后重新登录或运行: newgrp docker
 
 # 3. 测试配置
-./test-docker.sh
+./scripts/test-docker.sh
 
 # 4. 启动项目
 ./start.sh
