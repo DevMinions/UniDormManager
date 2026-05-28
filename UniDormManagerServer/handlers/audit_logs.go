@@ -2,11 +2,13 @@ package handlers
 
 import (
 	"context"
+	"io"
 	"net/http"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
 
+	"unidorm-manager-server/audit"
 	"unidorm-manager-server/database"
 	"unidorm-manager-server/middleware"
 )
@@ -110,5 +112,33 @@ func (h *AuditLogsHandler) GetAuditLogs(c *gin.Context) {
 		"total":    total,
 		"page":     page,
 		"pageSize": pageSize,
+	})
+}
+
+// StreamAuditLogs GET /api/audit-logs/stream
+//
+// SSE 实时流。客户端 EventSource 监听即可拿到每条新写操作。
+// 客户端断开(c.Request.Context().Done())时自动 unsubscribe 释放 channel。
+func (h *AuditLogsHandler) StreamAuditLogs(c *gin.Context) {
+	c.Writer.Header().Set("Content-Type", "text/event-stream")
+	c.Writer.Header().Set("Cache-Control", "no-cache")
+	c.Writer.Header().Set("Connection", "keep-alive")
+	c.Writer.Header().Set("X-Accel-Buffering", "no") // 防止 nginx 缓冲
+
+	ch, unsubscribe := audit.Subscribe()
+	defer unsubscribe()
+
+	// 即发即用:用 c.Stream 让 gin 处理 flush
+	c.Stream(func(w io.Writer) bool {
+		select {
+		case ev, ok := <-ch:
+			if !ok {
+				return false
+			}
+			c.SSEvent("audit", ev)
+			return true
+		case <-c.Request.Context().Done():
+			return false
+		}
 	})
 }

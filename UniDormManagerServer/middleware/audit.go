@@ -3,10 +3,12 @@ package middleware
 import (
 	"context"
 	"log"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 
+	"unidorm-manager-server/audit"
 	"unidorm-manager-server/auth"
 	"unidorm-manager-server/database"
 )
@@ -54,9 +56,9 @@ func AuditLog() gin.HandlerFunc {
 		}
 
 		// 异步写,API 响应已 flush 给客户端,不阻塞
+		id := uuid.NewString()
 		go func() {
 			ctx := context.Background()
-			id := uuid.NewString()
 			_, err := database.DB.Exec(ctx, `
 				INSERT INTO audit_logs (id, user_id, username, method, path, status, ip, user_agent)
 				VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
@@ -65,5 +67,18 @@ func AuditLog() gin.HandlerFunc {
 				log.Printf("audit: insert failed: %v (method=%s path=%s)", err, method, path)
 			}
 		}()
+
+		// 同时实时广播给 SSE 订阅者(in-memory,best-effort)
+		audit.Publish(audit.Event{
+			ID:        id,
+			UserID:    userID,
+			Username:  username,
+			Method:    method,
+			Path:      path,
+			Status:    status,
+			IP:        ip,
+			UserAgent: ua,
+			CreatedAt: time.Now().Format("2006-01-02 15:04:05"),
+		})
 	}
 }

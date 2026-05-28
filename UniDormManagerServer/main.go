@@ -134,6 +134,7 @@ func main() {
 
 		// 审计日志(admin 可见,users:read 权限)
 		api.GET("/audit-logs", middleware.RequirePermission("users:read"), auditLogsHandler.GetAuditLogs)
+		api.GET("/audit-logs/stream", middleware.RequirePermission("users:read"), auditLogsHandler.StreamAuditLogs)
 
 		// 用户管理路由（需要管理员权限）
 		users := api.Group("/users")
