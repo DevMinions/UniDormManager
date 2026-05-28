@@ -174,13 +174,14 @@
 | **B5** RBAC permissions 未播种 | ✅ 修 | `database/init_auth_data.go`(追加 6 条:access_logs/late_returns/room_swaps 的 read+create/handle/approve;系统管理员通过既有通配 `SELECT ... FROM permissions` 自动获得) | 6 个 403 全部 → 200 |
 | **F1** Web 错误状态不显示 | ⚠️ 误报 | 无需改动 | hook (`usePaginatedData.ts` L14/48/74/98-105) 与页面 (Students.tsx L257, RoomManagement.tsx L366) 已实现 error;审核 harness `audit_web.js` 的正则 `/加载失败/` 与实际渲染文本 "加载数据失败" 不匹配,是 harness 文案 bug |
 
-### 本轮新发现 bug(留下一轮)
+### 本轮新发现 bug
 
-- **B6**(中):`GET /api/inspections/my` 500 `expected 1 arguments, got 2` —— SQL 参数化绑定数量错位。在旧 in-progress `handlers/inspections.go` 改动里引入。详细定位待下一轮
+- **B6** ✅ 已修:`GET /api/inspections/my` 500 `expected 1 arguments, got 2` —— 根因在 `utils/query_builder.go:232` `BuildInspectionQuery`,6 个 filter 分支都先 `qb.Where(..., val)`(已 append)又手动 `qb.args = append(qb.args, val)` 二次 append,导致 args 数翻倍而占位符数不变。删 6 行冗余 append 即修
+- ⚠️ **未触发同源 bug**:`BuildRoomQuery` L171/176 对 `CapacityMin/Max` 也是同样的二次 append 模式。审核中没人传这两个 filter 所以未触发。留待下一轮一并清理
 
 ### 最终验证
 
-- `python3 tests/audit_api.py` → **35/36 PASS**(剩 1 个是 B6)
+- `python3 tests/audit_api.py` → **36/36 PASS**(B6 修后)
 - `node tests/audit_web.js` → **17/17 PASS**
 - `cd UniDormManagerServer && go test ./...` → 全绿
 

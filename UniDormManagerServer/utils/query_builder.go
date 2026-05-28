@@ -245,32 +245,26 @@ func BuildInspectionQuery(ctx context.Context, req *models.PaginatedRequest, fil
 
 	if filter.Building != "" && filter.Building != "All" {
 		qb.Where(fmt.Sprintf("i.building = $%d", len(qb.args)+1), filter.Building)
-		qb.args = append(qb.args, filter.Building)
 	}
 
 	if filter.Inspector != "" {
 		qb.Where(fmt.Sprintf("i.inspector = $%d", len(qb.args)+1), filter.Inspector)
-		qb.args = append(qb.args, filter.Inspector)
 	}
 
 	if !filter.DateFrom.IsZero() {
 		qb.Where("i.check_date >= $"+fmt.Sprintf("%d", len(qb.args)+1), filter.DateFrom.Format("2006-01-02"))
-		qb.args = append(qb.args, filter.DateFrom.Format("2006-01-02"))
 	}
 
 	if !filter.DateTo.IsZero() {
 		qb.Where("i.check_date <= $"+fmt.Sprintf("%d", len(qb.args)+1), filter.DateTo.Format("2006-01-02"))
-		qb.args = append(qb.args, filter.DateTo.Format("2006-01-02"))
 	}
 
 	if filter.ScoreMin > 0 {
 		qb.Where("i.overall_score >= $"+fmt.Sprintf("%d", len(qb.args)+1), filter.ScoreMin)
-		qb.args = append(qb.args, filter.ScoreMin)
 	}
 
 	if filter.ScoreMax > 0 {
 		qb.Where("i.overall_score <= $"+fmt.Sprintf("%d", len(qb.args)+1), filter.ScoreMax)
-		qb.args = append(qb.args, filter.ScoreMax)
 	}
 
 	dataQB := qb.Clone().
