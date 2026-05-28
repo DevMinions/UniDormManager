@@ -16,6 +16,7 @@ import (
 	"unidorm-manager-server/logger"
 	"unidorm-manager-server/middleware"
 	"unidorm-manager-server/monitoring"
+	"unidorm-manager-server/scheduler"
 	"unidorm-manager-server/store"
 )
 
@@ -115,6 +116,11 @@ func main() {
 	{
 		// 通用文件上传（任意登录用户）
 		api.POST("/upload", uploadHandler.UploadFile)
+
+		// 调度器管理（admin 可见）
+		api.GET("/scheduler/jobs", middleware.RequirePermission("users:read"), func(c *gin.Context) {
+			c.JSON(200, gin.H{"jobs": scheduler.Jobs()})
+		})
 
 		// 用户管理路由（需要管理员权限）
 		users := api.Group("/users")
@@ -278,6 +284,10 @@ func main() {
 			monitoring.UpdateSystemMetrics()
 		}
 	}()
+
+	// 启动周期任务调度器（晚归扫描、过期 token 清理等）
+	scheduler.Start(s)
+	defer scheduler.Stop()
 
 	// 获取端口号，默认为 8080
 	port := cfg.Port
