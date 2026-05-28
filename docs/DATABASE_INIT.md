@@ -22,19 +22,19 @@
 
 ### 默认管理员账号
 - **用户名**: `admin`
-- **密码**: `admin123`
+- **密码**: 后端首启时随机生成（16 字符），日志中搜 `INITIAL PASSWORD`；或预先用 `ADMIN_INITIAL_PASSWORD` 环境变量固定值
 
 ### 使用步骤
 ```bash
 # 1. 启动所有服务（会自动初始化数据库）
 docker compose up -d
 
-# 2. 查看后端日志，确认初始化成功
-docker compose logs backend | grep -i "initialized\|admin"
+# 2. 查看后端日志，拿到 admin 首启密码
+docker compose logs backend | grep -A1 'INITIAL PASSWORD'
 
 # 3. 访问前端登录页面
 # http://localhost:3000
-# 使用 admin/admin123 登录
+# 用 admin + 上一步拿到的密码登录，登录后立即在用户管理里修改
 ```
 
 ### 特点
@@ -129,10 +129,8 @@ docker compose exec postgres psql -U postgres -d unidorm -c "SELECT username, em
 # 1. 进入后端容器
 docker compose exec backend sh
 
-# 2. 运行初始化工具（如果存在）
-./init_admin [新密码]
-
-# 默认密码是 admin123
+# 2. 运行初始化工具（密码必填，至少 8 字符）
+./init_admin <新密码>
 ```
 
 ### 使用 SQL 直接创建
@@ -140,8 +138,8 @@ docker compose exec backend sh
 # 连接到数据库
 docker compose exec postgres psql -U postgres -d unidorm
 
-# 执行以下 SQL（密码是 admin123 的哈希值，需要从代码获取或使用 bcrypt 生成）
-# 通常后端会自动创建，此方法仅用于特殊情况
+# 后端会自动建表 + 自动播种 admin；此方式仅用于特殊情况下的修复。
+# 如需手动重置密码，推荐用 init_admin CLI 而不是直接改 SQL。
 ```
 
 ---
@@ -187,7 +185,11 @@ docker compose logs backend | grep -i "initialized\|admin\|roles\|permissions"
 # Database tables created successfully
 # Roles initialized successfully
 # Auth data initialized successfully
-# Default admin user initialized (username: admin, password: admin123)
+# ================================================================
+#   Default admin user created (username: admin)
+#   INITIAL PASSWORD: <16-char-random>
+#   ⚠ This password is shown ONLY ONCE. Save it and change ASAP.
+# ================================================================
 ```
 
 ### 检查数据

@@ -133,9 +133,9 @@ docker-compose exec -T postgres psql -U postgres unidorm < backup.sql
 系统初始化后会创建默认管理员账户：
 
 - **用户名**: `admin`
-- **密码**: `admin123`
+- **密码**: 后端首启时随机生成，日志中搜 `INITIAL PASSWORD`；或用 `ADMIN_INITIAL_PASSWORD` 环境变量预设
 
-⚠️ **生产环境请立即修改默认密码！**
+⚠️ **首启完成请立即登录并修改 admin 密码！**
 
 ## 🛠️ 开发模式
 

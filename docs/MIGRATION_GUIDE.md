@@ -49,7 +49,7 @@ docker compose up -d
 
 ```bash
 # 在新服务器上执行
-git clone https://git.adamyu.top:20443/adamyu/UniDormManager.git
+git clone https://github.com/adamyu/UniDormManager.git
 cd UniDormManager
 git checkout dev
 ```
@@ -165,7 +165,7 @@ docker compose version
 
 ```bash
 # 1. 克隆项目
-git clone https://git.adamyu.top:20443/adamyu/UniDormManager.git
+git clone https://github.com/adamyu/UniDormManager.git
 cd UniDormManager
 
 # 2. 切换到dev分支
@@ -474,7 +474,7 @@ echo "Backup completed: $DATE"
 
 ```bash
 # 克隆项目
-git clone https://git.adamyu.top:20443/adamyu/UniDormManager.git
+git clone https://github.com/adamyu/UniDormManager.git
 cd UniDormManager && git checkout dev
 
 # 配置环境

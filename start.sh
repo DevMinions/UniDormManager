@@ -219,7 +219,7 @@ echo "进入数据库: docker exec -it unidorm-postgres psql -U postgres -d unid
 echo ""
 echo "🎯 默认登录信息："
 echo "用户名: admin"
-echo "密码: admin123"
+echo "密码: 查看后端日志，搜 'INITIAL PASSWORD'（或预设 ADMIN_INITIAL_PASSWORD）"
 echo ""
 echo "✨ 系统已准备就绪，请访问 http://localhost:3000 开始使用！"
 
