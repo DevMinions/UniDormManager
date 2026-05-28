@@ -7,6 +7,19 @@
 
 ---
 
+## [0.2.2] - 2026-05-28
+
+### 🐛 修复
+
+- **Students search 三列 AND 假绿** — `BuildStudentQuery` 串 `.WhereLike('s.name', s).WhereLike('s.student_id', s).WhereLike('s.major', s)`,`qb.Where` 自动 AND,要求三列同时含 search,绝大多数学生不符合 → 后端返 total=0。Students 页面搜索框输入任何东西后列表立刻变空,看起来像"无匹配"。改成单条 OR + 同一 `$n` 复用,跟 `BuildRoomQuery` 风格一致
+
+### 🧪 测试
+
+- **`tests/audit_web_crud_students.js`** 新文件 — Students 完整 UI CRUD 10 项(create → search 验三列 OR → edit → delete with `window.confirm` accept → 列表同步)
+- baseline **110/110 全绿** + 5 包 ok(从 100/100 → 110/110)
+
+---
+
 ## [0.2.1] - 2026-05-28
 
 文档 / 监控 / 测试 收尾版。无 API 变更,无 schema 变更,直接覆盖 v0.2.0 部署。
