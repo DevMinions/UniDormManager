@@ -177,7 +177,7 @@
 ### 本轮新发现 bug
 
 - **B6** ✅ 已修:`GET /api/inspections/my` 500 `expected 1 arguments, got 2` —— 根因在 `utils/query_builder.go:232` `BuildInspectionQuery`,6 个 filter 分支都先 `qb.Where(..., val)`(已 append)又手动 `qb.args = append(qb.args, val)` 二次 append,导致 args 数翻倍而占位符数不变。删 6 行冗余 append 即修
-- ⚠️ **未触发同源 bug**:`BuildRoomQuery` L171/176 对 `CapacityMin/Max` 也是同样的二次 append 模式。审核中没人传这两个 filter 所以未触发。留待下一轮一并清理
+- **B6b** ✅ 已修(同源):`BuildRoomQuery` 对 `CapacityMin`/`CapacityMax` filter 同模式二次 append。审核未触发(没人传这两个 filter),修 B6 时顺手清理 2 行。重启后端实测 `?capacityMin=1` / `?capacityMax=10` / `?capacityMin=2&capacityMax=6` 全部 200 返真数据
 
 ### 最终验证
 

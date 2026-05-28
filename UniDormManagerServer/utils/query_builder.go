@@ -166,12 +166,10 @@ func BuildRoomQuery(ctx context.Context, req *models.PaginatedRequest, filter *m
 
 	if filter.CapacityMin > 0 {
 		qb.Where("r.capacity >= $"+fmt.Sprintf("%d", len(qb.args)+1), filter.CapacityMin)
-		qb.args = append(qb.args, filter.CapacityMin)
 	}
 
 	if filter.CapacityMax > 0 {
 		qb.Where("r.capacity <= $"+fmt.Sprintf("%d", len(qb.args)+1), filter.CapacityMax)
-		qb.args = append(qb.args, filter.CapacityMax)
 	}
 
 	// 构建数据查询和计数查询
