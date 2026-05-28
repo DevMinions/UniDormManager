@@ -4,7 +4,9 @@
 
 .PHONY: help build up down logs ps clean test deploy restart up-f down-v rebuild \
         test-backend test-frontend backup restore shell-backend shell-db shell-redis \
-        update version health logs-backend logs-frontend logs-db
+        update version health logs-backend logs-frontend logs-db \
+        audit audit-api audit-web audit-web-crud audit-web-crud-students \
+        audit-web-crud-rooms audit-web-workflow-repairs
 
 # 默认目标
 help:
@@ -20,6 +22,7 @@ help:
 	@echo "  make ps         - List running containers"
 	@echo "  make clean      - Remove containers + volumes + images"
 	@echo "  make test       - Run backend + frontend tests"
+	@echo "  make audit      - Run full E2E baseline (audit_api + 4 audit_web_* + 工作流)"
 	@echo "  make backup     - Dump postgres database"
 	@echo "  make restore    - Restore postgres database (file=...)"
 
@@ -85,6 +88,40 @@ test-backend:
 # 前端测试
 test-frontend:
 	cd UniDormManagerWeb && npm test -- --run
+
+# ─────────────── 全栈 baseline E2E harness ───────────────
+# 预置:vite preview :3000(npm run build && npm run preview)+ 后端 :8082 + admin/admin123
+# 任何一个 fail 立即停止后续(set -e via && 链);最终汇总 baseline 通过项
+
+audit: audit-api audit-web audit-web-crud audit-web-crud-students audit-web-crud-rooms audit-web-workflow-repairs
+	@echo ""
+	@echo "============================================"
+	@echo "✅ baseline 全栈 E2E harness 全绿"
+	@echo "============================================"
+
+audit-api:
+	@echo "── audit_api (后端 API 38 项) ──"
+	BASE=$${BASE:-http://localhost:8082} python3 tests/audit_api.py
+
+audit-web:
+	@echo "── audit_web (Web 导航 17 项) ──"
+	WEB_BASE=$${WEB_BASE:-http://localhost:3000} node tests/audit_web.js
+
+audit-web-crud:
+	@echo "── audit_web_crud (Buildings UI CRUD 14 项) ──"
+	ADMIN_PASS=$${ADMIN_PASS:-admin123} node tests/audit_web_crud.js
+
+audit-web-crud-students:
+	@echo "── audit_web_crud_students (Students UI CRUD 10 项) ──"
+	ADMIN_PASS=$${ADMIN_PASS:-admin123} node tests/audit_web_crud_students.js
+
+audit-web-crud-rooms:
+	@echo "── audit_web_crud_rooms (Rooms UI CRUD 13 项) ──"
+	ADMIN_PASS=$${ADMIN_PASS:-admin123} node tests/audit_web_crud_rooms.js
+
+audit-web-workflow-repairs:
+	@echo "── audit_web_workflow_repairs (Repairs status workflow 13 项) ──"
+	ADMIN_PASS=$${ADMIN_PASS:-admin123} node tests/audit_web_workflow_repairs.js
 
 # 数据库备份
 backup:
