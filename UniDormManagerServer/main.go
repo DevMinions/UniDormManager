@@ -93,6 +93,7 @@ func main() {
 	lateReturnHandler := handlers.NewLateReturnHandler(s)
 	uploadHandler := handlers.NewUploadHandler()
 	statisticsHandler := handlers.NewStatisticsHandler()
+	auditLogsHandler := handlers.NewAuditLogsHandler()
 
 	// 创建 Gin 路由引擎
 	r := gin.New()
@@ -114,6 +115,7 @@ func main() {
 	// API 路由组（需要认证）
 	api := r.Group("/api")
 	api.Use(middleware.AuthMiddleware()) // 所有 API 都需要认证
+	api.Use(middleware.AuditLog())       // 写操作自动记审计日志(异步)
 	{
 		// 通用文件上传（任意登录用户）
 		api.POST("/upload", uploadHandler.UploadFile)
@@ -129,6 +131,9 @@ func main() {
 		{
 			statistics.GET("/repairs-by-day", statisticsHandler.GetRepairsByDay)
 		}
+
+		// 审计日志(admin 可见,users:read 权限)
+		api.GET("/audit-logs", middleware.RequirePermission("users:read"), auditLogsHandler.GetAuditLogs)
 
 		// 用户管理路由（需要管理员权限）
 		users := api.Group("/users")

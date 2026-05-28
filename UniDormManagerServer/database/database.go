@@ -227,6 +227,18 @@ func createTables(ctx context.Context) error {
 			photo_url VARCHAR(500),
 			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 		)`,
+		// 审计日志:写操作（POST/PUT/DELETE）的请求记录
+		`CREATE TABLE IF NOT EXISTS audit_logs (
+			id VARCHAR(36) PRIMARY KEY,
+			user_id VARCHAR(36),
+			username VARCHAR(50),
+			method VARCHAR(10) NOT NULL,
+			path VARCHAR(500) NOT NULL,
+			status INTEGER NOT NULL,
+			ip VARCHAR(64),
+			user_agent VARCHAR(500),
+			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+		)`,
 		// 创建索引
 		`CREATE INDEX IF NOT EXISTS idx_students_student_id ON students(student_id)`,
 		`CREATE INDEX IF NOT EXISTS idx_students_room_number ON students(room_number)`,
@@ -239,6 +251,8 @@ func createTables(ctx context.Context) error {
 		`CREATE INDEX IF NOT EXISTS idx_user_roles_role_id ON user_roles(role_id)`,
 		`CREATE INDEX IF NOT EXISTS idx_role_permissions_role_id ON role_permissions(role_id)`,
 		`CREATE INDEX IF NOT EXISTS idx_token_blacklist_expires_at ON token_blacklist(expires_at)`,
+		`CREATE INDEX IF NOT EXISTS idx_audit_logs_created_at ON audit_logs(created_at DESC)`,
+		`CREATE INDEX IF NOT EXISTS idx_audit_logs_user_id ON audit_logs(user_id)`,
 		// 补列：CREATE TABLE IF NOT EXISTS 对已存在的表不会加列，需用 ALTER 单独补
 		`ALTER TABLE rooms ADD COLUMN IF NOT EXISTS floor INTEGER DEFAULT 1`,
 		`ALTER TABLE students ADD COLUMN IF NOT EXISTS building VARCHAR(50) DEFAULT ''`,
