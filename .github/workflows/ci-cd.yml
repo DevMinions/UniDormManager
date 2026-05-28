@@ -11,6 +11,7 @@ on:
     tags: [ 'v*' ]
   pull_request:
     branches: [ main, master, develop, dev ]
+  workflow_dispatch: {}  # 让 deploy-render 可在 Actions UI 手动触发
 
 env:
   REGISTRY: ghcr.io
@@ -170,40 +171,27 @@ jobs:
         cache-from: type=gha
         cache-to: type=gha,mode=max
 
-  # 部署到测试环境
-  deploy-staging:
+  # 部署到 Render(可选; 默认走 Render Blueprint 自动 deploy)
+  #
+  # 项目对外推荐的 demo 部署方式是 Render Blueprint(见根 render.yaml),
+  # Render 检测到推到 main 后会自动重 deploy。如你需要在 CI 显式触发
+  # Render Deploy Hook(例如部署其他 fork/分支),把下面 deploy-render job
+  # 改成 if: github.ref == 'refs/heads/main' 并在 repo secrets 加
+  # RENDER_DEPLOY_HOOK_URL,然后 curl 它。
+  #
+  # 这里保留为 workflow_dispatch 手动触发,避免 CI 链上一直挂"待跑"job。
+  deploy-render:
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/develop'
+    if: github.event_name == 'workflow_dispatch'
     needs: [publish]
-    environment: staging
-    
-    steps:
-    - name: Deploy to staging
-      run: |
-        echo "Deploying to staging environment..."
-        # 这里添加实际的部署脚本
-        # 例如：SSH 到服务器执行 docker-compose pull && docker-compose up -d
 
-  # 部署到生产环境
-  deploy-production:
-    runs-on: ubuntu-latest
-    if: startsWith(github.ref, 'refs/tags/v')
-    needs: [publish]
-    environment: production
-    
     steps:
-    - name: Deploy to production
+    - name: Trigger Render deploy hook
       run: |
-        echo "Deploying to production environment..."
-        # 这里添加实际的部署脚本
-        # 例如：SSH 到服务器执行部署
-    
-    - name: Create Release
-      uses: actions/create-release@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        tag_name: ${{ github.ref }}
-        release_name: Release ${{ github.ref }}
-        draft: false
-        prerelease: false
+        if [ -z "${{ secrets.RENDER_DEPLOY_HOOK_URL }}" ]; then
+          echo "RENDER_DEPLOY_HOOK_URL secret 未配置;跳过。"
+          echo "在 Render dashboard → Service Settings → Deploy Hook 拷贝 URL,"
+          echo "GitHub repo Settings → Secrets → 新增 RENDER_DEPLOY_HOOK_URL"
+          exit 0
+        fi
+        curl -fsSL -X POST "${{ secrets.RENDER_DEPLOY_HOOK_URL }}"

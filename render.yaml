@@ -1,0 +1,77 @@
+# Render Blueprint —— 一键 fork 仓库后到 https://render.com/deploy?repo=<this-repo>
+#   即可拉起完整 demo 栈:
+#     - PostgreSQL 数据库（Free 90 天试用,之后转 $7/mo 或自行迁移)
+#     - Go 后端 web service (Docker, Free 计划)
+#     - React 前端 static site (Free)
+#
+# 限制提示:Free 计划下 web service idle 15 分钟会 sleep,首次访问需要冷启动 ~30s。
+# 用 USE_CACHE=false,因为 Free 计划不带 Redis;启用 Redis 需要 Pro($7/mo Key-Value 服务)。
+
+databases:
+  - name: unidorm-postgres
+    plan: free
+    databaseName: unidorm
+    user: postgres
+    region: oregon
+
+services:
+  # 后端 API
+  - type: web
+    name: unidorm-backend
+    runtime: docker
+    rootDir: UniDormManagerServer
+    dockerfilePath: ./Dockerfile
+    plan: free
+    region: oregon
+    healthCheckPath: /health
+    envVars:
+      - key: DB_HOST
+        fromDatabase:
+          name: unidorm-postgres
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: unidorm-postgres
+          property: port
+      - key: DB_USER
+        fromDatabase:
+          name: unidorm-postgres
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: unidorm-postgres
+          property: password
+      - key: DB_NAME
+        fromDatabase:
+          name: unidorm-postgres
+          property: database
+      - key: DB_SSLMODE
+        value: require
+      - key: USE_CACHE
+        value: "false"
+      - key: JWT_SECRET
+        generateValue: true
+      - key: APP_ENV
+        value: production
+      - key: PORT
+        value: "8080"
+      - key: LOG_LEVEL
+        value: info
+
+  # Web 管理端(静态站点)
+  - type: web
+    name: unidorm-web
+    runtime: static
+    rootDir: UniDormManagerWeb
+    buildCommand: npm install --legacy-peer-deps && npm run build
+    staticPublishPath: ./dist
+    envVars:
+      # 注意:rewrite 后 baseURL 会拼到 unidorm-backend.onrender.com 的 /api。
+      # 部署成功后,在 Render dashboard 找到 unidorm-backend 实际域名,
+      # 用 dashboard env 编辑器把这个值改成 https://<your-backend>.onrender.com/api
+      - key: VITE_API_URL
+        value: https://unidorm-backend.onrender.com/api
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
