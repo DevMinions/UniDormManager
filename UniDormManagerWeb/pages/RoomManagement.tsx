@@ -20,7 +20,6 @@ const RoomManagement: React.FC = () => {
   const [studentsError, setStudentsError] = useState<string | null>(null);
   const [buildingsError, setBuildingsError] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-  const [filter, setFilter] = useState('All');
   const [filterBuilding, setFilterBuilding] = useState('All');
   const [filterType, setFilterType] = useState('All');
   const [filterStatus, setFilterStatus] = useState('All');
@@ -64,10 +63,9 @@ const RoomManagement: React.FC = () => {
   // Edit & Add Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
-  // Fixed: Updated 'building' to 'buildingName' to match Room type properties
   const [newRoom, setNewRoom] = useState<Partial<Room>>({
     number: '',
-    buildingName: 'A栋',
+    building: '',
     capacity: 4,
     occupied: 0,
     type: 'Male',
@@ -84,9 +82,9 @@ const RoomManagement: React.FC = () => {
 
     try {
       const createdRoom = await api.createRoom({
-        number: newRoom.number,
-        building: newRoom.building,
-        buildingId: newRoom.building || '', // Satisfy TS requirements
+        number: newRoom.number!,
+        building: newRoom.building || '',
+        buildingId: newRoom.building || '',
         capacity: newRoom.capacity || 4,
         occupied: 0,
         type: newRoom.type as Room['type'] || 'Male',
@@ -185,7 +183,7 @@ const RoomManagement: React.FC = () => {
     setEditingId(null);
     setNewRoom({
       number: '',
-      buildingName: 'A栋',
+      building: '',
       capacity: 4,
       occupied: 0,
       type: 'Male',
@@ -322,8 +320,8 @@ const RoomManagement: React.FC = () => {
           </div>
 
           {/* Building Filter */}
-          <div className="flex gap-2">
-            {['All', 'A栋', 'B栋', 'C栋'].map((val) => (
+          <div className="flex gap-2 flex-wrap">
+            {['All', ...buildings.map(b => b.name)].map((val) => (
               <button
                 key={val}
                 onClick={() => setFilterBuilding(val)}
@@ -611,9 +609,10 @@ const RoomManagement: React.FC = () => {
                   onChange={(e) => setNewRoom({ ...newRoom, building: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
                 >
-                  <option value="A栋">A栋</option>
-                  <option value="B栋">B栋</option>
-                  <option value="C栋">C栋</option>
+                  <option value="">请选择楼栋</option>
+                  {buildings.map(b => (
+                    <option key={b.id} value={b.name}>{b.name}</option>
+                  ))}
                 </select>
               </div>
               <div>

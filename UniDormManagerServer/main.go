@@ -223,30 +223,30 @@ func main() {
 		// 换寝申请路由
 		roomSwaps := api.Group("/room-swaps")
 		{
-			roomSwaps.GET("", roomSwapHandler.GetApplications)
+			roomSwaps.GET("", middleware.RequirePermission("room_swaps:read"), roomSwapHandler.GetApplications)
 			roomSwaps.GET("/my-applications", roomSwapHandler.GetMyApplications)
-			roomSwaps.GET("/pending", roomSwapHandler.GetPendingApplications)
+			roomSwaps.GET("/pending", middleware.RequirePermission("room_swaps:read"), roomSwapHandler.GetPendingApplications)
 			roomSwaps.GET("/history", roomSwapHandler.GetSwapHistory)
 			roomSwaps.GET("/available", roomSwapHandler.GetAvailableRooms)
 			roomSwaps.POST("", roomSwapHandler.ApplyRoomSwap)
-			roomSwaps.POST("/:id/approve", roomSwapHandler.ApproveRoomSwap)
+			roomSwaps.POST("/:id/approve", middleware.RequirePermission("room_swaps:approve"), roomSwapHandler.ApproveRoomSwap)
 			roomSwaps.DELETE("/:id", roomSwapHandler.CancelApplication)
 		}
 
 		// 门禁记录路由
 		accessLogs := api.Group("/access-logs")
 		{
-			accessLogs.GET("", accessLogHandler.GetAccessLogs)
-			accessLogs.GET("/live", accessLogHandler.GetLiveLogs)
+			accessLogs.GET("", middleware.RequirePermission("access_logs:read"), accessLogHandler.GetAccessLogs)
+			accessLogs.GET("/live", middleware.RequirePermission("access_logs:read"), accessLogHandler.GetLiveLogs)
 			accessLogs.POST("", middleware.RequirePermission("access_logs:create"), accessLogHandler.CreateAccessLog)
 		}
 
 		// 晚归告警路由
 		lateReturns := api.Group("/late-returns")
 		{
-			lateReturns.GET("", lateReturnHandler.GetLateReturns)
-			lateReturns.GET("/pending", lateReturnHandler.GetPendingReturns)
-			lateReturns.POST("/:id/handle", lateReturnHandler.HandleLateReturn)
+			lateReturns.GET("", middleware.RequirePermission("late_returns:read"), lateReturnHandler.GetLateReturns)
+			lateReturns.GET("/pending", middleware.RequirePermission("late_returns:read"), lateReturnHandler.GetPendingReturns)
+			lateReturns.POST("/:id/handle", middleware.RequirePermission("late_returns:handle"), lateReturnHandler.HandleLateReturn)
 		}
 	}
 

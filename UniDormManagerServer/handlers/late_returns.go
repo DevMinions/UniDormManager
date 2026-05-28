@@ -20,8 +20,17 @@ func NewLateReturnHandler(s store.StoreInterface) *LateReturnHandler {
 
 // GetLateReturns 获取晚归告警 (分页)
 func (h *LateReturnHandler) GetLateReturns(c *gin.Context) {
-	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
-	pageSize, _ := strconv.Atoi(c.DefaultQuery("pageSize", "10"))
+	page, err := strconv.Atoi(c.DefaultQuery("page", "1"))
+	if err != nil || page < 1 {
+		page = 1
+	}
+	pageSize, err := strconv.Atoi(c.DefaultQuery("pageSize", "10"))
+	if err != nil || pageSize < 1 {
+		pageSize = 10
+	}
+	if pageSize > 100 {
+		pageSize = 100
+	}
 
 	req := &models.PaginatedRequest{
 		Page:      page,
@@ -62,6 +71,10 @@ func (h *LateReturnHandler) GetPendingReturns(c *gin.Context) {
 // HandleLateReturn 处理晚归告警
 func (h *LateReturnHandler) HandleLateReturn(c *gin.Context) {
 	id := c.Param("id")
+	if id == "" {
+		middleware.WriteError(c, http.StatusBadRequest, "bad_request", "Alert ID is required")
+		return
+	}
 	var req models.HandleLateReturnRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		middleware.WriteError(c, http.StatusBadRequest, "invalid_request", err.Error())

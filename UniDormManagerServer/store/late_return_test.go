@@ -56,7 +56,7 @@ func TestIsLateReturn(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			testTime := time.Date(2024, 1, 1, tt.hour, tt.minute, 0, 0, time.Local)
-			isLate := testTime.Hour() >= 23 && tt.direction == "In"
+			isLate := (testTime.Hour() >= 23 || testTime.Hour() < 5) && tt.direction == "In"
 			assert.Equal(t, tt.expected, isLate)
 		})
 	}

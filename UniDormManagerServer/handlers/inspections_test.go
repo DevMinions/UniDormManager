@@ -10,6 +10,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	"unidorm-manager-server/auth"
 	"unidorm-manager-server/models"
 )
 
@@ -19,6 +20,11 @@ func setupInspectionTest() (*gin.Engine, *MockStore) {
 	handler := NewInspectionHandler(mockStore)
 
 	r := gin.New()
+	// Simulate auth middleware for tests
+	r.Use(func(c *gin.Context) {
+		auth.SetUserID(c, "test-user-id")
+		c.Next()
+	})
 	api := r.Group("/api")
 	{
 		inspections := api.Group("/inspections")
@@ -176,7 +182,7 @@ func TestDeleteInspection_Success(t *testing.T) {
 }
 
 func TestGetInspectionRankings(t *testing.T) {
-	router, mockStore := setupInspectionTest()
+	router, _ := setupInspectionTest()
 
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest("GET", "/api/inspections/rankings", nil)

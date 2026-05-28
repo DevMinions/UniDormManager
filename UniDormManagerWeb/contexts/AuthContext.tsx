@@ -50,17 +50,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       }
     };
 
-    const fetchRoles = async () => {
-      try {
-        const roles = await api.getRoles();
-        setAllRoles(roles);
-      } catch (err) {
-        console.error("Failed to fetch roles for auth context", err);
-      }
-    };
-
     initAuth();
-    fetchRoles();
   }, []);
 
   const login = async (username: string, password: string) => {

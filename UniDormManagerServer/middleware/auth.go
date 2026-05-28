@@ -16,7 +16,6 @@ func AuthMiddleware() gin.HandlerFunc {
 		authHeader := c.GetHeader("Authorization")
 		if authHeader == "" {
 			WriteError(c, http.StatusUnauthorized, "unauthorized", "Authorization header is required")
-			c.Abort()
 			return
 		}
 
@@ -24,7 +23,6 @@ func AuthMiddleware() gin.HandlerFunc {
 		parts := strings.SplitN(authHeader, " ", 2)
 		if len(parts) != 2 || parts[0] != "Bearer" {
 			WriteError(c, http.StatusUnauthorized, "unauthorized", "Invalid authorization header format")
-			c.Abort()
 			return
 		}
 
@@ -34,7 +32,6 @@ func AuthMiddleware() gin.HandlerFunc {
 		claims, err := auth.ValidateToken(tokenString)
 		if err != nil {
 			WriteError(c, http.StatusUnauthorized, "unauthorized", "Invalid or expired token")
-			c.Abort()
 			return
 		}
 

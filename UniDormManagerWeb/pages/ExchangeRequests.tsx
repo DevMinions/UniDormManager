@@ -2,11 +2,14 @@
 import React, { useState, useEffect } from 'react';
 import { GitPullRequest, CheckCircle2, XCircle, Clock, ChevronRight, User, MapPin, MessageSquare, AlertCircle } from 'lucide-react';
 import { api } from '../services/api';
+import { useAuth } from '../contexts/AuthContext';
 import { RoomSwapApplication } from '../types';
 
 const ExchangeRequests: React.FC = () => {
+  const { user } = useAuth();
   const [requests, setRequests] = useState<RoomSwapApplication[]>([]);
   const [loading, setLoading] = useState(true);
+  const [processingId, setProcessingId] = useState<string | null>(null);
 
   useEffect(() => {
     fetchRequests();
@@ -25,9 +28,10 @@ const ExchangeRequests: React.FC = () => {
   };
 
   const handleApprove = async (req: RoomSwapApplication) => {
+    setProcessingId(req.id);
     try {
       await api.approveRoomSwapApplication(req.id, {
-        approverId: 'current-user', // In real app, get from auth context
+        approverId: user?.id || '',
         approverRole: 'DormManager',
         status: 'Approved',
         comment: '审批通过',
@@ -35,13 +39,16 @@ const ExchangeRequests: React.FC = () => {
       fetchRequests();
     } catch (error: any) {
       alert(error.message || '审批失败');
+    } finally {
+      setProcessingId(null);
     }
   };
 
   const handleReject = async (req: RoomSwapApplication) => {
+    setProcessingId(req.id);
     try {
       await api.approveRoomSwapApplication(req.id, {
-        approverId: 'current-user',
+        approverId: user?.id || '',
         approverRole: 'DormManager',
         status: 'Rejected',
         comment: '审批驳回',
@@ -49,6 +56,8 @@ const ExchangeRequests: React.FC = () => {
       fetchRequests();
     } catch (error: any) {
       alert(error.message || '驳回失败');
+    } finally {
+      setProcessingId(null);
     }
   };
 
@@ -150,15 +159,17 @@ const ExchangeRequests: React.FC = () => {
                   <div className="pt-4 flex gap-2">
                     <button
                       onClick={() => handleApprove(req)}
-                      className="flex-1 py-2 bg-indigo-600 text-white text-xs font-bold rounded-lg hover:bg-indigo-700 transition-colors"
+                      disabled={processingId === req.id}
+                      className="flex-1 py-2 bg-indigo-600 text-white text-xs font-bold rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      通过
+                      {processingId === req.id ? '处理中...' : '通过'}
                     </button>
                     <button
                       onClick={() => handleReject(req)}
-                      className="flex-1 py-2 border border-slate-200 text-slate-600 text-xs font-bold rounded-lg hover:bg-slate-50"
+                      disabled={processingId === req.id}
+                      className="flex-1 py-2 border border-slate-200 text-slate-600 text-xs font-bold rounded-lg hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      驳回
+                      {processingId === req.id ? '处理中...' : '驳回'}
                     </button>
                   </div>
                 )}

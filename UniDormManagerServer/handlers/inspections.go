@@ -5,6 +5,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
+	"unidorm-manager-server/auth"
 	"unidorm-manager-server/middleware"
 	"unidorm-manager-server/models"
 	"unidorm-manager-server/store"
@@ -44,6 +45,33 @@ func (h *InspectionHandler) GetInspections(c *gin.Context) {
 	c.JSON(http.StatusOK, response)
 }
 
+// GetMyInspections 获取当前用户的查寝记录
+func (h *InspectionHandler) GetMyInspections(c *gin.Context) {
+	var req models.PaginatedRequest
+	var filter models.InspectionFilter
+
+	if err := c.ShouldBindQuery(&req); err != nil {
+		middleware.WriteError(c, http.StatusBadRequest, "invalid_request", err.Error())
+		return
+	}
+	if err := c.ShouldBindQuery(&filter); err != nil {
+		middleware.WriteError(c, http.StatusBadRequest, "invalid_request", err.Error())
+		return
+	}
+
+	// 限制为当前用户的查寝记录
+	userID := auth.GetUserID(c)
+	filter.Inspector = userID
+
+	response, err := h.store.GetInspectionsPaginated(&req, &filter)
+	if err != nil {
+		middleware.WriteError(c, http.StatusInternalServerError, "database_error", err.Error())
+		return
+	}
+
+	c.JSON(http.StatusOK, response)
+}
+
 // CreateInspection 创建查寝记录
 func (h *InspectionHandler) CreateInspection(c *gin.Context) {
 	var req models.CreateInspectionRequest
@@ -52,11 +80,11 @@ func (h *InspectionHandler) CreateInspection(c *gin.Context) {
 		return
 	}
 
-	// 获取当前用户ID (from middleware auth context)
-	inspectorID := c.GetString("userID")
+	// 获取当前用户ID
+	inspectorID := auth.GetUserID(c)
 	if inspectorID == "" {
-		// Fallback if not authenticated properly (should be caught by middleware though)
-		inspectorID = "system"
+		middleware.WriteError(c, http.StatusUnauthorized, "unauthorized", "User not authenticated")
+		return
 	}
 
 	// Optional: Get user real name if available?
@@ -136,6 +164,10 @@ func (h *InspectionHandler) GetInspectionRankings(c *gin.Context) {
 // GetInspectionByID 根据ID获取查寝记录
 func (h *InspectionHandler) GetInspectionByID(c *gin.Context) {
 	id := c.Param("id")
+	if id == "" {
+		middleware.WriteError(c, http.StatusBadRequest, "bad_request", "Inspection ID is required")
+		return
+	}
 	inspection, exists := h.store.GetInspectionByID(id)
 	if !exists {
 		middleware.WriteError(c, http.StatusNotFound, "not_found", "Inspection record not found")
@@ -147,6 +179,10 @@ func (h *InspectionHandler) GetInspectionByID(c *gin.Context) {
 // UpdateInspection 更新查寝记录
 func (h *InspectionHandler) UpdateInspection(c *gin.Context) {
 	id := c.Param("id")
+	if id == "" {
+		middleware.WriteError(c, http.StatusBadRequest, "bad_request", "Inspection ID is required")
+		return
+	}
 	var req models.CreateInspectionRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		middleware.WriteError(c, http.StatusBadRequest, "invalid_request", err.Error())
@@ -165,6 +201,10 @@ func (h *InspectionHandler) UpdateInspection(c *gin.Context) {
 // DeleteInspection 删除查寝记录
 func (h *InspectionHandler) DeleteInspection(c *gin.Context) {
 	id := c.Param("id")
+	if id == "" {
+		middleware.WriteError(c, http.StatusBadRequest, "bad_request", "Inspection ID is required")
+		return
+	}
 	if !h.store.DeleteInspection(id) {
 		middleware.WriteError(c, http.StatusNotFound, "not_found", "Inspection record not found")
 		return

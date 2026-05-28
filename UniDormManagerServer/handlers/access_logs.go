@@ -20,8 +20,17 @@ func NewAccessLogHandler(s store.StoreInterface) *AccessLogHandler {
 
 // GetAccessLogs 获取门禁记录 (分页)
 func (h *AccessLogHandler) GetAccessLogs(c *gin.Context) {
-	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
-	pageSize, _ := strconv.Atoi(c.DefaultQuery("pageSize", "10"))
+	page, err := strconv.Atoi(c.DefaultQuery("page", "1"))
+	if err != nil || page < 1 {
+		page = 1
+	}
+	pageSize, err := strconv.Atoi(c.DefaultQuery("pageSize", "10"))
+	if err != nil || pageSize < 1 {
+		pageSize = 10
+	}
+	if pageSize > 100 {
+		pageSize = 100
+	}
 
 	req := &models.PaginatedRequest{
 		Page:      page,

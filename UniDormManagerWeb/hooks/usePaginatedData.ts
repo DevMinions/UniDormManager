@@ -58,7 +58,17 @@ export function usePaginatedData<T = any>({
   });
 
   const [currentFilters, setCurrentFilters] = useState<Record<string, any>>(filters);
-  const [searchTimeout, setSearchTimeout] = useState<NodeJS.Timeout>();
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+
+  // 防抖搜索：延迟 300ms 后才真正触发搜索
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      setDebouncedSearch(state.search);
+      setState(prev => ({ ...prev, page: initialPage }));
+    }, 300);
+
+    return () => clearTimeout(timeout);
+  }, [state.search, initialPage]);
 
   const loadData = useCallback(async () => {
     setState(prev => ({ ...prev, loading: true, error: null }));
@@ -67,7 +77,7 @@ export function usePaginatedData<T = any>({
       const params = {
         page: state.page,
         pageSize: state.pageSize,
-        search: state.search || undefined,
+        search: debouncedSearch || undefined,
         sortBy: state.sortBy,
         sortOrder: state.sortOrder,
         ...currentFilters,
@@ -75,13 +85,14 @@ export function usePaginatedData<T = any>({
 
       const response = await apiFunction(params);
 
+      const totalPages = Math.ceil(response.total / response.pageSize);
       setState(prev => ({
         ...prev,
         data: response.data,
         total: response.total,
-        totalPages: Math.ceil(response.total / response.pageSize),
-        hasNext: state.page < Math.ceil(response.total / response.pageSize),
-        hasPrev: state.page > 1,
+        totalPages,
+        hasNext: prev.page < totalPages,
+        hasPrev: prev.page > 1,
         loading: false,
       }));
     } catch (err) {
@@ -92,22 +103,7 @@ export function usePaginatedData<T = any>({
         loading: false,
       }));
     }
-  }, [apiFunction, state.page, state.pageSize, state.search, state.sortBy, state.sortOrder, currentFilters]);
-
-  // 防抖搜索
-  useEffect(() => {
-    if (searchTimeout) {
-      clearTimeout(searchTimeout);
-    }
-
-    const timeout = setTimeout(() => {
-      setState(prev => ({ ...prev, page: initialPage })); // 搜索时重置到第一页
-    }, 300);
-
-    setSearchTimeout(timeout);
-
-    return () => clearTimeout(timeout);
-  }, [state.search, initialPage]);
+  }, [apiFunction, state.page, state.pageSize, debouncedSearch, state.sortBy, state.sortOrder, currentFilters]);
 
   // 自动加载数据
   useEffect(() => {

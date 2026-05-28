@@ -39,14 +39,17 @@ const RepairRequests: React.FC = () => {
   });
 
   const handleAddRepair = async () => {
-    if (!newRepair.title || !newRepair.roomNumber) return;
+    if (!newRepair.title?.trim() || !newRepair.roomNumber?.trim()) {
+      alert('请填写报修标题和房间号');
+      return;
+    }
 
     try {
       const created = await api.createRepairRequest({
         title: newRepair.title!,
         description: newRepair.description || '无详细描述',
         roomNumber: newRepair.roomNumber!,
-        priority: (newRepair.priority as any) || 'Medium',
+        priority: (newRepair.priority as 'Low' | 'Medium' | 'High') || 'Medium',
       });
 
       // 刷新数据

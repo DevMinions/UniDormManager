@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"net/http"
+	"unidorm-manager-server/auth"
 	"unidorm-manager-server/middleware"
 	"unidorm-manager-server/models"
 	"unidorm-manager-server/store"
@@ -19,8 +20,12 @@ func NewRoomSwapHandler(s store.StoreInterface) *RoomSwapHandler {
 
 // GetApplications 获取申请列表
 func (h *RoomSwapHandler) GetApplications(c *gin.Context) {
-	userID := c.GetString("userId")
-	role := c.GetString("role")
+	userID := auth.GetUserID(c)
+	roles := auth.GetRoles(c)
+	role := ""
+	if len(roles) > 0 {
+		role = roles[0]
+	}
 
 	apps, err := h.store.GetRoomSwapApplications(userID, role)
 	if err != nil {
@@ -44,7 +49,7 @@ func (h *RoomSwapHandler) GetPendingApplications(c *gin.Context) {
 
 // ApplyRoomSwap 提交申请
 func (h *RoomSwapHandler) ApplyRoomSwap(c *gin.Context) {
-	userID := c.GetString("userId")
+	userID := auth.GetUserID(c)
 	var req models.CreateRoomSwapRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		middleware.WriteError(c, http.StatusBadRequest, "invalid_request", err.Error())
@@ -63,6 +68,10 @@ func (h *RoomSwapHandler) ApplyRoomSwap(c *gin.Context) {
 // ApproveRoomSwap 审批申请
 func (h *RoomSwapHandler) ApproveRoomSwap(c *gin.Context) {
 	id := c.Param("id")
+	if id == "" {
+		middleware.WriteError(c, http.StatusBadRequest, "bad_request", "Application ID is required")
+		return
+	}
 	var req models.ApproveRoomSwapRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		middleware.WriteError(c, http.StatusBadRequest, "invalid_request", err.Error())
@@ -80,7 +89,7 @@ func (h *RoomSwapHandler) ApproveRoomSwap(c *gin.Context) {
 
 // GetMyApplications 获取当前用户的换寝申请
 func (h *RoomSwapHandler) GetMyApplications(c *gin.Context) {
-	userID := c.GetString("userId")
+	userID := auth.GetUserID(c)
 	apps, err := h.store.GetMyRoomSwapApplications(userID)
 	if err != nil {
 		middleware.WriteError(c, http.StatusInternalServerError, "database_error", err.Error())
@@ -92,6 +101,10 @@ func (h *RoomSwapHandler) GetMyApplications(c *gin.Context) {
 // CancelApplication 取消换寝申请
 func (h *RoomSwapHandler) CancelApplication(c *gin.Context) {
 	id := c.Param("id")
+	if id == "" {
+		middleware.WriteError(c, http.StatusBadRequest, "bad_request", "Application ID is required")
+		return
+	}
 	if !h.store.DeleteRoomSwapApplication(id) {
 		middleware.WriteError(c, http.StatusNotFound, "not_found", "Application not found")
 		return
@@ -101,7 +114,7 @@ func (h *RoomSwapHandler) CancelApplication(c *gin.Context) {
 
 // GetSwapHistory 获取换寝历史记录
 func (h *RoomSwapHandler) GetSwapHistory(c *gin.Context) {
-	userID := c.GetString("userId")
+	userID := auth.GetUserID(c)
 	history, err := h.store.GetRoomSwapHistory(userID)
 	if err != nil {
 		middleware.WriteError(c, http.StatusInternalServerError, "database_error", err.Error())

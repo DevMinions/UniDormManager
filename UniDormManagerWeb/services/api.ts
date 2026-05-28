@@ -4,7 +4,7 @@ import {
   StudentFilter, Student, Building, Room, RepairRequest, Notice,
   Inspection, InspectionDetail, InspectionRanking, AccessLog, LateReturnAlert,
   RoomSwapApplication, ApprovalFlow, RoomSwapHistory, InspectionFilter,
-  AccessLogFilter, LateReturnFilter, RoomSwapFilter
+  AccessLogFilter, LateReturnFilter, RoomSwapFilter, RoomFilter, RepairFilter
 } from '../types';
 
 // 在浏览器环境中使用相对路径（通过 nginx 代理），在开发环境使用环境变量

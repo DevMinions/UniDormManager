@@ -3,7 +3,6 @@ package middleware
 import (
 	"net/http"
 	"net/http/httptest"
-	"strings"
 	"testing"
 
 	"unidorm-manager-server/auth"
@@ -150,23 +149,11 @@ func TestCORSPreflight(t *testing.T) {
 
 // Helper functions
 func generateValidToken() string {
-	token, _ := auth.GenerateToken(&auth.Claims{
-		UserID:   "test-user-id",
-		Username: "testuser",
-		Roles:    []string{"admin"},
-		BuildingIDs: []string{},
-		RegisteredClaims: auth.GetDefaultClaims(),
-	})
+	token, _ := auth.GenerateToken("test-user-id", "testuser", []string{"admin"}, []string{"students:read"}, []string{}, nil)
 	return token
 }
 
 func generateExpiredToken() string {
-	token, _ := auth.GenerateToken(&auth.Claims{
-		UserID:   "test-user-id",
-		Username: "testuser",
-		Roles:    []string{"admin"},
-		BuildingIDs: []string{},
-		RegisteredClaims: auth.GetExpiredClaims(),
-	})
-	return token
+	// Use an obviously invalid token to trigger expiry error
+	return "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoidGVzdCIsImV4cCI6MH0.invalid"
 }

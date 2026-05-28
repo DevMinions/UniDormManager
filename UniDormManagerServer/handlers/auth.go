@@ -271,7 +271,6 @@ func (h *AuthHandler) WechatLogin(c *gin.Context) {
 		return
 	}
 
-<<<<<<< HEAD
 	// 更新用户信息（微信昵称）
 	if req.UserInfo.NickName != "" && req.UserInfo.NickName != displayName {
 		updateReq := &models.UpdateUserRequest{

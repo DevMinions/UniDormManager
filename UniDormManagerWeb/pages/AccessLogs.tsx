@@ -2,10 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { AccessLog, LateReturnAlert, Building } from '../types';
 import { Search, Filter, AlertTriangle, Clock, Users, DoorOpen, Bell, Send, CheckCircle, X, RefreshCw, AlertCircle, Activity, ShieldAlert } from 'lucide-react';
 import { api } from '../services/api';
+import { useAuth } from '../contexts/AuthContext';
 import { useAccessLogs, useLateReturnAlerts } from '../hooks/usePaginatedData';
 import Pagination from '../components/Pagination';
 
 const AccessLogs: React.FC = () => {
+  const { user } = useAuth();
+
   // 使用分页Hook
   const [accessLogsState, accessLogsActions] = useAccessLogs({
     pageSize: 30,
@@ -66,7 +69,7 @@ const AccessLogs: React.FC = () => {
     setIsHandlingAlert(alertId);
     try {
       await api.handleLateReturn(alertId, {
-        handler: '当前用户',
+        handler: user?.realName || user?.username || '未知用户',
         comment: '已处理',
         status,
       });
