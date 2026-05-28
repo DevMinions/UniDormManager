@@ -67,7 +67,8 @@ async function api(token, method, path, body) {
     await page.goto(WEB_BASE + '/#/login', { waitUntil: 'load', timeout: 15000 });
     await page.locator('input[type="text"], input[placeholder*="用户"], input[placeholder*="账号"]').first().fill(ADMIN_USER);
     await page.locator('input[type="password"]').first().fill(ADMIN_PASS);
-    await page.locator('button:has-text("登录"), button:has-text("登 录"), button[type="submit"]').first().click();
+    // 登录按钮 actionability 会卡(framer-motion / transition);force 直接发事件
+    await page.locator('button:has-text("登录"), button:has-text("登 录"), button[type="submit"]').first().click({ force: true });
     await page.waitForTimeout(2500);
     const loggedIn = !/login/i.test(page.url());
     check('UI 登录成功', loggedIn, `url=${page.url()}`);
@@ -82,7 +83,7 @@ async function api(token, method, path, body) {
     // ─── Step 2:打开楼栋页 + 点"添加楼栋" 弹 Modal ──────────────────
     await page.goto(WEB_BASE + '/#/buildings', { waitUntil: 'load' });
     await page.waitForTimeout(1500);
-    await page.locator('button:has-text("添加楼栋")').click();
+    await page.locator('button:has-text("添加楼栋")').click({ force: true });
     await page.waitForTimeout(500);
     const modalOpen = await page.locator('text=添加新楼栋').count() > 0;
     check('Modal 打开(添加新楼栋)', modalOpen);
@@ -90,7 +91,7 @@ async function api(token, method, path, body) {
     // ─── Step 3:填表 + 保存 ────────────────────────────────────────
     await page.locator('input[placeholder*="例如"]').fill(uniqueName);
     await page.locator('input[placeholder*="负责人"]').fill('audit-bot');
-    await page.locator('button:has-text("确认添加")').click();
+    await page.locator('button:has-text("确认添加")').click({ force: true });
     await page.waitForTimeout(2000);
 
     const modalClosed = await page.locator('text=添加新楼栋').count() === 0;
@@ -108,7 +109,7 @@ async function api(token, method, path, body) {
     check('能精确定位到新建楼栋的卡片', cardCount === 1, `count=${cardCount}`);
     if (cardCount !== 1) throw new Error('card locator ambiguous');
     const editBtn = card.locator('button:has-text("编辑信息")');
-    await editBtn.click();
+    await editBtn.click({ force: true });
     await page.waitForTimeout(500);
     const editModal = await page.locator('text=编辑楼栋信息').count() > 0;
     check('Modal 打开(编辑楼栋信息)', editModal);
@@ -117,7 +118,8 @@ async function api(token, method, path, body) {
     // Playwright fill 在 React controlled input 上不一定触发 onChange(value 进了 DOM 但 state 未更新),
     // 所以用 select-all + type 走真键盘事件:
     const managerInput = page.locator('label:has-text("管理员")').locator('xpath=following-sibling::input[1]');
-    await managerInput.click();
+    // input.click() 也会受 actionability 卡(modal 入场动画),force focus
+    await managerInput.focus();
     await managerInput.press('Control+a');
     await managerInput.pressSequentially(editedManager, { delay: 10 });
     const filledValue = await managerInput.inputValue();
@@ -125,7 +127,7 @@ async function api(token, method, path, body) {
 
     // 抓 PUT 请求体 + 响应,debug 用
     const putPromise = page.waitForResponse(r => /\/api\/buildings\/[^/]+$/.test(r.url()) && r.request().method() === 'PUT', { timeout: 8000 }).catch(() => null);
-    await page.locator('button:has-text("保存更改")').click();
+    await page.locator('button:has-text("保存更改")').click({ force: true });
     const putRes = await putPromise;
     const putBody = putRes ? await putRes.text().catch(()=>'') : '';
     const putReqBody = putRes ? putRes.request().postData() : '';

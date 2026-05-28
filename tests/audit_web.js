@@ -61,7 +61,8 @@ async function withPage(browser, fn) {
     try {
       await userInput.fill('admin');
       await passInput.fill('admin123');
-      await loginBtn.click();
+      // 登录按钮 actionability 会卡(framer-motion/transition);force 绕过
+      await loginBtn.click({ force: true });
       await page.waitForTimeout(2500);
     } catch (e) {
       check('登录提交', false, `异常: ${e.message.slice(0,120)}`); return;

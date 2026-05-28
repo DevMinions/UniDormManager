@@ -80,6 +80,10 @@ func TestSetJWTSecret(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			// 防 env 污染:SetJWTSecret 在 secret 无效时会 fallback 到 JWT_SECRET env,
+			// 如果运行时设了合法的 JWT_SECRET,"应报错" 的用例会假绿。t.Setenv 在测试结束
+			// 自动回滚,空串使 fallback 走 validateJWTSecret 失败分支(空串本身不合法)。
+			t.Setenv("JWT_SECRET", "")
 			err := SetJWTSecret(tt.secret)
 			if tt.wantError {
 				assert.Error(t, err)
