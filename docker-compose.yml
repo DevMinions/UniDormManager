@@ -1,34 +1,30 @@
 # ============================================
 # Docker Compose 配置
-# 一键启动整个应用栈
+# 一键启动整个应用栈（PostgreSQL + Redis + 后端 + 前端）
 # ============================================
 
-version: '3.8'
-
 services:
-  # MySQL 数据库
-  mysql:
-    image: mysql:8.0
-    container_name: unidorm_mysql
+  # PostgreSQL 数据库
+  postgres:
+    image: postgres:16-alpine
+    container_name: unidorm_postgres
     restart: unless-stopped
     environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root_password}
-      MYSQL_DATABASE: ${MYSQL_DATABASE:-unidorm_db}
-      MYSQL_USER: ${MYSQL_USER:-unidorm}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-user_password}
+      POSTGRES_DB: ${POSTGRES_DB:-unidorm}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
     volumes:
-      - mysql_data:/var/lib/mysql
-      - ./UniDormManagerServer/migrations:/docker-entrypoint-initdb.d:ro
+      - postgres_data:/var/lib/postgresql/data
     ports:
-      - "${MYSQL_PORT:-3306}:3306"
+      - "${POSTGRES_PORT:-5432}:5432"
     networks:
       - unidorm_network
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-unidorm}"]
       interval: 10s
       timeout: 5s
       retries: 5
-      start_period: 30s
+      start_period: 20s
 
   # Redis 缓存
   redis:
@@ -56,23 +52,28 @@ services:
     container_name: unidorm_backend
     restart: unless-stopped
     environment:
-      # 数据库配置
-      DB_HOST: mysql
-      DB_PORT: 3306
-      DB_USER: ${MYSQL_USER:-unidorm}
-      DB_PASSWORD: ${MYSQL_PASSWORD:-user_password}
-      DB_NAME: ${MYSQL_DATABASE:-unidorm_db}
-      
+      # 数据库配置（指向同网络的 postgres 服务）
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: ${POSTGRES_USER:-postgres}
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      DB_NAME: ${POSTGRES_DB:-unidorm}
+      DB_SSLMODE: disable
+
       # Redis 配置
       REDIS_HOST: redis
       REDIS_PORT: 6379
       REDIS_PASSWORD: ${REDIS_PASSWORD:-redis_pass}
-      
+      USE_CACHE: ${USE_CACHE:-true}
+
       # 应用配置
       APP_ENV: ${APP_ENV:-production}
       APP_PORT: 8080
-      JWT_SECRET: ${JWT_SECRET:-your_jwt_secret_key}
+      PORT: 8080
+      JWT_SECRET: ${JWT_SECRET:-please_change_me_min_32_chars_for_production}
       LOG_LEVEL: ${LOG_LEVEL:-info}
+      # 可选：固定初始 admin 密码；不设置时后端首启会生成随机密码并打印到日志
+      ADMIN_INITIAL_PASSWORD: ${ADMIN_INITIAL_PASSWORD:-}
     volumes:
       - ./uploads:/app/uploads
       - ./logs:/app/logs
@@ -81,7 +82,7 @@ services:
     networks:
       - unidorm_network
     depends_on:
-      mysql:
+      postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
@@ -92,10 +93,10 @@ services:
       retries: 3
       start_period: 40s
 
-  # 前端服务
+  # 前端服务（React Web 管理端）
   frontend:
     build:
-      context: ./UniDormManager-UniApp
+      context: ./UniDormManagerWeb
       dockerfile: Dockerfile
     container_name: unidorm_frontend
     restart: unless-stopped
@@ -132,7 +133,7 @@ services:
       - production
 
 volumes:
-  mysql_data:
+  postgres_data:
     driver: local
   redis_data:
     driver: local
