@@ -19,6 +19,11 @@ const Dashboard: React.FC = () => {
     requestStatus: [] as Array<{ name: string; value: number; color: string }>,
   });
   const [repairsTrend, setRepairsTrend] = useState<Array<{ day: string; total: number; completed: number; pending: number }>>([]);
+  // P8 audit SSE: 显示最近 10 条写操作流
+  const [auditEvents, setAuditEvents] = useState<Array<{
+    id: string; userId: string; username: string; method: string;
+    path: string; status: number; ip: string; createdAt: string;
+  }>>([]);
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -41,6 +46,46 @@ const Dashboard: React.FC = () => {
     };
 
     fetchStats();
+  }, []);
+
+  // 订阅 audit SSE 流(P8 后端推)
+  useEffect(() => {
+    const ctrl = new AbortController();
+    const apiBase = (import.meta as any).env?.VITE_API_URL || '/api';
+    const token = localStorage.getItem('token') || '';
+    (async () => {
+      try {
+        const res = await fetch(`${apiBase}/audit-logs/stream`, {
+          headers: { Authorization: `Bearer ${token}` },
+          signal: ctrl.signal,
+        });
+        if (!res.ok || !res.body) return;
+        const reader = res.body.getReader();
+        const dec = new TextDecoder();
+        let buf = '';
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          buf += dec.decode(value, { stream: true });
+          // SSE 帧: 事件之间空行分隔
+          const blocks = buf.split('\n\n');
+          buf = blocks.pop() || '';
+          for (const block of blocks) {
+            const dataLine = block.split('\n').find((l) => l.startsWith('data:'));
+            if (!dataLine) continue;
+            try {
+              const ev = JSON.parse(dataLine.slice(5).trim());
+              setAuditEvents((prev) => [ev, ...prev].slice(0, 10));
+            } catch {
+              /* skip malformed */
+            }
+          }
+        }
+      } catch {
+        /* 用户切走 / 流断 都属于正常 */
+      }
+    })();
+    return () => ctrl.abort();
   }, []);
 
   const displayStats = [
@@ -218,6 +263,40 @@ const Dashboard: React.FC = () => {
             <div className="flex items-center justify-center h-full text-slate-400">
               <p>暂无趋势数据</p>
             </div>
+          )}
+        </div>
+      </div>
+
+      {/* Live Audit Feed (SSE 来自后端 /api/audit-logs/stream) */}
+      <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+        <div className="p-6 border-b border-slate-100 flex items-center justify-between">
+          <h2 className="text-lg font-semibold">实时审计流</h2>
+          <div className="flex items-center gap-2 text-xs text-slate-500">
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+            </span>
+            实时
+          </div>
+        </div>
+        <div className="divide-y divide-slate-100 max-h-80 overflow-y-auto">
+          {auditEvents.length > 0 ? (
+            auditEvents.map((e) => (
+              <div key={e.id} className="p-3 px-6 flex items-center gap-3 text-sm">
+                <span className={`px-2 py-0.5 rounded text-xs font-mono font-semibold ${
+                  e.method === 'POST' ? 'bg-blue-100 text-blue-700' :
+                  e.method === 'PUT' || e.method === 'PATCH' ? 'bg-amber-100 text-amber-700' :
+                  e.method === 'DELETE' ? 'bg-red-100 text-red-700' :
+                  'bg-slate-100 text-slate-700'
+                }`}>{e.method}</span>
+                <code className="text-slate-700 font-mono text-xs truncate flex-1">{e.path}</code>
+                <span className="text-slate-500 text-xs">{e.username || '匿名'}</span>
+                <span className={`text-xs ${e.status >= 400 ? 'text-red-600' : 'text-emerald-600'}`}>{e.status}</span>
+                <span className="text-xs text-slate-400 font-mono">{e.createdAt.slice(11)}</span>
+              </div>
+            ))
+          ) : (
+            <div className="p-6 text-center text-slate-400 text-sm">等待第一条写操作…</div>
           )}
         </div>
       </div>
