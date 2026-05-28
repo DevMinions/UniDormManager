@@ -89,7 +89,6 @@ func (s *DBStore) GetRepairRequestsPaginated(req *models.PaginatedRequest, filte
 			&repair.Status, &date, &repair.RoomNumber, &repair.Priority,
 		); err == nil {
 			repair.Date = date.Format("2006-01-02")
-			repair.Status = convertRepairStatus(repair.Status) // 转换状态值
 			repairs = append(repairs, &repair)
 		}
 	}

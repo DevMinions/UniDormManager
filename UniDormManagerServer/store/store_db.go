@@ -691,19 +691,10 @@ func (s *DBStore) DeleteRoom(id string) bool {
 
 // ========== RepairRequest Methods ==========
 
-// convertRepairStatus 将后端状态转换为前端期望的格式
-func convertRepairStatus(status string) string {
-	switch status {
-	case "Pending":
-		return "pending"
-	case "In Progress":
-		return "processing"
-	case "Completed":
-		return "completed"
-	default:
-		return "pending"
-	}
-}
+// 注:此前有 convertRepairStatus 强行把 'Pending' 转成 'pending'(以及 'In Progress'
+// → 'processing'),声称是"前端期望的格式"。但 Web 端到处用大写 'Pending' / 'In Progress'
+// 比较 status —— 转换后所有 UI 状态判断全 false,"开始维修" / "标记完成" 按钮永远不渲染,
+// 用户根本无法推进任何报修工单。删掉该函数,后端直接返 DB 存储格式(大写),前后端约定一致。
 
 // GetAllRepairRequests 获取所有报修请求
 func (s *DBStore) GetAllRepairRequests() ([]*models.RepairRequest, error) {
@@ -734,7 +725,6 @@ func (s *DBStore) GetAllRepairRequests() ([]*models.RepairRequest, error) {
 			return nil, fmt.Errorf("扫描报修记录失败: %w", err)
 		}
 		repair.Date = date.Format("2006-01-02")
-		repair.Status = convertRepairStatus(repair.Status) // 转换状态值
 		repairs = append(repairs, &repair)
 	}
 
@@ -768,7 +758,6 @@ func (s *DBStore) GetRepairRequestByID(id string) (*models.RepairRequest, bool) 
 		&repair.Status, &date, &repair.RoomNumber, &repair.Priority)
 	if err == nil {
 		repair.Date = date.Format("2006-01-02")
-		repair.Status = convertRepairStatus(repair.Status) // 转换状态值
 	}
 
 	if err == pgx.ErrNoRows {
