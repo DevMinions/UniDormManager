@@ -7,6 +7,15 @@
 
 ---
 
+## [0.2.4] - 2026-05-28
+
+### 🛠 工程
+
+- **`make audit`** 一键跑全 E2E baseline 105 项 — 依赖链顺序跑 6 个 harness(audit_api 38 → audit_web 17 → buildings 14 → students 10 → rooms 13 → repairs 13),任一 fail 立即停后续。预置 vite preview :3000 + 后端 :8082 + admin/admin123,可通过 env 覆盖
+- 跟既有 `make test` 互补:test 跑单元/集成,audit 跑端到端真启服务 + Playwright
+
+---
+
 ## [0.2.3] - 2026-05-28
 
 ### 🐛 修复
