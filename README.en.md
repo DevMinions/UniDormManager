@@ -134,6 +134,7 @@ docker compose exec -T postgres psql -U postgres -d unidorm < scripts/seed_test_
 - [Docker deployment](docs/DOCKER.md)
 - [Database initialization](docs/DATABASE_INIT.md)
 - [Full deployment guide](docs/DEPLOYMENT.md)
+- [Architecture overview](docs/ARCHITECTURE.md) — C4 container view, backend layering, key flow Mermaid diagrams
 - [API reference](docs/API.md)
 - [Development guidelines](docs/DEVELOPMENT_GUIDE.md)
 - [User manual](docs/USER_MANUAL.md)

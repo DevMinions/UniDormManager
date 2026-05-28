@@ -133,6 +133,7 @@ docker compose exec -T postgres psql -U postgres -d unidorm < scripts/seed_test_
 - [Docker 部署指南](docs/DOCKER.md)
 - [数据库初始化](docs/DATABASE_INIT.md)
 - [完整部署文档](docs/DEPLOYMENT.md)
+- [架构总览](docs/ARCHITECTURE.md) — C4 容器图 / 后端分层 / 关键流程 Mermaid
 - [API 接口文档](docs/API.md)
 - [开发规范](docs/DEVELOPMENT_GUIDE.md)
 - [用户操作手册](docs/USER_MANUAL.md)
