@@ -11,6 +11,7 @@ import (
 	"unidorm-manager-server/audit"
 	"unidorm-manager-server/auth"
 	"unidorm-manager-server/database"
+	"unidorm-manager-server/monitoring"
 )
 
 // AuditLog 是 gin 中间件:对每个成功的写请求(POST/PUT/PATCH/DELETE)
@@ -80,5 +81,8 @@ func AuditLog() gin.HandlerFunc {
 			UserAgent: ua,
 			CreatedAt: time.Now().Format("2006-01-02 15:04:05"),
 		})
+
+		// Prometheus counter
+		monitoring.RecordAuditEvent(method, status)
 	}
 }

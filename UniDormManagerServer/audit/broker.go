@@ -10,6 +10,8 @@ package audit
 import (
 	"sync"
 	"sync/atomic"
+
+	"unidorm-manager-server/monitoring"
 )
 
 // Event 就是一条审计记录(跟 audit_logs 表字段对齐,JSON 化后给 SSE 客户端)
@@ -41,14 +43,18 @@ func Subscribe() (<-chan Event, func()) {
 	id := nextID.Add(1)
 	mu.Lock()
 	subscribers[id] = ch
+	n := len(subscribers)
 	mu.Unlock()
+	monitoring.SetSSESubscribers(n)
 	return ch, func() {
 		mu.Lock()
 		if c, ok := subscribers[id]; ok {
 			delete(subscribers, id)
 			close(c)
 		}
+		n := len(subscribers)
 		mu.Unlock()
+		monitoring.SetSSESubscribers(n)
 	}
 }
 

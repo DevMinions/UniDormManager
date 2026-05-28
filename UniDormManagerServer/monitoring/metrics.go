@@ -171,3 +171,66 @@ func UpdateRoomsTotal(count float64) {
 func UpdateRepairRequestsTotal(status string, count float64) {
 	repairRequestsTotal.WithLabelValues(status).Set(count)
 }
+
+// ------ P7/P8 audit + P3 scheduler 业务指标 ------
+
+var (
+	// 审计事件计数:每条 audit_logs 写入 +1。
+	// status_class 为 "2xx" / "3xx" / "4xx" / "5xx",方便 Grafana 按类聚合。
+	auditEventsTotal = promauto.NewCounterVec(
+		prometheus.CounterOpts{
+			Name: "audit_events_total",
+			Help: "审计事件计数(每个成功写请求 +1)",
+		},
+		[]string{"method", "status_class"},
+	)
+
+	// 调度器任务运行计数。result = "ok" | "error"。
+	schedulerJobRunsTotal = promauto.NewCounterVec(
+		prometheus.CounterOpts{
+			Name: "scheduler_job_runs_total",
+			Help: "调度器任务运行次数",
+		},
+		[]string{"name", "result"},
+	)
+
+	// SSE 当前订阅者数。每次 Subscribe/Unsubscribe 调 SetSSESubscribers 同步。
+	sseSubscribers = promauto.NewGauge(
+		prometheus.GaugeOpts{
+			Name: "sse_subscribers",
+			Help: "当前 SSE 实时订阅者数量",
+		},
+	)
+)
+
+// RecordAuditEvent 由 middleware.AuditLog 在写库后调用
+func RecordAuditEvent(method string, status int) {
+	auditEventsTotal.WithLabelValues(method, statusClass(status)).Inc()
+}
+
+// RecordSchedulerJob 由 scheduler/jobs.go 任务跑完调用
+func RecordSchedulerJob(name string, ok bool) {
+	result := "ok"
+	if !ok {
+		result = "error"
+	}
+	schedulerJobRunsTotal.WithLabelValues(name, result).Inc()
+}
+
+// SetSSESubscribers 同步当前订阅者数 gauge
+func SetSSESubscribers(n int) {
+	sseSubscribers.Set(float64(n))
+}
+
+func statusClass(s int) string {
+	switch {
+	case s >= 500:
+		return "5xx"
+	case s >= 400:
+		return "4xx"
+	case s >= 300:
+		return "3xx"
+	default:
+		return "2xx"
+	}
+}

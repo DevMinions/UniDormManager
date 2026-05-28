@@ -5,6 +5,7 @@ import (
 	"log"
 
 	"unidorm-manager-server/database"
+	"unidorm-manager-server/monitoring"
 	"unidorm-manager-server/store"
 )
 
@@ -17,9 +18,11 @@ func cleanupExpiredTokens() {
 	res, err := database.DB.Exec(ctx, "DELETE FROM token_blacklist WHERE expires_at < NOW()")
 	if err != nil {
 		log.Printf("scheduler[cleanup-expired-tokens]: failed: %v", err)
+		monitoring.RecordSchedulerJob("cleanup-expired-tokens", false)
 		return
 	}
 	log.Printf("scheduler[cleanup-expired-tokens]: deleted %d rows", res.RowsAffected())
+	monitoring.RecordSchedulerJob("cleanup-expired-tokens", true)
 }
 
 // scanLateReturns 扫"过去 24h 内最后一条 access_log 是 Out 且没回"的学生,
@@ -60,7 +63,9 @@ func scanLateReturns(_ store.StoreInterface) {
 		// access_logs 可能没数据 / late_return_alerts 表 schema 跟假设不符。
 		// 不致命,记日志即可,下次照常跑。
 		log.Printf("scheduler[scan-late-returns]: failed: %v", err)
+		monitoring.RecordSchedulerJob("scan-late-returns", false)
 		return
 	}
 	log.Printf("scheduler[scan-late-returns]: inserted %d alerts", res.RowsAffected())
+	monitoring.RecordSchedulerJob("scan-late-returns", true)
 }
