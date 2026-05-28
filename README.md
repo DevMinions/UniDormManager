@@ -117,7 +117,6 @@ docker compose exec -T postgres psql -U postgres -d unidorm < scripts/seed_test_
 - [Docker 部署指南](docs/DOCKER.md)
 - [API 联调](docs/API_INTEGRATION.md)
 - [部署](docs/DEPLOYMENT.md)
-- [审核报告 (2026-05-28)](docs/AUDIT_REPORT_2026-05-28.md)
 - [贡献指南](CONTRIBUTING.md)
 
 ---
