@@ -7,6 +7,60 @@
 
 ---
 
+## [0.2.1] - 2026-05-28
+
+文档 / 监控 / 测试 收尾版。无 API 变更,无 schema 变更,直接覆盖 v0.2.0 部署。
+
+### 📚 文档
+
+- **API.md** 加 "v0.2.0 新增接口" 章节(此前 doc 停留在 v0.1.0):
+  `POST /api/upload` · `GET /api/statistics/repairs-by-day` ·
+  `GET /api/audit-logs` · `GET /api/audit-logs/stream`(含前端 SSE 消费示例) ·
+  `GET /api/scheduler/jobs`
+- **ARCHITECTURE.md** 新文件 — 7 张 Mermaid 图:
+  - C4 L1 系统上下文 / L2 容器视图 / L3 后端包分层
+  - 写请求 + audit 链 sequence(client 拿到 201 后异步写库 + broker.Publish)
+  - JWT + RBAC 校验 sequence
+  - Dashboard 并行拉 stats + repairs-by-day 数据流
+  - Render Blueprint 部署拓扑
+- README / README.en.md 加 ARCHITECTURE.md 链接
+
+### 📊 监控
+
+- **Grafana 默认 dashboard** `grafana/provisioning/dashboards/unidorm-overview.json` —
+  此前 provisioning 目录是空的,起 compose 看不到图。本 dashboard 走 file
+  provisioning 自动 load,开机即可见。5 行 11 panel:
+  - 业务概览 stat:students / rooms / sse_subscribers / active_users / 未完成报修
+  - HTTP:请求速率 by status(stack) + topk 8 endpoint p95
+  - 审计:audit_events rate by method + by status_class(2xx 绿 / 4xx 黄 / 5xx 红)
+  - Scheduler:scheduler_job_runs_total 累计 by (name, result)
+  - 登录尝试 by status(failed 红 / success 绿)
+  - schemaVersion 39 兼容 Grafana 10+,UID 固定 `unidorm-overview`
+
+### 🧪 测试
+
+- **`tests/audit_web_crud.js`** 新文件 — Buildings 完整 UI CRUD 14 项:
+  UI Create → UI Edit → API Delete → 列表同步验证。脚本注释带 3 个 e2e 坑的踩坑笔记:
+  多卡片精确锁定 / `pressSequentially` 替代 `.fill()` 触发 React onChange /
+  HashRouter 同 hash 二次 goto 不重挂载
+- **baseline 全绿** 100/100 + 5 包 ok:audit_api 38/38 · audit_web 17/17 ·
+  audit_web_crud 14/14 · vitest 31/31 · `go test ./...` 5 包 ok
+
+### 🐛 修复
+
+- **E2E click 30s actionability 卡死** — vite preview dist 下,framer-motion 入场
+  动画阻塞 `button.click()` 30s。`tests/audit_web.js` + `audit_web_crud.js`
+  全部改 `{ force: true }`,input 换 `.focus()`,注释带根因
+- **TestSetJWTSecret env 污染** — `SetJWTSecret` 在 secret 无效时 fallback
+  到 `$JWT_SECRET`;以前本地带 env 跑 baseline 偶尔假绿。子测加
+  `t.Setenv('JWT_SECRET', '')` 用 testing 自带回滚机制隔离
+
+### 🔧 改进
+
+- `go.mod`:`robfig/cron/v3` 提到 direct(P3 加 scheduler 时通过 indirect 引入,`go mod tidy` 修正)
+
+---
+
 ## [0.2.0] - 2026-05-28
 
 第二个 GitHub 开源发布。本版集中补齐对外可观察性与工程能力。
