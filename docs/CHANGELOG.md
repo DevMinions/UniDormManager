@@ -7,6 +7,38 @@
 
 ---
 
+## [0.2.7] - 2026-05-28
+
+依赖更新版。**含 1 个 critical + 1 个 low 安全漏洞修复**。建议覆盖部署。
+
+### 🔐 安全
+
+- **pgx critical memory-safety 漏洞** → 升 `github.com/jackc/pgx/v5` 5.7.6 → 5.9.2(critical fixed in 5.9.0,low SQL 注入 via 美元引用 fixed in 5.9.2)
+
+### ⬆️ Runtime 依赖
+
+- `github.com/gin-gonic/gin` 1.10.1 → 1.12.0
+- `github.com/jackc/pgx/v5` 5.7.6 → 5.9.2
+- `github.com/sirupsen/logrus` 1.9.3 → 1.9.4
+- `recharts` 3.7.0 → 3.8.1
+
+### ⬆️ 开发依赖 / Transitive
+
+- `vite` / `vitest` / `@vitest/ui` multi-bump
+- `rollup` 4.57.1 → 4.60.4
+- `postcss` 8.5.6 → 8.5.15
+- `brace-expansion` / `minimatch` / `picomatch` / `flatted`
+
+`package-lock.json` 净减 ~1300 行(dev 工具升级减少 transitive 树)。
+
+### ✅ 回归
+
+baseline **136/136 全绿,0 regression**:audit_api 38/38 · audit_web 17/17 · audit_web_crud 14/14 · audit_web_crud_students 10/10 · audit_web_crud_rooms 13/13 · audit_web_workflow_repairs 13/13 · vitest 31/31 · `go test` 5 包 ok。
+
+merge 后 open PR:0,open dependabot alert:0。
+
+---
+
 ## [0.2.6] - 2026-05-28
 
 仅文档,无代码 / schema 变更。可直接覆盖 v0.2.5 部署。
