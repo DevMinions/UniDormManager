@@ -35,7 +35,7 @@
 - [ ] 新增/修改的代码有对应的测试或回归手段
 - [ ] 涉及 schema 改动时，同步更新了 `database/database.go`（自动建表 + ALTER 兼容现库）
 - [ ] 涉及新路由的 RBAC 权限时，同步在 `database/init_auth_data.go` 加了 `permissions` 行
-- [ ] 文档（README / docs/ / CLAUDE.md）已同步更新
+- [ ] 文档（README / docs/）已同步更新
 - [ ] commit message 遵循 Conventional Commits（`feat:` / `fix:` / `chore:` / ...）
 - [ ] 我已自审过 diff，没有调试代码、注释掉的代码、或硬编码凭据残留
 

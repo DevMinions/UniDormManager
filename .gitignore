@@ -77,6 +77,10 @@ uploads/
 *.backup
 Thumbs.db
 
-# ---> 工具状态文件（非项目代码）
+# ---> 本地 AI/IDE 工具配置（仅个人本地用，不上传仓库）
 .openclaw/
-.claude/settings.local.json
+.claude/
+.cursor/
+.mcp.json
+CLAUDE.md
+AGENTS.md
