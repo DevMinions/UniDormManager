@@ -116,11 +116,14 @@ func BuildStudentQuery(ctx context.Context, req *models.PaginatedRequest, filter
 
 	qb := NewQueryBuilder(ctx, baseQuery)
 
-	// 添加筛选条件
-	qb.WhereLike("s.name", req.Search).
-		WhereLike("s.student_id", req.Search).
-		WhereLike("s.major", req.Search).
-		WhereStatus(filter.Status, "s.status").
+	// search 跨三列 OR(name / student_id / major)。
+	// 之前用 WhereLike 串三次是 AND,要求同时命中三列,实际等于无人匹配 — UI 搜索时
+	// 学生列表立刻变空。改 OR + 同一 $n 复用,跟 BuildRoomQuery 的写法保持一致。
+	if req.Search != "" {
+		n := len(qb.args) + 1
+		qb.Where(fmt.Sprintf("(s.name ILIKE $%d OR s.student_id ILIKE $%d OR s.major ILIKE $%d)", n, n, n), "%"+req.Search+"%")
+	}
+	qb.WhereStatus(filter.Status, "s.status").
 		WhereLike("s.major", filter.Major).
 		WhereLike("r.number", filter.Room).
 		WhereLike("r.building", filter.Building)
