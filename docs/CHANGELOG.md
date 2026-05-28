@@ -7,6 +7,20 @@
 
 ---
 
+## [0.2.3] - 2026-05-28
+
+### 🐛 修复
+
+- **Repairs 状态推不动(v0.1.0 静默 bug)** — `convertRepairStatus` 强行把出库 status 转小写(`'Pending'`→`'pending'` / `'In Progress'`→`'processing'`),前端 `RepairRequests.tsx` 多处用大写比较 status 决定渲染 "开始维修" / "标记完成" 按钮,转换后所有判断全 false,**用户根本无法推进任何报修工单**。删函数 + 三处调用,后端直返 DB 存储格式
+
+### 🧪 测试
+
+- **`tests/audit_web_crud_rooms.js`** 新文件 — Rooms UI CRUD 13 项(grid 卡片定位 + search 三列 OR + 容量编辑 + 删除)
+- **`tests/audit_web_workflow_repairs.js`** 新文件 — Repairs status workflow 13 项(Pending → In Progress → Completed),每步 `waitForResponse` + API 二次验证
+- baseline **136/136 全绿** + 5 包 ok(从 110 → 136)
+
+---
+
 ## [0.2.2] - 2026-05-28
 
 ### 🐛 修复
