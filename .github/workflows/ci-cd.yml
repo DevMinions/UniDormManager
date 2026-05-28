@@ -14,8 +14,9 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  BACKEND_IMAGE: ${{ github.repository }}/backend
-  FRONTEND_IMAGE: ${{ github.repository }}/frontend
+  # Docker tag 段必须全小写；github.repository 含大写时会失败，故硬编码
+  BACKEND_IMAGE: devminions/unidormmanager/backend
+  FRONTEND_IMAGE: devminions/unidormmanager/frontend
 
 jobs:
   # 后端测试和构建
