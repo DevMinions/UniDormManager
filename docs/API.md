@@ -885,6 +885,175 @@ Authorization: Bearer {token}
 
 ---
 
+## v0.2.0 新增接口
+
+以下接口是 [v0.2.0](https://github.com/DevMinions/UniDormManager/releases/tag/v0.2.0) 引入的。如果你的部署还在 v0.1.0,这些接口不会存在。
+
+### POST /api/upload
+
+通用文件上传(需登录,任意角色)。
+
+- **Content-Type**: `multipart/form-data`
+- **字段名**: `file`
+- **限制**: 单文件 ≤ 5 MiB,MIME 白名单 `image/{jpeg,png,gif,webp}` + `application/pdf`(嗅探前 512 字节,不信前端 Content-Type)
+- **落盘路径**: `./uploads/<YYYY-MM-DD>/<32 hex>.<ext>`
+- **静态服务**: 返回的 url 路径直接 `GET /<url>` 即可下载
+
+请求:
+```bash
+curl -X POST http://localhost:8080/api/upload \
+  -H "Authorization: Bearer <token>" \
+  -F "file=@/path/to/image.png"
+```
+
+响应 (200):
+```json
+{
+  "url": "/uploads/2026-05-28/4e0d3b7b08c12f763eb6501fb072a58c.png",
+  "filename": "4e0d3b7b08c12f763eb6501fb072a58c.png",
+  "size": 220382,
+  "mime": "image/png"
+}
+```
+
+错误:
+| Status | error | 场景 |
+|---|---|---|
+| 400 | invalid_request | 缺 `file` 字段或读取失败 |
+| 413 | file_too_large | 文件超 5 MiB |
+| 415 | unsupported_type | MIME 不在白名单(响应 message 含真实嗅探类型) |
+
+---
+
+### GET /api/statistics/repairs-by-day
+
+报修按日聚合,适合前端 LineChart 画 30 天趋势。需 `dashboard:read` 权限。
+
+参数:
+| Query | 类型 | 默认 | 范围 | 说明 |
+|---|---|---|---|---|
+| days | int | 30 | 1..180 | 取过去 N 天(含今天),用 `generate_series` 补齐空日 |
+
+响应 (200):
+```json
+{
+  "days": 7,
+  "data": [
+    {"day": "2026-05-22", "total": 0, "completed": 0, "pending": 0},
+    {"day": "2026-05-23", "total": 0, "completed": 0, "pending": 0},
+    {"day": "2026-05-24", "total": 0, "completed": 0, "pending": 0},
+    {"day": "2026-05-25", "total": 0, "completed": 0, "pending": 0},
+    {"day": "2026-05-26", "total": 0, "completed": 0, "pending": 0},
+    {"day": "2026-05-27", "total": 0, "completed": 0, "pending": 0},
+    {"day": "2026-05-28", "total": 0, "completed": 0, "pending": 0}
+  ]
+}
+```
+
+---
+
+### GET /api/audit-logs
+
+审计日志查询(任何登录用户对 POST/PUT/PATCH/DELETE 的访问都会被记录)。需 `users:read` 权限。
+
+参数:
+| Query | 类型 | 默认 | 范围 | 说明 |
+|---|---|---|---|---|
+| page | int | 1 | ≥1 | 分页页码 |
+| pageSize | int | 50 | 1..200 | 每页大小 |
+| userId | string | - | - | 可选,只看某个用户的操作 |
+
+响应 (200):
+```json
+{
+  "total": 124,
+  "page": 1,
+  "pageSize": 50,
+  "data": [
+    {
+      "id": "8c0973d6-...",
+      "userId": "user-admin-1",
+      "username": "admin",
+      "method": "POST",
+      "path": "/api/buildings",
+      "status": 201,
+      "ip": "127.0.0.1",
+      "userAgent": "curl/8.4.0",
+      "createdAt": "2026-05-28 17:13:35"
+    }
+  ]
+}
+```
+
+---
+
+### GET /api/audit-logs/stream
+
+审计事件 SSE 实时流。客户端断开自动 unsubscribe;无新事件时连接保持。需 `users:read` 权限。
+
+请求:
+```bash
+curl -N -H "Authorization: Bearer <token>" \
+  http://localhost:8080/api/audit-logs/stream
+```
+
+响应 (200,持续):
+```
+event: audit
+data: {"id":"...","userId":"user-admin-1","username":"admin","method":"POST","path":"/api/buildings","status":201,"ip":"127.0.0.1","userAgent":"curl/8.4.0","createdAt":"2026-05-28 17:13:35"}
+
+event: audit
+data: {"id":"...","method":"DELETE","path":"/api/buildings/...",...}
+```
+
+前端示例(浏览器 fetch + ReadableStream,适配带 Authorization 头):
+```js
+const res = await fetch(`${API}/audit-logs/stream`, {
+  headers: { Authorization: `Bearer ${token}` },
+  signal: ctrl.signal,
+});
+const reader = res.body.getReader();
+const dec = new TextDecoder();
+let buf = '';
+while (true) {
+  const { done, value } = await reader.read();
+  if (done) break;
+  buf += dec.decode(value, { stream: true });
+  const blocks = buf.split('\n\n');
+  buf = blocks.pop() || '';
+  for (const block of blocks) {
+    const data = block.split('\n').find(l => l.startsWith('data:'));
+    if (data) handle(JSON.parse(data.slice(5).trim()));
+  }
+}
+```
+
+实现:in-memory broker,无持久化(完整记录在 `audit_logs` 表里)。慢消费者(buffer 32 满)直接丢事件,不阻塞 Publish。
+
+---
+
+### GET /api/scheduler/jobs
+
+查看当前注册的周期任务(需 `users:read` 权限)。
+
+响应 (200):
+```json
+{
+  "jobs": [
+    {"id": 1, "schedule": "0 0 3 * * *", "name": "cleanup-expired-tokens"},
+    {"id": 2, "schedule": "0 0 2 * * *", "name": "scan-late-returns"}
+  ]
+}
+```
+
+任务说明:
+- **cleanup-expired-tokens** — 每日 03:00,删 `token_blacklist` 中 `expires_at < NOW()` 的行
+- **scan-late-returns** — 每日 02:00,扫过去 24h 最后一次 `access_logs.direction='Out'` 的学生,写 `late_return_alerts`(同日不重复)
+
+观测:每次跑完会 +1 到 Prometheus counter `scheduler_job_runs_total{name, result}`。
+
+---
+
 ## 通用响应格式
 
 ### 成功响应
