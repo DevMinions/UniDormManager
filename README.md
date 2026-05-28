@@ -1,153 +1,111 @@
-# UniDormManager
+<h1 align="center">UniDormManager</h1>
 
-> 宿舍管理系统 - 基于 Go + React 19 的现代化宿舍管理解决方案
+<p align="center">
+  开箱即用的宿舍管理系统 — Go 后端 + React 19 前端 + PostgreSQL,带 RBAC、审计、SSE 实时流和 Prometheus 指标。
+</p>
 
-[![Go](https://img.shields.io/badge/Go-1.23+-00ADD8?logo=go)](https://golang.org/)
-[![React](https://img.shields.io/badge/React-19-61DAFB?logo=react)](https://react.dev/)
-[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-336791?logo=postgresql&logoColor=white)](https://www.postgresql.org/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/DevMinions/UniDormManager)
+<p align="center">
+  <a href="https://github.com/DevMinions/UniDormManager/actions/workflows/ci-cd.yml"><img alt="CI" src="https://github.com/DevMinions/UniDormManager/actions/workflows/ci-cd.yml/badge.svg"></a>
+  <a href="https://github.com/DevMinions/UniDormManager/releases/latest"><img alt="Release" src="https://img.shields.io/github/v/release/DevMinions/UniDormManager?sort=semver"></a>
+  <a href="LICENSE"><img alt="License" src="https://img.shields.io/badge/license-MIT-blue.svg"></a>
+  <a href="https://golang.org/"><img alt="Go" src="https://img.shields.io/badge/go-1.23%2B-00ADD8?logo=go&logoColor=white"></a>
+  <a href="https://react.dev/"><img alt="React" src="https://img.shields.io/badge/react-19-61DAFB?logo=react&logoColor=white"></a>
+  <a href="https://render.com/deploy?repo=https://github.com/DevMinions/UniDormManager"><img alt="Deploy to Render" src="https://render.com/images/deploy-to-render-button.svg" height="20"></a>
+</p>
 
-📖 **Languages**: **简体中文** · [English](README.en.md)
+<p align="center">
+  <a href="README.md">简体中文</a> · <a href="README.en.md">English</a> · <a href="docs/ARCHITECTURE.md">架构</a> · <a href="docs/API.md">API</a>
+</p>
 
----
-
-## ✨ 项目简介
-
-UniDormManager 是一套完整的宿舍管理系统，提供学生信息管理、宿舍分配、报修处理、公告通知、查寝评分、门禁记录等功能。
-
-### 核心功能
-
-- 🎓 **学生管理** - 学生信息维护、宿舍分配
-- 🏢 **楼栋管理** - 楼栋信息、房间管理
-- 🔧 **报修管理** - 报修请求处理、状态跟踪
-- 📢 **公告管理** - 公告发布、通知管理
-- 📊 **查寝评分** - 查寝记录、评分统计、排行榜
-- 🚪 **门禁管理** - 门禁记录、晚归预警
-- 🔄 **换寝申请** - 在线换寝申请、审批流程
-- 👥 **用户权限** - RBAC权限管理、角色配置
-
----
-
-## 🚀 一键部署 Demo
-
-最简单的体验方式 —— 点上方 **Deploy to Render** 按钮(或访问
-[render.com/deploy?repo=https://github.com/DevMinions/UniDormManager](https://render.com/deploy?repo=https://github.com/DevMinions/UniDormManager))，Render 会按照仓库根的 `render.yaml` 自动拉起 PostgreSQL + Go 后端 + React 前端。
-
-> Render Free 计划:idle 15min 后 sleep,首访冷启 ~30s；PostgreSQL 90 天免费试用。生产请用付费 plan 或自托管 (`make up`)。
-
-部署完成后:
-1. Render dashboard 找 `unidorm-backend` 服务的真实域名
-2. 编辑 `unidorm-web` 服务的 `VITE_API_URL` 环境变量改为 `https://<你的backend域名>.onrender.com/api`
-3. 触发 `unidorm-web` 重新构建
-4. 访问 `unidorm-backend` 启动日志拿 `INITIAL PASSWORD`,用 admin / 该密码登录
-
----
-
-## 📸 截图
-
-| 仪表板 | 学生管理 |
-|---|---|
-| ![Dashboard](docs/screenshots/02-dashboard.png) | ![Students](docs/screenshots/03-students.png) |
-
-| 楼栋 | 房间管理 |
-|---|---|
-| ![Buildings](docs/screenshots/04-buildings.png) | ![Rooms](docs/screenshots/05-rooms.png) |
-
-| 报修 | 公告 |
-|---|---|
-| ![Repairs](docs/screenshots/06-repairs.png) | ![Notices](docs/screenshots/07-notices.png) |
-
-| 查寝 | 门禁记录 |
-|---|---|
-| ![Inspections](docs/screenshots/08-inspections.png) | ![Access Logs](docs/screenshots/09-access-logs.png) |
+<p align="center">
+  <img src="docs/screenshots/02-dashboard.png" alt="Dashboard" width="860">
+</p>
 
 <details>
-<summary>登录页 / Login</summary>
+<summary>更多截图(学生 / 楼栋 / 房间 / 报修 / 公告 / 查寝 / 门禁 / 登录)</summary>
 
-![Login](docs/screenshots/01-login.png)
+| ![Students](docs/screenshots/03-students.png) | ![Buildings](docs/screenshots/04-buildings.png) |
+|---|---|
+| 学生管理 | 楼栋管理 |
+| ![Rooms](docs/screenshots/05-rooms.png) | ![Repairs](docs/screenshots/06-repairs.png) |
+| 房间管理 | 报修工单 |
+| ![Notices](docs/screenshots/07-notices.png) | ![Inspections](docs/screenshots/08-inspections.png) |
+| 公告 | 查寝 |
+| ![Access Logs](docs/screenshots/09-access-logs.png) | ![Login](docs/screenshots/01-login.png) |
+| 门禁与晚归告警 | 登录 |
+
+截图由 `scripts/capture_screenshots.js` 自动抓取,发版重跑即可同步。
 
 </details>
 
-> 截图由 `scripts/capture_screenshots.js` 自动抓取，每次发版重跑即可同步。
+## Features
 
----
+- **业务覆盖完整** — 学生 / 楼栋 / 房间 / 报修 / 公告 / 查寝 / 门禁 / 晚归 / 换寝,8 个一线管理域全部带 UI
+- **RBAC + JWT** — 角色与权限矩阵存数据库,system-admin 通配,新增路由自动包含
+- **审计与 SSE 实时流** — 所有写操作记录 `audit_logs`,Dashboard 通过 `/api/audit-logs/stream` 实时显示最近 10 条
+- **可观测性** — `/metrics` 暴露 Prometheus 指标,自带 Grafana dashboard 11 个 panel 覆盖业务 / HTTP / 审计 / Scheduler
+- **一键部署** — Docker Compose 本地全栈 / Render Blueprint 云端一键(PostgreSQL + 后端 + 前端)
+- **端到端基线 105 项** — `make audit` 跑全部 E2E harness(audit_api + 4 个 UI CRUD + workflow),CI 期间一键回归
 
-## 🏗️ 技术栈
+## Tech Stack
 
-### 后端
-- **语言**: Go 1.23+
-- **框架**: Gin
-- **数据库**: PostgreSQL 16
-- **缓存**: Redis 7
-- **监控**: Prometheus + Grafana
+| 层 | 选型 |
+|---|---|
+| 后端 | Go 1.23 · Gin · pgx · golang-jwt · robfig/cron · prometheus client |
+| 前端 | React 19 · TypeScript · Vite · Tailwind · Recharts · HashRouter |
+| 数据 | PostgreSQL 16 · Redis 7(可选缓存) |
+| 监控 | Prometheus · Grafana(provisioning 已配) |
+| 测试 | Vitest · `go test` · Playwright(audit_web 系列) |
+| 部署 | Docker Compose · Render Blueprint · GitHub Actions |
 
-### 前端
-- **框架**: React 19 + TypeScript + Vite
-- **UI库**: Tailwind CSS + Lucide React 图标
-- **图表**: Recharts
-- **HTTP**: Fetch API
-- **路由**: React Router DOM (HashRouter)
-- **测试**: Vitest + Testing Library
+## Quick Start
 
----
-
-## 🚀 快速开始
-
-### 前置要求
-
-- Docker 20.10+
-- Docker Compose 2.0+
-- Git
-
-### Docker 部署（推荐）
+需要 Docker 20.10+ 与 Docker Compose 2.0+。
 
 ```bash
-# 1. 克隆项目
 git clone https://github.com/DevMinions/UniDormManager.git
 cd UniDormManager
-
-# 2. 启动所有服务
-docker compose up -d
-
-# 3. 导入测试数据（可选）
-docker compose exec -T postgres psql -U postgres -d unidorm < scripts/seed_test_data.sql
-
-# 4. 访问系统
-# 前端: http://localhost:3000
-# 后端: http://localhost:8080
-# Grafana: http://localhost:3001
+make up
 ```
 
-### 默认账号
+服务启动后:
+- 前端:http://localhost:3000
+- 后端:http://localhost:8080
+- Grafana:http://localhost:3001
 
-- **用户名**: `admin`
-- **密码**: 首次启动后端时会在日志中打印一次（搜索 `INITIAL PASSWORD`），或通过 `ADMIN_INITIAL_PASSWORD` 环境变量预设
+首次启动后,**后端日志会打印一次** `INITIAL PASSWORD: <16 字符>`(或通过 `ADMIN_INITIAL_PASSWORD` 环境变量预设)。账号 `admin`,首次登录后请立即改密码。
 
-⚠️ 首启完成请立即登录并修改 admin 密码。
-
----
-
-## 📚 文档
-
-- [Docker 部署指南](docs/DOCKER.md)
-- [数据库初始化](docs/DATABASE_INIT.md)
-- [完整部署文档](docs/DEPLOYMENT.md)
-- [架构总览](docs/ARCHITECTURE.md) — C4 容器图 / 后端分层 / 关键流程 Mermaid
-- [API 接口文档](docs/API.md)
-- [开发规范](docs/DEVELOPMENT_GUIDE.md)
-- [用户操作手册](docs/USER_MANUAL.md)
-- [变更日志](docs/CHANGELOG.md)
-- [贡献指南](CONTRIBUTING.md)
-
----
-
-## 🛠️ 开发
-
-### 环境配置
+可选导入测试数据:
 
 ```bash
-# 后端
+docker compose exec -T postgres psql -U postgres -d unidorm < scripts/seed_test_data.sql
+```
+
+### 一键云端部署
+
+点击顶部 **Deploy to Render** 按钮,Render 会按 `render.yaml` 拉起 PostgreSQL + 后端 + 前端。部署完成后:
+
+1. 在 Render dashboard 找到 `unidorm-backend` 服务真实域名
+2. 编辑 `unidorm-web` 的 `VITE_API_URL` 改为 `https://<backend域名>.onrender.com/api`
+3. 触发 `unidorm-web` 重新构建
+4. 从 `unidorm-backend` 启动日志取 `INITIAL PASSWORD` 登录
+
+Render Free 计划 idle 15min 后 sleep,首访冷启 ~30s;PostgreSQL 90 天免费试用。生产请用付费 plan 或 `make up` 自托管。
+
+## Documentation
+
+- [架构总览](docs/ARCHITECTURE.md) — C4 容器图 + 后端分层 + 关键流程 Mermaid
+- [API 参考](docs/API.md) — 所有端点 + 请求 / 响应示例
+- [部署指南](docs/DEPLOYMENT.md) · [Docker 部署](docs/DOCKER.md) · [数据库初始化](docs/DATABASE_INIT.md)
+- [开发规范](docs/DEVELOPMENT_GUIDE.md) · [用户手册](docs/USER_MANUAL.md) · [角色权限](docs/ROLE_BASED_DESIGN.md)
+- [变更日志](docs/CHANGELOG.md) · [安全策略](SECURITY.md) · [贡献指南](CONTRIBUTING.md)
+
+## Development
+
+不走 Docker 起本地开发服务:
+
+```bash
+# 后端(需先起 PostgreSQL)
 cd UniDormManagerServer
 go mod download
 go run main.go
@@ -158,89 +116,36 @@ npm install
 npm run dev
 ```
 
-### 工作流
+详细环境变量见 [DEPLOYMENT.md](docs/DEPLOYMENT.md)。
 
-本项目采用规范的 Git 工作流：
+## Testing
 
+```bash
+make test       # 后端 go test + 前端 vitest
+make audit      # 全 E2E baseline 105 项(audit_api + 4 个 UI CRUD + workflow)
 ```
-feature/* (功能开发) → dev (开发测试) → master (生产发布)
-```
 
-详细的分支管理规范请查看 [CONTRIBUTING.md](CONTRIBUTING.md)
+`make audit` 需要 vite preview :3000、后端 :8082、admin/admin123 都到位,任一 harness fail 立即停后续。详见 [Makefile](Makefile)。
 
----
-
-## 📊 项目结构
+## Project Structure
 
 ```
 UniDormManager/
-├── UniDormManagerServer/    # Go后端
-│   ├── handlers/              # API处理器
-│   ├── models/                # 数据模型
-│   ├── database/              # 数据库操作
-│   ├── store/                 # 数据存储层
-│   ├── cache/                 # Redis缓存
-│   └── main.go                # 主程序
-├── UniDormManagerWeb/        # React 19 前端
-│   ├── pages/                 # 页面组件（每个管理页一个文件）
-│   ├── components/            # 共享组件
-│   ├── hooks/                 # 自定义 Hook（usePaginatedData 等）
-│   ├── services/api.ts        # 统一的后端 API 客户端
-│   ├── contexts/              # React Context（AuthContext 等）
-│   └── types.ts               # TypeScript 类型
-├── scripts/                   # SQL脚本
-├── docker-compose.yml         # Docker编排
-└── CONTRIBUTING.md            # 贡献指南
+├── UniDormManagerServer/    Go 后端(handlers / store / middleware / scheduler / audit / monitoring)
+├── UniDormManagerWeb/       React 19 前端(pages / hooks / services / contexts)
+├── tests/                   E2E harness(audit_api.py / audit_web*.js)
+├── scripts/                 SQL 迁移 / 一次性修复脚本
+├── docs/                    长文档(ARCHITECTURE / API / DEPLOYMENT 等)
+├── grafana/                 Grafana provisioning(datasources + dashboards)
+├── render.yaml              Render Blueprint(一键云部署)
+├── docker-compose.yml       本地全栈编排
+└── Makefile                 常用命令入口
 ```
 
----
+## Contributing
 
-## 📝 提交规范
+欢迎提 Issue / PR。请先读 [CONTRIBUTING.md](CONTRIBUTING.md) 了解分支策略、commit message 规范和本地测试要求。安全相关问题请走 [GitHub Private Vulnerability Reporting](SECURITY.md),不要直接提 Issue。
 
-使用语义化提交信息：
+## License
 
-- `feat:` 新功能
-- `fix:` Bug修复
-- `refactor:` 代码重构
-- `docs:` 文档更新
-- `style:` 代码格式
-- `test:` 测试相关
-- `chore:` 构建/工具
-
-示例：`feat: 添加查寝评分功能`
-
----
-
-## 🤝 贡献
-
-欢迎贡献代码！请遵循以下步骤：
-
-1. Fork 本仓库
-2. 创建功能分支 (`git checkout -b feature/AmazingFeature`)
-3. 提交更改 (`git commit -m 'feat: Add some AmazingFeature'`)
-4. 推送到分支 (`git push origin feature/AmazingFeature`)
-5. 提交 Pull Request
-
-详细指南请查看 [CONTRIBUTING.md](CONTRIBUTING.md)
-
----
-
-## 📄 许可证
-
-本项目采用 MIT 许可证 - 查看 [LICENSE](LICENSE) 文件了解详情
-
----
-
-## 👥 作者
-
-- [@DevMinions](https://github.com/DevMinions)
-
----
-
-## 📮 反馈
-
-如有问题或建议，请提交 Issue 或联系项目维护者。
-
----
-
-**最后更新**: 2026-01-31
+[MIT](LICENSE) © DevMinions
