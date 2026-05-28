@@ -4,8 +4,10 @@ import "time"
 
 // PaginatedRequest 分页请求参数
 type PaginatedRequest struct {
-	Page      int               `json:"page" form:"page" binding:"min=1"`
-	PageSize  int               `json:"pageSize" form:"pageSize" binding:"min=1,max=100"`
+	// Page / PageSize 不写 binding：缺省/越界由 ValidateAndSetDefaults() 兜底,
+	// 这样前端不传分页参数(如 UniApp 某些列表)也不会 400,而是按默认 1 / 10。
+	Page      int               `json:"page" form:"page"`
+	PageSize  int               `json:"pageSize" form:"pageSize"`
 	SortBy    string            `json:"sortBy" form:"sortBy"`
 	SortOrder string            `json:"sortOrder" form:"sortOrder" binding:"omitempty,oneof=asc desc"`
 	Search    string            `json:"search" form:"search"`
