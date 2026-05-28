@@ -78,7 +78,7 @@ docker compose logs -f frontend
 ## 🔐 默认登录信息
 
 - **用户名**: `admin`
-- **密码**: `admin123`
+- **密码**: 首次启动后端时在日志中查找 `INITIAL PASSWORD`，或通过 `ADMIN_INITIAL_PASSWORD` 环境变量预设
 
 ⚠️ 生产环境请立即修改！
 

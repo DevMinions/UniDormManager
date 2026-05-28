@@ -219,7 +219,7 @@ try {
 
 ### 1. 查看网络请求
 
-在微信开发者工具中：
+在浏览器开发者工具中：
 - 打开 Network 面板
 - 查看请求/响应详情
 
@@ -266,7 +266,7 @@ w.Header().Set("Access-Control-Allow-Origin", "*")
 
 - [后端 API 设计](./UniDormManagerServer/API_DESIGN.md)
 - [数据库初始化](./DATABASE_INIT.md)
-- [请求封装](./UniDormManager-UniApp/src/utils/request.js)
+- [请求封装](../UniDormManagerWeb/services/api.ts)
 
 ---
 

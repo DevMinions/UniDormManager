@@ -100,10 +100,6 @@ JWT_EXPIRATION=86400  # 24小时
 # 服务器配置
 SERVER_PORT=8080
 SERVER_MODE=production
-
-# 微信小程序配置（可选）
-WECHAT_APPID=your_wechat_appid
-WECHAT_APPSECRET=your_wechat_appsecret
 ```
 
 ### 步骤4：启动服务
@@ -198,7 +194,7 @@ curl http://your-server:8080/health
 # 2. 测试登录
 curl -X POST http://your-server:8080/api/auth/login \
   -H "Content-Type: application/json" \
-  -d '{"username":"admin","password":"admin123"}'
+  -d '{"username":"admin","password":"<your-admin-password>"}'
 
 # 3. 测试Dashboard
 curl http://your-server:8080/api/dashboard/stats
@@ -316,33 +312,6 @@ sudo apt-get install certbot python3-certbot-nginx
 
 sudo certbot --nginx -d your-domain.com
 ```
-
----
-
-## 📱 小程序配置
-
-### 更新API地址
-
-在 `UniDormManagerMini/app.js` 中修改：
-
-```javascript
-App({
-  globalData: {
-    baseUrl: 'https://your-domain.com', // 修改为你的域名
-    // ...
-  }
-})
-```
-
-### 微信小程序后台配置
-
-1. 登录微信小程序后台
-2. 进入"开发" → "开发设置"
-3. 配置服务器域名白名单：
-   - `https://your-domain.com`
-   - `wss://your-domain.com` (WebSocket)
-4. 修改服务器域名（正式环境）：
-   - `https://your-domain.com`
 
 ---
 
@@ -496,8 +465,6 @@ echo "Backup completed: $DATE"
 - [ ] Nginx反向代理已配置（如需要）
 - [ ] SSL证书已配置（如需要）
 - [ ] 防火墙规则已配置
-- [ ] 小程序后台已配置域名白名单
-- [ ] 小程序API地址已更新
 - [ ] 数据库已备份
 - [ ] 监控已配置
 

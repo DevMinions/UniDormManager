@@ -4,7 +4,7 @@
 2024-03-16
 
 ## 审查范围
-- UniDormManager-UniApp/src/
+- UniDormManagerWeb/
 - UniDormManagerServer/
 
 ---

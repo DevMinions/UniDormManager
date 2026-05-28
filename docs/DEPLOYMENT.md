@@ -163,16 +163,13 @@ npm -v
 ### 2. 构建
 
 ```bash
-cd UniDormManager/UniDormManager-UniApp
+cd UniDormManager/UniDormManagerWeb
 
 # 安装依赖
 npm install
 
-# 构建 H5
-npm run build:h5
-
-# 构建微信小程序
-npm run build:mp-weixin
+# 生产构建（产物在 dist/）
+npm run build
 ```
 
 ### 3. Nginx 配置
@@ -189,7 +186,7 @@ server {
     
     # 前端静态资源
     location / {
-        root /opt/UniDormManager/UniDormManager-UniApp/dist/build/h5;
+        root /opt/UniDormManager/UniDormManagerWeb/dist;
         index index.html;
         try_files $uri $uri/ /index.html;
     }
@@ -443,7 +440,7 @@ services:
     restart: unless-stopped
 
   frontend:
-    build: ./UniDormManager-UniApp
+    build: ./UniDormManagerWeb
     container_name: unidorm_frontend
     depends_on:
       - backend
@@ -530,7 +527,7 @@ mysql -u unidorm -p -h localhost unidorm_db
 sudo nginx -t
 
 # 检查前端文件是否存在
-ls -la /opt/UniDormManager/UniDormManager-UniApp/dist/build/h5/
+ls -la /opt/UniDormManager/UniDormManagerWeb/dist/
 
 # 检查 Nginx 错误日志
 sudo tail -f /var/log/nginx/error.log
@@ -570,7 +567,7 @@ sudo systemctl restart unidorm
 
 ### 前端更新
 ```bash
-cd /opt/UniDormManager/UniDormManager-UniApp
+cd /opt/UniDormManager/UniDormManagerWeb
 git pull
 
 # 备份

@@ -59,7 +59,7 @@ docker compose logs -f
 ## 🔐 默认账户
 
 - 用户名: `admin`
-- 密码: `admin123`
+- 密码: 后端首次启动时会在日志里打印一次（搜 `INITIAL PASSWORD`），或通过 `ADMIN_INITIAL_PASSWORD` 环境变量预设
 
 ## 🛑 停止服务
 

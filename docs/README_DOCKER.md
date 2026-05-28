@@ -80,7 +80,7 @@ docker-compose logs -f
 ## 🔐 默认登录
 
 - **用户名**: `admin`
-- **密码**: `admin123`
+- **密码**: 首次启动后端时在日志中查找 `INITIAL PASSWORD`，或通过 `ADMIN_INITIAL_PASSWORD` 环境变量预设
 
 ## 🗄️ 数据库连接
 
