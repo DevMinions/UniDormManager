@@ -22,10 +22,6 @@ FROM nginx:alpine
 # 复制构建产物到 nginx
 COPY --from=builder /app/dist /usr/share/nginx/html
 
-# 复制测试页面并设置权限
-COPY test.html /usr/share/nginx/html/test.html
-RUN chmod 644 /usr/share/nginx/html/test.html
-
 # 复制 nginx 配置
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
