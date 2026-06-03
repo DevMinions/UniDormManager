@@ -105,7 +105,8 @@ func (h *RoomSwapHandler) CancelApplication(c *gin.Context) {
 		middleware.WriteError(c, http.StatusBadRequest, "bad_request", "Application ID is required")
 		return
 	}
-	if !h.store.DeleteRoomSwapApplication(id) {
+	callerID := auth.GetUserID(c)
+	if !h.store.DeleteRoomSwapApplication(id, callerID) {
 		middleware.WriteError(c, http.StatusNotFound, "not_found", "Application not found")
 		return
 	}

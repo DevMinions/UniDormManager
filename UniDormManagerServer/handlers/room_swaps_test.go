@@ -9,15 +9,29 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	"unidorm-manager-server/auth"
 	"unidorm-manager-server/models"
 )
 
+// authMiddlewareFor injects a fixed userID into the gin context, simulating auth middleware.
+func authMiddlewareFor(userID string) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		auth.SetUserID(c, userID)
+		c.Next()
+	}
+}
+
 func setupRoomSwapTest() (*gin.Engine, *MockStore) {
+	return setupRoomSwapTestWithUser("test-user")
+}
+
+func setupRoomSwapTestWithUser(userID string) (*gin.Engine, *MockStore) {
 	gin.SetMode(gin.TestMode)
 	mockStore := new(MockStore)
 	handler := NewRoomSwapHandler(mockStore)
 
 	r := gin.New()
+	r.Use(authMiddlewareFor(userID))
 	api := r.Group("/api")
 	{
 		roomSwaps := api.Group("/room-swaps")
@@ -67,10 +81,13 @@ func TestGetMyApplications(t *testing.T) {
 	mockStore.AssertExpectations(t)
 }
 
+// TestCancelApplication_Success verifies that the handler passes the caller's UserID as applicantID.
 func TestCancelApplication_Success(t *testing.T) {
-	router, mockStore := setupRoomSwapTest()
+	const callerID = "userA"
+	router, mockStore := setupRoomSwapTestWithUser(callerID)
 
-	mockStore.On("DeleteRoomSwapApplication", "app-001").Return(true)
+	// Mock expects both id AND callerID — proves ownership check is wired correctly.
+	mockStore.On("DeleteRoomSwapApplication", "app-001", callerID).Return(true)
 
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest("DELETE", "/api/room-swaps/app-001", nil)
@@ -86,13 +103,32 @@ func TestCancelApplication_Success(t *testing.T) {
 	mockStore.AssertExpectations(t)
 }
 
+// TestCancelApplication_NotFound verifies 404 when store returns false (applicantID mismatch or id absent).
 func TestCancelApplication_NotFound(t *testing.T) {
-	router, mockStore := setupRoomSwapTest()
+	const callerID = "userB"
+	router, mockStore := setupRoomSwapTestWithUser(callerID)
 
-	mockStore.On("DeleteRoomSwapApplication", "nonexistent").Return(false)
+	mockStore.On("DeleteRoomSwapApplication", "nonexistent", callerID).Return(false)
 
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest("DELETE", "/api/room-swaps/nonexistent", nil)
+	router.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusNotFound, w.Code)
+
+	mockStore.AssertExpectations(t)
+}
+
+// TestCancelApplication_WrongOwner verifies 404 when mock simulates applicantID mismatch.
+func TestCancelApplication_WrongOwner(t *testing.T) {
+	const callerID = "userC" // not the owner of app-001
+	router, mockStore := setupRoomSwapTestWithUser(callerID)
+
+	// Store returns false because applicant_id doesn't match
+	mockStore.On("DeleteRoomSwapApplication", "app-001", callerID).Return(false)
+
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("DELETE", "/api/room-swaps/app-001", nil)
 	router.ServeHTTP(w, req)
 
 	assert.Equal(t, http.StatusNotFound, w.Code)
