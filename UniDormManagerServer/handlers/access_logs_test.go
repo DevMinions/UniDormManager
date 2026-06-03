@@ -219,8 +219,8 @@ func (m *MockStore) ApproveRoomSwapApplication(id string, req *models.ApproveRoo
 	return args.Error(0)
 }
 
-func (m *MockStore) DeleteRoomSwapApplication(id string) bool {
-	args := m.Called(id)
+func (m *MockStore) DeleteRoomSwapApplication(id, applicantID string) bool {
+	args := m.Called(id, applicantID)
 	return args.Bool(0)
 }
 

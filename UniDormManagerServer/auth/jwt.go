@@ -1,17 +1,18 @@
 package auth
 
 import (
+	"crypto/rand"
+	"encoding/base64"
 	"errors"
 	"fmt"
-	"os"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
 )
 
 var (
-	// JWT 密钥（生产环境应从环境变量读取）
-	jwtSecret = []byte("your-secret-key-change-in-production")
+	// JWT 密钥（必须由 SetJWTSecret 设置；生产无强密钥则拒绝启动）
+	jwtSecret []byte
 	// Token 过期时间：24小时
 	TokenExpiration = 24 * time.Hour
 )
@@ -42,43 +43,27 @@ func validateJWTSecret(secret string) error {
 	return nil
 }
 
-// SetJWTSecret 设置 JWT 密钥（从环境变量读取）
+// SetJWTSecret 校验并设置 JWT 密钥；不合格返回 error（由调用方决定 fatal 还是回退）
 func SetJWTSecret(secret string) error {
-	fmt.Printf("🔐 JWT Secret Attempt: secret length=%d\n", len(secret))
-
 	if err := validateJWTSecret(secret); err != nil {
-		fmt.Printf("❌ JWT Secret validation failed: %v\n", err)
-		// 尝试从环境变量读取
-		envSecret := os.Getenv("JWT_SECRET")
-		fmt.Printf("🔍 Environment JWT_SECRET length=%d\n", len(envSecret))
-		if envSecret != "" {
-			if err := validateJWTSecret(envSecret); err == nil {
-				jwtSecret = []byte(envSecret)
-				fmt.Println("✅ JWT密钥已从环境变量加载")
-				return nil
-			} else {
-				fmt.Printf("❌ Environment JWT Secret validation failed: %v\n", err)
-			}
-		}
-		// 生成随机密钥作为最后手段
-		fmt.Println("⚠️  警告: 使用随机生成的JWT密钥，重启服务后将失效")
-		fmt.Println("⚠️  请设置环境变量 JWT_SECRET 来持久化密钥")
-		jwtSecret = []byte(generateRandomSecret())
 		return err
 	}
 	jwtSecret = []byte(secret)
-	fmt.Printf("✅ JWT Secret set successfully: length=%d\n", len(secret))
 	return nil
 }
 
-// generateRandomSecret 生成随机密钥（仅用于开发环境）
+// SetRandomDevSecret 仅非生产环境缺密钥时回退使用
+func SetRandomDevSecret() {
+	jwtSecret = []byte(generateRandomSecret())
+}
+
+// generateRandomSecret 生成密码学安全随机密钥
 func generateRandomSecret() string {
-	const chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*"
-	result := make([]byte, 64)
-	for i := range result {
-		result[i] = chars[i%len(chars)]
+	b := make([]byte, 48)
+	if _, err := rand.Read(b); err != nil {
+		panic("failed to generate random JWT secret: " + err.Error())
 	}
-	return string(result)
+	return base64.StdEncoding.EncodeToString(b)
 }
 
 // GenerateToken 生成 JWT Token
@@ -140,4 +125,3 @@ func ValidateToken(tokenString string) (*Claims, error) {
 
 	return claims, nil
 }
-

@@ -1674,11 +1674,12 @@ func (s *DBStore) GetRoomSwapApplicationByID(id string) (*models.RoomSwapApplica
 	return &app, true
 }
 
-// DeleteRoomSwapApplication 删除换寝申请（取消申请）
-func (s *DBStore) DeleteRoomSwapApplication(id string) bool {
+// DeleteRoomSwapApplication 取消换寝申请（仅申请人本人可删；返回是否真的删了一行）
+func (s *DBStore) DeleteRoomSwapApplication(id, applicantID string) bool {
 	ctx := context.Background()
-	_, err := database.DB.Exec(ctx, "DELETE FROM room_swap_applications WHERE id = $1", id)
-	return err == nil
+	tag, err := database.DB.Exec(ctx,
+		"DELETE FROM room_swap_applications WHERE id = $1 AND applicant_id = $2", id, applicantID)
+	return err == nil && tag.RowsAffected() > 0
 }
 
 // GetRoomSwapHistory 获取换寝历史记录
