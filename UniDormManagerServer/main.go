@@ -118,13 +118,7 @@ func main() {
 	}
 
 	// 认证路由（不需要认证）
-	auth := r.Group("/api/auth")
-	{
-		auth.POST("/login", middleware.RateLimitLogin(loginRateLimit, loginRateWindow), authHandler.Login)
-		auth.POST("/wechat/login", authHandler.WechatLogin) // 微信登录（小程序）
-		auth.POST("/logout", middleware.AuthMiddleware(), authHandler.Logout)
-		auth.GET("/me", middleware.AuthMiddleware(), authHandler.GetCurrentUser)
-	}
+	setupAuthRoutes(r, authHandler, cfg, loginRateLimit, loginRateWindow)
 
 	// API 路由组（需要认证）
 	api := r.Group("/api")
@@ -332,5 +326,16 @@ func main() {
 
 	if err := r.Run(":" + port); err != nil {
 		log.Fatalf("Server failed to start: %v", err)
+	}
+}
+
+// setupAuthRoutes 注册认证路由；微信小程序 stub 端点仅非生产注册，防零凭据接管
+func setupAuthRoutes(r *gin.Engine, authHandler *handlers.AuthHandler, cfg *config.Config, rateLimit int, rateWindow time.Duration) {
+	auth := r.Group("/api/auth")
+	auth.POST("/login", middleware.RateLimitLogin(rateLimit, rateWindow), authHandler.Login)
+	auth.POST("/logout", middleware.AuthMiddleware(), authHandler.Logout)
+	auth.GET("/me", middleware.AuthMiddleware(), authHandler.GetCurrentUser)
+	if !cfg.IsProduction() {
+		auth.POST("/wechat/login", authHandler.WechatLogin)
 	}
 }
