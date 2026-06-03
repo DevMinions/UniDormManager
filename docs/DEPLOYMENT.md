@@ -30,14 +30,22 @@ Docker compose 路径自带前 4 项,只需 Docker 20.10+ 和 Docker Compose 2.0
 |---|---|---|
 | `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME` | ✓ | PostgreSQL 连接 |
 | `DB_SSLMODE` | ✓ | 生产用 `require`,本地可 `disable` |
-| `JWT_SECRET` | ✓ | **≥32 字符**,生产请用 `openssl rand -base64 48` 生成 |
+| `JWT_SECRET` | ✓ | **≥32 字符**;生产(`APP_ENV=production`)无强密钥则**拒绝启动**;开发缺失时回退随机临时密钥。用 `openssl rand -base64 48` 生成 |
 | `ADMIN_INITIAL_PASSWORD` | 可选 | 不设则首启随机生成 16 字符,日志打印一次 |
 | `REDIS_HOST`, `REDIS_PORT`, `REDIS_PASSWORD` | 仅 `USE_CACHE=true` 时 | |
 | `USE_CACHE` | 可选 | `true` / `false`(默认 false) |
 | `PORT` / `APP_PORT` | 可选 | 监听端口(默认 8080) |
-| `APP_ENV` | 可选 | `production` / `development` |
+| `APP_ENV` | 可选 | `production` / `development`(默认)。生产模式启用:JWT 强校验拒启动、CORS 白名单、**不注册微信 stub 登录端点** |
+| `CORS_ALLOWED_ORIGINS` | 生产建议 | 逗号分隔的允许跨域来源。命中回显该 Origin;未配置且非生产时回退 `*` |
+| `LOGIN_RATE_LIMIT` | 可选 | 单 IP 登录限流次数上限(默认 10) |
+| `LOGIN_RATE_WINDOW` | 可选 | 登录限流时间窗(默认 `15m`,Go duration 格式) |
 
 完整字段参考 `UniDormManagerServer/config/` 包源码。
+
+### 安全说明 (A1 加固)
+
+- 微信登录端点 `/api/auth/wechat/login` 是未完成 stub,仅非生产环境注册;生产上线前需用真实 jscode2session 替换。
+- `DeleteStudent` 的越权防御依赖 RBAC 配置(`init_auth_data.go` 不给 `student` 角色 `students:delete`);若将来修改权限表给 student 加该权限,需同步给 `DeleteStudent` handler 补归属校验。
 
 ## Path 1 — Docker Compose
 
