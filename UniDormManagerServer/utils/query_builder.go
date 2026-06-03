@@ -295,7 +295,6 @@ func BuildAccessLogQuery(ctx context.Context, req *models.PaginatedRequest, filt
 
 	if filter.Direction != "" {
 		qb.Where("direction = $"+fmt.Sprintf("%d", len(qb.args)+1), filter.Direction)
-		qb.args = append(qb.args, filter.Direction)
 	}
 
 	if filter.GateName != "" {
@@ -304,12 +303,10 @@ func BuildAccessLogQuery(ctx context.Context, req *models.PaginatedRequest, filt
 
 	if filter.DateFrom != "" {
 		qb.Where("timestamp >= $"+fmt.Sprintf("%d", len(qb.args)+1), filter.DateFrom)
-		qb.args = append(qb.args, filter.DateFrom)
 	}
 
 	if filter.DateTo != "" {
 		qb.Where("timestamp <= $"+fmt.Sprintf("%d", len(qb.args)+1), filter.DateTo)
-		qb.args = append(qb.args, filter.DateTo)
 	}
 
 	dataQB := qb.Clone().
@@ -338,12 +335,10 @@ func BuildLateReturnQuery(ctx context.Context, req *models.PaginatedRequest, fil
 
 	if filter.AlertDateFrom != "" {
 		qb.Where("alert_date >= $"+fmt.Sprintf("%d", len(qb.args)+1), filter.AlertDateFrom)
-		qb.args = append(qb.args, filter.AlertDateFrom)
 	}
 
 	if filter.AlertDateTo != "" {
 		qb.Where("alert_date <= $"+fmt.Sprintf("%d", len(qb.args)+1), filter.AlertDateTo)
-		qb.args = append(qb.args, filter.AlertDateTo)
 	}
 
 	dataQB := qb.Clone().
