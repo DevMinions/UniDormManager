@@ -69,7 +69,7 @@ func (qb *QueryBuilder) WhereStatus(status string, columnName string) *QueryBuil
 	return qb
 }
 
-// OrderBy 添加排序
+// OrderBy 添加排序（sortBy 白名单 + sortOrder 仅 ASC/DESC，防注入）
 func (qb *QueryBuilder) OrderBy(sortBy, sortOrder string) *QueryBuilder {
 	// 安全的排序列表
 	allowedColumns := map[string]bool{
@@ -79,10 +79,11 @@ func (qb *QueryBuilder) OrderBy(sortBy, sortOrder string) *QueryBuilder {
 	}
 
 	if allowedColumns[sortBy] {
-		if sortOrder == "" {
-			sortOrder = "DESC"
+		order := strings.ToUpper(strings.TrimSpace(sortOrder))
+		if order != "ASC" && order != "DESC" {
+			order = "DESC"
 		}
-		qb.baseQuery += fmt.Sprintf(" ORDER BY %s %s", sortBy, sortOrder)
+		qb.baseQuery += fmt.Sprintf(" ORDER BY %s %s", sortBy, order)
 	}
 	return qb
 }
