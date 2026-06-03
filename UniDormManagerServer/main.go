@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"os"
+	"strconv"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -44,10 +45,13 @@ func main() {
 		})
 	}
 
-	// 设置 JWT 密钥（从环境变量读取）
-	jwtSecret := os.Getenv("JWT_SECRET")
-	if err := auth.SetJWTSecret(jwtSecret); err != nil {
-		log.Printf("JWT密钥警告: %v", err)
+	// 设置 JWT 密钥（生产无强密钥拒绝启动）
+	if err := auth.SetJWTSecret(os.Getenv("JWT_SECRET")); err != nil {
+		if cfg.IsProduction() {
+			log.Fatalf("生产环境 JWT 密钥无效，拒绝启动: %v", err)
+		}
+		log.Printf("⚠️  开发环境 JWT 密钥无效，使用随机临时密钥（重启失效）: %v", err)
+		auth.SetRandomDevSecret()
 	}
 
 	// 必须初始化数据库
@@ -103,14 +107,18 @@ func main() {
 	r.Use(middleware.CORS())
 	r.Use(gin.Recovery()) // Gin 内置的恢复中间件
 
-	// 认证路由（不需要认证）
-	auth := r.Group("/api/auth")
-	{
-		auth.POST("/login", authHandler.Login)
-		auth.POST("/wechat/login", authHandler.WechatLogin) // 微信登录（小程序）
-		auth.POST("/logout", middleware.AuthMiddleware(), authHandler.Logout)
-		auth.GET("/me", middleware.AuthMiddleware(), authHandler.GetCurrentUser)
+	// 登录限流配置（防暴力撞库）
+	loginRateLimit := 10
+	if v, err := strconv.Atoi(os.Getenv("LOGIN_RATE_LIMIT")); err == nil && v > 0 {
+		loginRateLimit = v
 	}
+	loginRateWindow := 15 * time.Minute
+	if v, err := time.ParseDuration(os.Getenv("LOGIN_RATE_WINDOW")); err == nil && v > 0 {
+		loginRateWindow = v
+	}
+
+	// 认证路由（不需要认证）
+	setupAuthRoutes(r, authHandler, cfg, loginRateLimit, loginRateWindow)
 
 	// API 路由组（需要认证）
 	api := r.Group("/api")
@@ -318,5 +326,16 @@ func main() {
 
 	if err := r.Run(":" + port); err != nil {
 		log.Fatalf("Server failed to start: %v", err)
+	}
+}
+
+// setupAuthRoutes 注册认证路由；微信小程序 stub 端点仅非生产注册，防零凭据接管
+func setupAuthRoutes(r *gin.Engine, authHandler *handlers.AuthHandler, cfg *config.Config, rateLimit int, rateWindow time.Duration) {
+	auth := r.Group("/api/auth")
+	auth.POST("/login", middleware.RateLimitLogin(rateLimit, rateWindow), authHandler.Login)
+	auth.POST("/logout", middleware.AuthMiddleware(), authHandler.Logout)
+	auth.GET("/me", middleware.AuthMiddleware(), authHandler.GetCurrentUser)
+	if !cfg.IsProduction() {
+		auth.POST("/wechat/login", authHandler.WechatLogin)
 	}
 }

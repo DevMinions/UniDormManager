@@ -9,6 +9,9 @@ type Config struct {
 	// 服务器配置
 	Port string
 
+	// 运行环境：development / production
+	Env string
+
 	// 数据库配置
 	Database DatabaseConfig
 
@@ -38,6 +41,7 @@ type RedisConfig struct {
 func LoadConfig() *Config {
 	return &Config{
 		Port: getEnv("PORT", "8080"),
+		Env:  getEnv("APP_ENV", "development"),
 		Database: DatabaseConfig{
 			Host:     getEnv("DB_HOST", "localhost"),
 			Port:     getEnv("DB_PORT", "5432"),
@@ -75,3 +79,7 @@ func (c *Config) GetRedisAddr() string {
 	return c.Redis.Host + ":" + c.Redis.Port
 }
 
+// IsProduction 是否生产环境
+func (c *Config) IsProduction() bool {
+	return c.Env == "production"
+}

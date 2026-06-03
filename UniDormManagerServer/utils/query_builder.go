@@ -69,7 +69,7 @@ func (qb *QueryBuilder) WhereStatus(status string, columnName string) *QueryBuil
 	return qb
 }
 
-// OrderBy 添加排序
+// OrderBy 添加排序（sortBy 白名单 + sortOrder 仅 ASC/DESC，防注入）
 func (qb *QueryBuilder) OrderBy(sortBy, sortOrder string) *QueryBuilder {
 	// 安全的排序列表
 	allowedColumns := map[string]bool{
@@ -79,10 +79,11 @@ func (qb *QueryBuilder) OrderBy(sortBy, sortOrder string) *QueryBuilder {
 	}
 
 	if allowedColumns[sortBy] {
-		if sortOrder == "" {
-			sortOrder = "DESC"
+		order := strings.ToUpper(strings.TrimSpace(sortOrder))
+		if order != "ASC" && order != "DESC" {
+			order = "DESC"
 		}
-		qb.baseQuery += fmt.Sprintf(" ORDER BY %s %s", sortBy, sortOrder)
+		qb.baseQuery += fmt.Sprintf(" ORDER BY %s %s", sortBy, order)
 	}
 	return qb
 }
@@ -294,7 +295,6 @@ func BuildAccessLogQuery(ctx context.Context, req *models.PaginatedRequest, filt
 
 	if filter.Direction != "" {
 		qb.Where("direction = $"+fmt.Sprintf("%d", len(qb.args)+1), filter.Direction)
-		qb.args = append(qb.args, filter.Direction)
 	}
 
 	if filter.GateName != "" {
@@ -303,12 +303,10 @@ func BuildAccessLogQuery(ctx context.Context, req *models.PaginatedRequest, filt
 
 	if filter.DateFrom != "" {
 		qb.Where("timestamp >= $"+fmt.Sprintf("%d", len(qb.args)+1), filter.DateFrom)
-		qb.args = append(qb.args, filter.DateFrom)
 	}
 
 	if filter.DateTo != "" {
 		qb.Where("timestamp <= $"+fmt.Sprintf("%d", len(qb.args)+1), filter.DateTo)
-		qb.args = append(qb.args, filter.DateTo)
 	}
 
 	dataQB := qb.Clone().
@@ -337,12 +335,10 @@ func BuildLateReturnQuery(ctx context.Context, req *models.PaginatedRequest, fil
 
 	if filter.AlertDateFrom != "" {
 		qb.Where("alert_date >= $"+fmt.Sprintf("%d", len(qb.args)+1), filter.AlertDateFrom)
-		qb.args = append(qb.args, filter.AlertDateFrom)
 	}
 
 	if filter.AlertDateTo != "" {
 		qb.Where("alert_date <= $"+fmt.Sprintf("%d", len(qb.args)+1), filter.AlertDateTo)
-		qb.args = append(qb.args, filter.AlertDateTo)
 	}
 
 	dataQB := qb.Clone().

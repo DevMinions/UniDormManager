@@ -57,7 +57,7 @@ type StoreInterface interface {
 	GetRoomSwapApplicationByID(id string) (*models.RoomSwapApplication, bool)
 	CreateRoomSwapApplication(userID string, req *models.CreateRoomSwapRequest) (*models.RoomSwapApplication, error)
 	ApproveRoomSwapApplication(id string, req *models.ApproveRoomSwapRequest) error
-	DeleteRoomSwapApplication(id string) bool
+	DeleteRoomSwapApplication(id, applicantID string) bool
 	GetRoomSwapHistory(userID string) ([]*models.RoomSwapHistory, error)
 	GetAvailableRooms() ([]*models.Room, error)
 

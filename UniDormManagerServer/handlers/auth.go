@@ -26,7 +26,7 @@ func NewAuthHandler() *AuthHandler {
 
 // WechatLoginRequest 微信登录请求
 type WechatLoginRequest struct {
-	Code     string `json:"code" binding:"required"`
+	Code     string         `json:"code" binding:"required"`
 	UserInfo WechatUserInfo `json:"userInfo"`
 }
 
@@ -34,21 +34,21 @@ type WechatLoginRequest struct {
 type WechatUserInfo struct {
 	NickName  string `json:"nickName"`
 	AvatarURL string `json:"avatarUrl"`
-	Gender     int    `json:"gender"`
-	Language   string `json:"language"`
-	City       string `json:"city"`
-	Province   string `json:"province"`
-	Country    string `json:"country"`
+	Gender    int    `json:"gender"`
+	Language  string `json:"language"`
+	City      string `json:"city"`
+	Province  string `json:"province"`
+	Country   string `json:"country"`
 }
 
 // WechatLoginResponse 微信登录响应
 type WechatLoginResponse struct {
-	Token     string      `json:"token"`
+	Token     string          `json:"token"`
 	User      models.UserInfo `json:"user"`
-	ExpiresIn int64       `json:"expiresIn"`
-	UserRole  string      `json:"userRole"`   // 主要角色：student, maintenance, admin
-	UserLevel int        `json:"userLevel"` // 权限等级：1-6
-	Roles     []string   `json:"roles"`     // 所有角色代码
+	ExpiresIn int64           `json:"expiresIn"`
+	UserRole  string          `json:"userRole"`  // 主要角色：student, maintenance, admin
+	UserLevel int             `json:"userLevel"` // 权限等级：1-6
+	Roles     []string        `json:"roles"`     // 所有角色代码
 }
 
 // Login 登录
@@ -171,8 +171,6 @@ func (h *AuthHandler) WechatLogin(c *gin.Context) {
 		middleware.WriteError(c, http.StatusBadRequest, "bad_request", "Invalid request body")
 		return
 	}
-
-	log.Printf("微信登录请求: code=%s, nickName=%s", req.Code, req.UserInfo.NickName)
 
 	// 根据code查询/创建用户
 	// 测试账号：
