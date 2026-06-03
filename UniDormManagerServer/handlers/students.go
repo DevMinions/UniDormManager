@@ -141,6 +141,17 @@ func (h *StudentHandler) GetStudentsAll(c *gin.Context) {
 	c.JSON(http.StatusOK, filteredStudents)
 }
 
+// isDormStaff 判断调用者是否持有可跨人管理学生的员工角色
+func isDormStaff(c *gin.Context) bool {
+	for _, r := range auth.GetRoles(c) {
+		switch r {
+		case "dorm_manager", "building_manager", "logistics_admin", "system_admin":
+			return true
+		}
+	}
+	return false
+}
+
 // GetStudentByID 根据ID获取学生
 func (h *StudentHandler) GetStudentByID(c *gin.Context) {
 	id := c.Param("id")
@@ -152,6 +163,12 @@ func (h *StudentHandler) GetStudentByID(c *gin.Context) {
 	student, exists := h.store.GetStudentByID(id)
 	if !exists {
 		middleware.WriteError(c, http.StatusNotFound, "not_found", "学生不存在")
+		return
+	}
+
+	// 归属校验：staff 可访问任意记录；学生只能访问自己的记录（A1-8 IDOR 修复）
+	if !isDormStaff(c) && !middleware.IsSelfData(c, student.StudentID) {
+		middleware.WriteError(c, http.StatusForbidden, "forbidden", "无权访问该学生记录")
 		return
 	}
 
@@ -203,6 +220,18 @@ func (h *StudentHandler) UpdateStudent(c *gin.Context) {
 	// 验证状态值
 	if req.Status != "" && req.Status != "Active" && req.Status != "Graduated" && req.Status != "On Leave" {
 		middleware.WriteError(c, http.StatusBadRequest, "bad_request", "Invalid status value")
+		return
+	}
+
+	// 防御性归属校验：先取目标记录，确认归属后再更新（A1-8 IDOR 防御）
+	// 注：学生角色无 students:update 权限，RBAC 中间件已拦截；此处为 defense-in-depth。
+	existing, exists := h.store.GetStudentByID(id)
+	if !exists {
+		middleware.WriteError(c, http.StatusNotFound, "not_found", "学生不存在")
+		return
+	}
+	if !isDormStaff(c) && !middleware.IsSelfData(c, existing.StudentID) {
+		middleware.WriteError(c, http.StatusForbidden, "forbidden", "无权修改该学生记录")
 		return
 	}
 

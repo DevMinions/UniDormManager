@@ -159,26 +159,66 @@ func TestStudentHandler_GetStudentsPaginated(t *testing.T) {
 	}
 }
 
+// authMiddlewareForStudent builds a gin middleware that injects claims with given roles and optional studentID.
+func authMiddlewareForStudent(roles []string, studentID *string) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		auth.SetRoles(c, roles)
+		auth.SetClaims(c, &auth.Claims{
+			UserID:      "test-user-id",
+			Username:    "testuser",
+			Roles:       roles,
+			Permissions: []string{},
+			BuildingIDs: []string{},
+			StudentID:   studentID,
+		})
+		c.Next()
+	}
+}
+
+func strPtr(s string) *string { return &s }
+
 func TestStudentHandler_GetStudentByID(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
 	tests := []struct {
 		name           string
-		studentID      string
+		urlID          string
+		authMiddleware gin.HandlerFunc
 		mockStudent    *models.Student
 		mockExists     bool
 		expectedStatus int
 	}{
 		{
-			name:           "获取学生成功",
-			studentID:      "1",
-			mockStudent:    &models.Student{ID: "1", Name: "张三", StudentID: "2021001", Major: "计算机"},
+			// staff 可以读任意学生
+			name:           "宿管读任意学生 → 200",
+			urlID:          "1",
+			authMiddleware: authMiddlewareForStudent([]string{"dorm_manager"}, nil),
+			mockStudent:    &models.Student{ID: "1", Name: "张三", StudentID: "S-OTHER", Major: "计算机"},
 			mockExists:     true,
 			expectedStatus: http.StatusOK,
 		},
 		{
-			name:           "学生不存在",
-			studentID:      "999",
+			// 学生读自己（claims.StudentID == student.StudentID）→ 200
+			name:           "学生读自己记录 → 200",
+			urlID:          "1",
+			authMiddleware: authMiddlewareForStudent([]string{"student"}, strPtr("S-SELF")),
+			mockStudent:    &models.Student{ID: "1", Name: "张三", StudentID: "S-SELF", Major: "计算机"},
+			mockExists:     true,
+			expectedStatus: http.StatusOK,
+		},
+		{
+			// 学生读别人（claims.StudentID != student.StudentID）→ 403
+			name:           "学生读别人记录 → 403",
+			urlID:          "2",
+			authMiddleware: authMiddlewareForStudent([]string{"student"}, strPtr("S-SELF")),
+			mockStudent:    &models.Student{ID: "2", Name: "李四", StudentID: "S-OTHER", Major: "软件工程"},
+			mockExists:     true,
+			expectedStatus: http.StatusForbidden,
+		},
+		{
+			name:           "学生不存在 → 404",
+			urlID:          "999",
+			authMiddleware: authMiddlewareForStudent([]string{"dorm_manager"}, nil),
 			mockStudent:    nil,
 			mockExists:     false,
 			expectedStatus: http.StatusNotFound,
@@ -190,12 +230,13 @@ func TestStudentHandler_GetStudentByID(t *testing.T) {
 			mockStore := new(MockStore)
 			handler := NewStudentHandler(mockStore)
 
-			mockStore.On("GetStudentByID", tt.studentID).Return(tt.mockStudent, tt.mockExists)
+			mockStore.On("GetStudentByID", tt.urlID).Return(tt.mockStudent, tt.mockExists)
 
 			router := setupTestRouter()
+			router.Use(tt.authMiddleware)
 			router.GET("/students/:id", handler.GetStudentByID)
 
-			w := makeRequest(t, router, "GET", "/students/"+tt.studentID, nil)
+			w := makeRequest(t, router, "GET", "/students/"+tt.urlID, nil)
 
 			assert.Equal(t, tt.expectedStatus, w.Code)
 
@@ -277,21 +318,27 @@ func TestStudentHandler_UpdateStudent(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
 	tests := []struct {
-		name           string
-		studentID      string
-		requestBody    models.UpdateStudentRequest
-		mockStudent    *models.Student
-		mockUpdated    bool
-		expectedStatus int
+		name            string
+		studentID       string
+		requestBody     models.UpdateStudentRequest
+		authMiddleware  gin.HandlerFunc
+		prefetchStudent *models.Student
+		prefetchExists  bool
+		mockStudent     *models.Student
+		mockUpdated     bool
+		expectedStatus  int
 	}{
 		{
-			name:      "更新学生成功",
+			name:      "staff 更新学生成功",
 			studentID: "1",
 			requestBody: models.UpdateStudentRequest{
 				Name:   "张三 Updated",
 				Major:  "软件工程",
 				Status: "Active",
 			},
+			authMiddleware:  authMiddlewareForStudent([]string{"dorm_manager"}, nil),
+			prefetchStudent: &models.Student{ID: "1", Name: "张三", StudentID: "2021001", Major: "计算机"},
+			prefetchExists:  true,
 			mockStudent: &models.Student{
 				ID:        "1",
 				Name:      "张三 Updated",
@@ -303,14 +350,17 @@ func TestStudentHandler_UpdateStudent(t *testing.T) {
 			expectedStatus: http.StatusOK,
 		},
 		{
-			name:      "学生不存在",
+			name:      "学生不存在 → 404",
 			studentID: "999",
 			requestBody: models.UpdateStudentRequest{
 				Name: "张三",
 			},
-			mockStudent:    nil,
-			mockUpdated:    false,
-			expectedStatus: http.StatusNotFound,
+			authMiddleware:  authMiddlewareForStudent([]string{"dorm_manager"}, nil),
+			prefetchStudent: nil,
+			prefetchExists:  false,
+			mockStudent:     nil,
+			mockUpdated:     false,
+			expectedStatus:  http.StatusNotFound,
 		},
 	}
 
@@ -319,9 +369,15 @@ func TestStudentHandler_UpdateStudent(t *testing.T) {
 			mockStore := new(MockStore)
 			handler := NewStudentHandler(mockStore)
 
-			mockStore.On("UpdateStudent", tt.studentID, mock.Anything).Return(tt.mockStudent, tt.mockUpdated)
+			// pre-fetch mock (归属校验用)
+			mockStore.On("GetStudentByID", tt.studentID).Return(tt.prefetchStudent, tt.prefetchExists)
+			// 只有 prefetch 成功才会调用 UpdateStudent
+			if tt.prefetchExists {
+				mockStore.On("UpdateStudent", tt.studentID, mock.Anything).Return(tt.mockStudent, tt.mockUpdated)
+			}
 
 			router := setupTestRouter()
+			router.Use(tt.authMiddleware)
 			router.PUT("/students/:id", handler.UpdateStudent)
 
 			w := makeRequest(t, router, "PUT", "/students/"+tt.studentID, tt.requestBody)
