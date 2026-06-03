@@ -10,7 +10,9 @@ import (
 	"unidorm-manager-server/cache"
 )
 
-// memLimiter USE_CACHE=false 时的进程内滑动窗口回退
+// memLimiter USE_CACHE=false（无 Redis）时的进程内滑动窗口回退。
+// 仅适用于开发/单实例；生产应开 Redis（TTL 自动回收 + 多副本一致）。
+// 不活动 IP 的 key 不会主动清理——高基数场景应走 Redis 路径,此回退不承担。
 type memLimiter struct {
 	mu   sync.Mutex
 	hits map[string][]time.Time
@@ -22,7 +24,7 @@ func (m *memLimiter) allow(key string, limit int, window time.Duration) bool {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	cutoff := time.Now().Add(-window)
-	kept := m.hits[key][:0]
+	var kept []time.Time
 	for _, t := range m.hits[key] {
 		if t.After(cutoff) {
 			kept = append(kept, t)
@@ -46,7 +48,10 @@ func RateLimitLogin(limit int, window time.Duration) gin.HandlerFunc {
 			count, err := cache.Cache.Incr(ctx, key).Result()
 			if err == nil {
 				if count == 1 {
-					cache.Cache.Expire(ctx, key, window)
+					// 设 TTL；失败则删 key,避免无过期导致永久封锁(fail-open)
+					if expErr := cache.Cache.Expire(ctx, key, window).Err(); expErr != nil {
+						cache.Cache.Del(ctx, key)
+					}
 				}
 				allowed = count <= int64(limit)
 			} // Redis 故障则放行，避免限流器故障拒绝合法登录

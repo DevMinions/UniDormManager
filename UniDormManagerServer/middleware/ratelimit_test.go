@@ -19,6 +19,7 @@ func TestMemLimiterAllowsUpToLimit(t *testing.T) {
 }
 
 func TestRateLimitLoginReturns429(t *testing.T) {
+	memLim.hits = make(map[string][]time.Time)
 	gin.SetMode(gin.TestMode)
 	r := gin.New()
 	r.POST("/login", RateLimitLogin(2, time.Minute), func(c *gin.Context) { c.Status(200) })
