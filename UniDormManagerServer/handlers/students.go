@@ -167,7 +167,8 @@ func (h *StudentHandler) GetStudentByID(c *gin.Context) {
 	}
 
 	// 归属校验：staff 可访问任意记录；学生只能访问自己的记录（A1-8 IDOR 修复）
-	if !isDormStaff(c) && !middleware.IsSelfData(c, student.StudentID) {
+	// 使用主键 student.ID 而非学号 student.StudentID：claims.StudentID 存的是 students.id（主键）
+	if !isDormStaff(c) && !middleware.IsSelfData(c, student.ID) {
 		middleware.WriteError(c, http.StatusForbidden, "forbidden", "无权访问该学生记录")
 		return
 	}
@@ -230,7 +231,8 @@ func (h *StudentHandler) UpdateStudent(c *gin.Context) {
 		middleware.WriteError(c, http.StatusNotFound, "not_found", "学生不存在")
 		return
 	}
-	if !isDormStaff(c) && !middleware.IsSelfData(c, existing.StudentID) {
+	// 使用主键 existing.ID 而非学号 existing.StudentID：claims.StudentID 存的是 students.id（主键）
+	if !isDormStaff(c) && !middleware.IsSelfData(c, existing.ID) {
 		middleware.WriteError(c, http.StatusForbidden, "forbidden", "无权修改该学生记录")
 		return
 	}

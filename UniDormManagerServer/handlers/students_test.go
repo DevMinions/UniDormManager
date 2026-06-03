@@ -198,20 +198,24 @@ func TestStudentHandler_GetStudentByID(t *testing.T) {
 			expectedStatus: http.StatusOK,
 		},
 		{
-			// 学生读自己（claims.StudentID == student.StudentID）→ 200
+			// 学生读自己（claims.StudentID == student.ID 主键）→ 200
+			// 注意：claims.StudentID 存的是 students.id 主键（如 "stu-pk-self"），
+			// 而 student.StudentID 是学号字段（如 "2023001"），两者刻意不同，
+			// 确保测试验证的是主键匹配而非学号巧合。
 			name:           "学生读自己记录 → 200",
-			urlID:          "1",
-			authMiddleware: authMiddlewareForStudent([]string{"student"}, strPtr("S-SELF")),
-			mockStudent:    &models.Student{ID: "1", Name: "张三", StudentID: "S-SELF", Major: "计算机"},
+			urlID:          "stu-pk-self",
+			authMiddleware: authMiddlewareForStudent([]string{"student"}, strPtr("stu-pk-self")),
+			mockStudent:    &models.Student{ID: "stu-pk-self", Name: "张三", StudentID: "2023001", Major: "计算机"},
 			mockExists:     true,
 			expectedStatus: http.StatusOK,
 		},
 		{
-			// 学生读别人（claims.StudentID != student.StudentID）→ 403
+			// 学生读别人（claims.StudentID == 自己主键，student.ID == 别人主键）→ 403
+			// claims.StudentID = "stu-pk-self"（自己的主键），目标记录 ID = "stu-pk-other" → 主键不等 → 403
 			name:           "学生读别人记录 → 403",
-			urlID:          "2",
-			authMiddleware: authMiddlewareForStudent([]string{"student"}, strPtr("S-SELF")),
-			mockStudent:    &models.Student{ID: "2", Name: "李四", StudentID: "S-OTHER", Major: "软件工程"},
+			urlID:          "stu-pk-other",
+			authMiddleware: authMiddlewareForStudent([]string{"student"}, strPtr("stu-pk-self")),
+			mockStudent:    &models.Student{ID: "stu-pk-other", Name: "李四", StudentID: "2023002", Major: "软件工程"},
 			mockExists:     true,
 			expectedStatus: http.StatusForbidden,
 		},
