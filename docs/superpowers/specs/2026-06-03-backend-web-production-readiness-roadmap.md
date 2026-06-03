@@ -126,3 +126,26 @@ B 批设计时权衡后定。
 - 微信登录真实化(jscode2session)需微信 appid/secret + 产品决策 —— 若 mobile 短期不上线,A 批先摘端点即可
 - 前端 XSS/CSP、依赖 SCA 扫描、E2E 扩边界用例 —— 留后续轮次
 - 本路线图不含 mobile 仓(已单独加固到 vitest 126)
+
+---
+
+## 7. 修复进度
+
+### Batch A1(安全快修)— ✅ 已完成并合并 main(2026-06-03,merge `de06776c`)
+
+拆分见 [A1 设计](./2026-06-03-batch-a1-security-quickfixes-design.md) + [A1 计划](../plans/2026-06-03-batch-a1-security-quickfixes.md)。子代理驱动 TDD 实现,每实质任务 spec 审查 + 最终 security 整体审查(抓出并修复 1 个 HIGH:IDOR self 比错字段)。`go test ./...` 全绿,live audit_api 38/38 不退化。
+
+| 项 | 闭环 | commit |
+|---|---|---|
+| C1 微信端点接管 | dev-gate(仅非生产注册) | `d991506e` |
+| C2 JWT 弱密钥伪造 | 生产 fail-fast + crypto/rand | `6ceedf29` |
+| C6 登录撞库 | Redis+内存限流 | `6588ed34`+`13803589` |
+| H1 students IDOR | GetStudentByID 主键归属校验 | `9b893d0b`+`9e242fb5` |
+| H2 换寝越权删除 | applicant_id 归属约束 | `761cd89d` |
+| H3 ORDER BY SQLi | sortOrder 白名单 | `2dc2fff6` |
+| H4 CORS 通配 | env 白名单收敛 | `b2001373` |
+| M2 日志脱敏 | 删 JWT/微信 code 打印 | 并入 C2/C1 |
+
+**A1 范围外、留后续**:完整 scope 系统(A2)、Logout token 吊销(M3)、`err.Error()` 回显客户端、`query_builder` B6/B6b 双 append(既存)。
+
+### 下一步:Batch A2(完整 scope 系统)→ Batch B(数据正确性/事务)→ Batch C(运维/部署)
