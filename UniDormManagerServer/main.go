@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"os"
+	"strconv"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -106,10 +107,20 @@ func main() {
 	r.Use(middleware.CORS())
 	r.Use(gin.Recovery()) // Gin 内置的恢复中间件
 
+	// 登录限流配置（防暴力撞库）
+	loginRateLimit := 10
+	if v, err := strconv.Atoi(os.Getenv("LOGIN_RATE_LIMIT")); err == nil && v > 0 {
+		loginRateLimit = v
+	}
+	loginRateWindow := 15 * time.Minute
+	if v, err := time.ParseDuration(os.Getenv("LOGIN_RATE_WINDOW")); err == nil && v > 0 {
+		loginRateWindow = v
+	}
+
 	// 认证路由（不需要认证）
 	auth := r.Group("/api/auth")
 	{
-		auth.POST("/login", authHandler.Login)
+		auth.POST("/login", middleware.RateLimitLogin(loginRateLimit, loginRateWindow), authHandler.Login)
 		auth.POST("/wechat/login", authHandler.WechatLogin) // 微信登录（小程序）
 		auth.POST("/logout", middleware.AuthMiddleware(), authHandler.Logout)
 		auth.GET("/me", middleware.AuthMiddleware(), authHandler.GetCurrentUser)
