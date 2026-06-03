@@ -44,8 +44,8 @@ func TestValidateTokenWrongSecret(t *testing.T) {
 	token, err := GenerateToken("test-user-id", "testuser", []string{"admin"}, []string{}, []string{}, nil)
 	require.NoError(t, err)
 
-	// Change the secret and try to validate
-	SetJWTSecret("different-secret-key-12345678")
+	// Change the secret and try to validate (must be >= 32 chars to pass validation)
+	SetJWTSecret("different-secret-key-for-testing-abcdefgh")
 	_, err = ValidateToken(token)
 	assert.Error(t, err)
 }
@@ -92,6 +92,25 @@ func TestSetJWTSecret(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestValidateJWTSecret(t *testing.T) {
+	assert.Error(t, validateJWTSecret(""))
+	assert.Error(t, validateJWTSecret("short"))
+	assert.Error(t, validateJWTSecret("your-secret-key-change-in-production"))
+	assert.NoError(t, validateJWTSecret("a-very-long-and-secure-secret-key-1234567890"))
+}
+
+func TestGenerateRandomSecretIsNonDeterministic(t *testing.T) {
+	a := generateRandomSecret()
+	b := generateRandomSecret()
+	assert.NotEqual(t, a, b, "随机密钥必须不可重算")
+	assert.GreaterOrEqual(t, len(a), 32)
+}
+
+func TestSetJWTSecretRejectsWeak(t *testing.T) {
+	assert.Error(t, SetJWTSecret("short"))
+	assert.NoError(t, SetJWTSecret("a-very-long-and-secure-secret-key-1234567890"))
 }
 
 func TestHasPermission(t *testing.T) {

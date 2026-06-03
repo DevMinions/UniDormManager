@@ -44,10 +44,13 @@ func main() {
 		})
 	}
 
-	// 设置 JWT 密钥（从环境变量读取）
-	jwtSecret := os.Getenv("JWT_SECRET")
-	if err := auth.SetJWTSecret(jwtSecret); err != nil {
-		log.Printf("JWT密钥警告: %v", err)
+	// 设置 JWT 密钥（生产无强密钥拒绝启动）
+	if err := auth.SetJWTSecret(os.Getenv("JWT_SECRET")); err != nil {
+		if cfg.IsProduction() {
+			log.Fatalf("生产环境 JWT 密钥无效，拒绝启动: %v", err)
+		}
+		log.Printf("⚠️  开发环境 JWT 密钥无效，使用随机临时密钥（重启失效）: %v", err)
+		auth.SetRandomDevSecret()
 	}
 
 	// 必须初始化数据库
